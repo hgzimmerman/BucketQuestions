@@ -34,6 +34,7 @@ where
 
 /// Updates a generic row.
 #[inline(always)]
+#[allow(dead_code)]
 pub fn update_row<Model, Chg, Tab>(
     table: Tab,
     changeset: Chg,

@@ -1,22 +1,23 @@
 //! Implementation of the specified interfaces for PgConnection.
 
-use crate::bucket::interface::{BucketRepository, BucketUserRelationRepository, QuestionRepository};
+use crate::bucket::interface::{BucketRepository, BucketUserRelationRepository, QuestionRepository, AnswerRepository, FavoriteQuestionRelationRepository};
 use diesel::pg::PgConnection;
-use crate::bucket::db_types::{NewBucket, Bucket, NewBucketUserJoin, BucketUserJoin, BucketUserPermissionsChangeset, BucketUserPermissions, NewQuestion, Question};
+use crate::bucket::db_types::{NewBucket, Bucket, NewBucketUserJoin, BucketUserJoin, BucketUserPermissionsChangeset, BucketUserPermissions, NewQuestion, Question, NewAnswer, Answer, NewFavoriteQuestionRelation, FavoriteQuestionRelation};
 use diesel::result::Error;
 use uuid::Uuid;
 use crate::schema::{
     buckets,
     bucket_user_join,
-    questions
+    questions,
+    answers,
+    user_favorite_question_join
 };
 use diesel::query_dsl::{QueryDsl, RunQueryDsl};
 use diesel::ExpressionMethods;
 use diesel::SaveChangesDsl;
-use diesel::BelongingToDsl;
-use diesel::query_dsl::InternalJoinDsl;
+//use diesel::BelongingToDsl;
+//use diesel::query_dsl::InternalJoinDsl;
 use diesel::BoolExpressionMethods;
-use crate::user::UserRepository;
 
 
 impl BucketRepository for PgConnection {
@@ -69,7 +70,13 @@ impl BucketUserRelationRepository for PgConnection {
     }
 
     fn remove_user_from_bucket(&self, user_uuid: Uuid, bucket_uuid: Uuid) -> Result<BucketUserJoin, Error> {
-        crate::util::delete_row(bucket_user_join::table, user_uuid, self)
+        let target = bucket_user_join::table
+            .filter(
+                bucket_user_join::user_uuid.eq(user_uuid)
+                    .and(bucket_user_join::bucket_uuid.eq(bucket_uuid))
+            );
+        diesel::delete(target)
+            .get_result(self)
     }
 
     fn set_permissions(&self, permissions_changeset: BucketUserPermissionsChangeset) -> Result<BucketUserJoin, Error> {
@@ -78,7 +85,10 @@ impl BucketUserRelationRepository for PgConnection {
 
     fn get_permissions(&self, user_uuid: Uuid, bucket_uuid: Uuid) -> Result<BucketUserPermissions, Error> {
         bucket_user_join::table
-            .find(user_uuid)
+            .filter(
+                bucket_user_join::user_uuid.eq(user_uuid)
+                .and(bucket_user_join::bucket_uuid.eq(bucket_uuid))
+            )
             .select((
                 bucket_user_join::uuid,
                 bucket_user_join::set_visibility_permission,
@@ -135,5 +145,49 @@ impl QuestionRepository for PgConnection {
         diesel::update(target)
             .set(questions::archived.eq(archived))
             .get_result(self)
+    }
+}
+
+impl AnswerRepository for PgConnection {
+    fn create_answer(&self, answer: NewAnswer) -> Result<Answer, Error> {
+        crate::util::create_row(answers::table, answer, self)
+    }
+
+    fn delete_answer(&self, uuid: Uuid) -> Result<Answer, Error> {
+        crate::util::delete_row(answers::table, uuid, self)
+    }
+
+    fn get_answers_for_question(&self, question_uuid: Uuid) -> Result<Vec<Answer>, Error> {
+        answers::table
+            .filter(answers::question_uuid.eq(question_uuid))
+            .get_results(self)
+    }
+}
+
+impl FavoriteQuestionRelationRepository for PgConnection {
+    fn favorite_question(&self, relation: NewFavoriteQuestionRelation) -> Result<(), Error> {
+        crate::util::create_row(user_favorite_question_join::table, relation, self)
+            .map(|_: FavoriteQuestionRelation| ())
+    }
+
+    fn unfavorite_question(&self, relation: NewFavoriteQuestionRelation) -> Result<(), Error> {
+        let target = user_favorite_question_join::table
+            .filter(
+                user_favorite_question_join::user_uuid.eq(relation.user_uuid)
+                    .and(user_favorite_question_join::question_uuid.eq(relation.question_uuid))
+            );
+        diesel::delete(target)
+            .execute(self)
+            .map(|_| ())
+    }
+
+    fn get_favorite_questions(&self, user_uuid: Uuid) -> Result<Vec<Question>, Error> {
+        use user_favorite_question_join as favorites;
+        favorites::table
+            .filter(favorites::user_uuid.eq(user_uuid))
+            .select(favorites::question_uuid)
+            .inner_join(questions::table)
+            .select(questions::all_columns)
+            .get_results(self)
     }
 }

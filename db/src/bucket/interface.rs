@@ -3,7 +3,7 @@
 //! These traits should try to not include significant quantities of business logic.
 //! It should try to deal with only the types specified in db_types, and avoid wire types.
 
-use crate::bucket::db_types::{Bucket, NewBucket, NewBucketUserJoin, BucketUserPermissionsChangeset, BucketUserJoin, BucketUserPermissions, NewQuestion, Question, NewAnswer, Answer, FavoriteQuestionRelation, NewFavoriteQuestionRelation};
+use crate::bucket::db_types::{Bucket, NewBucket, NewBucketUserJoin, BucketUserPermissionsChangeset, BucketUserJoin, BucketUserPermissions, NewQuestion, Question, NewAnswer, Answer, NewFavoriteQuestionRelation};
 use uuid::Uuid;
 use diesel::QueryResult;
 
@@ -74,9 +74,9 @@ pub trait AnswerRepository {
 /// Functions for specifically working with Favorites.
 pub trait FavoriteQuestionRelationRepository {
     /// Add the relation
-    fn favorite_question(&self, relation: NewFavoriteQuestionRelation);
+    fn favorite_question(&self, relation: NewFavoriteQuestionRelation) -> QueryResult<()>;
     /// Removes the relation
-    fn unfavorite_question(&self, relation: NewFavoriteQuestionRelation);
+    fn unfavorite_question(&self, relation: NewFavoriteQuestionRelation) -> QueryResult<()>;
     /// Gets the favorite quesitons.
-    fn get_favorite_questions(&self, user_uuid: Uuid) -> QueryResult<FavoriteQuestionRelation>;
+    fn get_favorite_questions(&self, user_uuid: Uuid) -> QueryResult<Vec<Question>>;
 }
