@@ -2,6 +2,7 @@ table! {
     answers (uuid) {
         uuid -> Uuid,
         user_uuid -> Nullable<Uuid>,
+        question_uuid -> Uuid,
         publicly_visible -> Bool,
         answer_text -> Varchar,
     }
@@ -11,8 +12,9 @@ table! {
     buckets (uuid) {
         uuid -> Uuid,
         bucket_name -> Varchar,
+        bucket_slug -> Varchar,
         visible -> Bool,
-        accepting_answers -> Bool,
+        drawing_enabled -> Bool,
     }
 }
 
@@ -22,7 +24,7 @@ table! {
         user_uuid -> Uuid,
         bucket_uuid -> Uuid,
         set_visibility_permission -> Bool,
-        set_accepting_answers_permission -> Bool,
+        set_drawing_permission -> Bool,
         grant_permissions_permission -> Bool,
     }
 }
@@ -52,6 +54,7 @@ table! {
     }
 }
 
+joinable!(answers -> questions (question_uuid));
 joinable!(answers -> users (user_uuid));
 joinable!(bucket_user_join -> buckets (bucket_uuid));
 joinable!(bucket_user_join -> users (user_uuid));

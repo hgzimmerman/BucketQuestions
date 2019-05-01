@@ -18,5 +18,6 @@ extern crate diesel;
 //pub mod event;
 mod schema;
 //pub mod stock;
+pub mod bucket;
 pub mod user;
 mod util;
