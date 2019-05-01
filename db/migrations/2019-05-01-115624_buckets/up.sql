@@ -19,7 +19,7 @@ CREATE TABLE bucket_user_join (
 
 CREATE TABLE questions (
   uuid UUID PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),
-  bucket_uuid UUID REFERENCES buckets(uuid) ON DELETE CASCADE, -- The bucket the question belongs to.
+  bucket_uuid UUID NOT NULL REFERENCES buckets(uuid) ON DELETE CASCADE, -- The bucket the question belongs to.
   user_uuid UUID REFERENCES users(uuid) ON DELETE CASCADE, -- The user that created the Question. Users don't have to be logged in to create questions.
   question_text VARCHAR NOT NULL, -- The question
   archived BOOLEAN NOT NULL DEFAULT FALSE -- Once a question is answered, it is archived, and not able to be drawn again, unless explicitly put back in the bucket.

@@ -51,13 +51,11 @@ pub trait QuestionRepository {
     /// Gets a random question.
     fn get_random_question(&self, bucket_uuid: Uuid) -> QueryResult<Question>;
     /// Gets the number of active questions.
-    fn get_number_of_active_questions(&self, bucket_uuid: Uuid) -> u32;
+    fn get_number_of_active_questions_for_bucket(&self, bucket_uuid: Uuid) -> QueryResult<i64>;
     /// Gets all active questions
-    fn get_all_active_questions(&self, bucket_uuid: Uuid) -> QueryResult<Vec<Question>>;
-    /// Remove the question from drawing eligibility.
-    fn archive_question(&self, question_uuid: Uuid) -> QueryResult<Question>;
-    /// Allow the question to be drawn again
-    fn unarchive_question(&self, question_uuid: Uuid) -> QueryResult<Question>;
+    fn get_all_active_questions_for_bucket(&self, bucket_uuid: Uuid) -> QueryResult<Vec<Question>>;
+    /// Disable or Enable the question from drawing eligibility.
+    fn set_archive_status_for_question(&self, question_uuid: Uuid, archived: bool) -> QueryResult<Question>;
 }
 
 

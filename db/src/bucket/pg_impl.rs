@@ -1,19 +1,21 @@
 //! Implementation of the specified interfaces for PgConnection.
 
-use crate::bucket::interface::{BucketRepository, BucketUserRelationRepository};
+use crate::bucket::interface::{BucketRepository, BucketUserRelationRepository, QuestionRepository};
 use diesel::pg::PgConnection;
-use crate::bucket::db_types::{NewBucket, Bucket, NewBucketUserJoin, BucketUserJoin, BucketUserPermissionsChangeset, BucketUserPermissions};
+use crate::bucket::db_types::{NewBucket, Bucket, NewBucketUserJoin, BucketUserJoin, BucketUserPermissionsChangeset, BucketUserPermissions, NewQuestion, Question};
 use diesel::result::Error;
 use uuid::Uuid;
 use crate::schema::{
     buckets,
-    bucket_user_join
+    bucket_user_join,
+    questions
 };
 use diesel::query_dsl::{QueryDsl, RunQueryDsl};
 use diesel::ExpressionMethods;
 use diesel::SaveChangesDsl;
 use diesel::BelongingToDsl;
 use diesel::query_dsl::InternalJoinDsl;
+use diesel::BoolExpressionMethods;
 use crate::user::UserRepository;
 
 
@@ -91,7 +93,47 @@ impl BucketUserRelationRepository for PgConnection {
             .filter(bucket_user_join::user_uuid.eq(user_uuid))
             .select(bucket_user_join::bucket_uuid)
             .inner_join(buckets::table)
-            .select((buckets::all_columns))
+            .select(buckets::all_columns)
             .get_results(self)
+    }
+}
+
+impl QuestionRepository for PgConnection {
+    fn create_question(&self, question: NewQuestion) -> Result<Question, Error> {
+        crate::util::create_row(questions::table, question, self)
+    }
+
+    fn delete_question(&self, uuid: Uuid) -> Result<Question, Error> {
+        crate::util::delete_row(questions::table, uuid, self)
+    }
+
+    fn get_random_question(&self, bucket_uuid: Uuid) -> Result<Question, Error> {
+        no_arg_sql_function!(RANDOM, (), "Represents the sql RANDOM() function");
+        questions::table
+            .filter(questions::bucket_uuid.eq(bucket_uuid))
+            .order(RANDOM)
+            .first(self)
+    }
+
+    fn get_number_of_active_questions_for_bucket(&self, bucket_uuid: Uuid) -> Result<i64, Error> {
+        questions::table
+            .filter(questions::bucket_uuid.eq(bucket_uuid).and(questions::archived.eq(false)))
+            .count()
+            .get_result(self)
+    }
+
+    fn get_all_active_questions_for_bucket(&self, bucket_uuid: Uuid) -> Result<Vec<Question>, Error> {
+        questions::table
+            .filter(questions::bucket_uuid.eq(bucket_uuid).and(questions::archived.eq(false)))
+            .get_results(self)
+    }
+
+    fn set_archive_status_for_question(&self, question_uuid: Uuid, archived: bool) -> Result<Question, Error> {
+        let target = questions::table
+            .find(question_uuid);
+
+        diesel::update(target)
+            .set(questions::archived.eq(archived))
+            .get_result(self)
     }
 }

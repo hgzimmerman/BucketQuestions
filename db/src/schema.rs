@@ -32,7 +32,7 @@ table! {
 table! {
     questions (uuid) {
         uuid -> Uuid,
-        bucket_uuid -> Nullable<Uuid>,
+        bucket_uuid -> Uuid,
         user_uuid -> Nullable<Uuid>,
         question_text -> Varchar,
         archived -> Bool,
@@ -42,8 +42,8 @@ table! {
 table! {
     user_favorite_question_join (uuid) {
         uuid -> Uuid,
-        user_uuid -> Nullable<Uuid>,
-        question_uuid -> Nullable<Uuid>,
+        user_uuid -> Uuid,
+        question_uuid -> Uuid,
     }
 }
 
