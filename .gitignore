@@ -1,0 +1,10 @@
+**/pgsql
+**/Cargo.lock
+**/target/
+**/node_modules
+.idea
+**/db.logfile
+**/DS_Store
+**/.DS_Store
+frontend/build
+frontend_backup/build

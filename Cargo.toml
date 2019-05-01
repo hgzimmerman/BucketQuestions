@@ -1,0 +1,9 @@
+[workspace]
+members = [
+    "db",
+    "server",
+    "testing_common",
+    "pool",
+    "auth",
+]
+

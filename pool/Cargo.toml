@@ -1,0 +1,10 @@
+[package]
+name = "pool"
+version = "0.1.0"
+authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+r2d2 = "0.8.3"
+diesel = { version = "1.4.1", features = ["postgres", "r2d2"] }
+apply = "0.2.2"

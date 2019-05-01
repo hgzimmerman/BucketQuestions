@@ -1,0 +1,24 @@
+[package]
+name = "testing_common"
+version = "0.1.0"
+authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+
+#auth = { path = "../auth"}
+#testing_fixtures = {path = "../testing_fixtures"}
+
+#server = { path = "../server"}
+
+chrono = { version = "0.4", features = ["serde"] }
+uuid = {version = "0.6", features = ["serde", "v4"] }
+#db = { path = "../db"}
+pool = {path = "../pool"}
+
+
+migrations_internals = "~1.4.0"
+lazy_static = "1.0"
+
+diesel = { version = "1.4.1", features = ["postgres", "uuid", "chrono", "serde_json", "r2d2"] }
+
