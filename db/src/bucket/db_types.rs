@@ -83,7 +83,8 @@ pub struct NewBucketUserJoin {
     pub grant_permissions_permission: bool
 }
 /// Structure used to create new join relations between users and buckets.
-#[derive(Clone, Copy, AsChangeset, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, AsChangeset, Identifiable, Debug, Serialize, Deserialize)]
+#[primary_key(uuid)]
 #[table_name = "bucket_user_join"]
 pub struct BucketUserPermissionsChangeset {
     /// The id

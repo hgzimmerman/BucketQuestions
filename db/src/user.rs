@@ -28,7 +28,7 @@ pub struct NewUser {
 }
 
 /// Trait for storing and retrieving users.
-pub trait UserStorage {
+pub trait UserRepository {
     /// Creates a user
     fn create_user(&self, user: NewUser) -> QueryResult<User>;
     /// Gets a user using its unique identifier.
@@ -37,7 +37,7 @@ pub trait UserStorage {
     fn get_user_by_google_id(&self, id: i32) -> QueryResult<User>;
 }
 
-impl UserStorage for PgConnection {
+impl UserRepository for PgConnection {
     fn create_user(&self, user: NewUser) -> Result<User, Error> {
         crate::util::create_row(schema::users::table, user, self)
     }

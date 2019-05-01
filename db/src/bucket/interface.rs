@@ -33,7 +33,7 @@ pub trait BucketUserRelationRepository {
     /// Removes the user from bucket.
     fn remove_user_from_bucket(&self, user_uuid: Uuid, bucket_uuid: Uuid) -> QueryResult<BucketUserJoin>;
     /// Set permissions for the user-bucket relation.
-    fn set_permissions(&self, permissions_changeset: BucketUserPermissionsChangeset) -> QueryResult<BucketUserPermissions>;
+    fn set_permissions(&self, permissions_changeset: BucketUserPermissionsChangeset) -> QueryResult<BucketUserJoin>;
     /// Get the permissions for the user.
     /// The user may not be a part of the bucket.
     fn get_permissions(&self, user_uuid: Uuid, bucket_uuid: Uuid) -> QueryResult<BucketUserPermissions>;
