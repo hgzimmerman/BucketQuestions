@@ -82,6 +82,34 @@ pub struct NewBucketUserJoin {
     /// Can the user grant permissions to other users.
     pub grant_permissions_permission: bool
 }
+/// Structure used to create new join relations between users and buckets.
+#[derive(Clone, Copy, AsChangeset, Debug, Serialize, Deserialize)]
+#[table_name = "bucket_user_join"]
+pub struct BucketUserPermissionsChangeset {
+    /// The id
+    pub uuid: Uuid,
+    /// Can the user set the visibility of the bucket.
+    pub set_visibility_permission: Option<bool>,
+    /// Can the user enable drawing from the bucket.
+    pub set_drawing_permission: Option<bool>,
+    /// Can the user grant permissions to other users.
+    pub grant_permissions_permission: Option<bool>
+}
+
+/// Structure that just contains the permissions for a user-bucket relation.
+#[derive(Clone, Copy, Queryable, Identifiable, Debug, Serialize, Deserialize)]
+#[primary_key(uuid)]
+#[table_name = "bucket_user_join"]
+pub struct BucketUserPermissions {
+    /// The id
+    pub uuid: Uuid,
+    /// Can the user set the visibility of the bucket.
+    pub set_visibility_permission: bool,
+    /// Can the user enable drawing from the bucket.
+    pub set_drawing_permission: bool,
+    /// Can the user grant permissions to other users.
+    pub grant_permissions_permission: bool
+}
 
 
 /// A struct representing a question.
@@ -153,7 +181,7 @@ pub struct NewAnswer {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Identifiable, Queryable, Serialize, Deserialize)]
 #[primary_key(uuid)]
 #[table_name = "user_favorite_question_join"]
-pub struct FavoriteQuestionsRelation {
+pub struct FavoriteQuestionRelation {
     /// Unique identifier.
     pub uuid: Uuid,
     /// User
@@ -162,10 +190,10 @@ pub struct FavoriteQuestionsRelation {
     pub question_uuid: Uuid
 }
 
-/// Struct for creating a new favorite relation.
+/// Structure for creating a new favorite relation.
 #[derive(Clone, Copy, Insertable, Debug, Serialize, Deserialize)]
 #[table_name = "user_favorite_question_join"]
-pub struct FavoriteQuestionRelation {
+pub struct NewFavoriteQuestionRelation {
     /// User
     pub user_uuid: Uuid,
     /// Question
