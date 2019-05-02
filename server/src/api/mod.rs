@@ -1,24 +1,22 @@
 //! The api defines all of the routes that are supported for the server.
-//mod advertisement;
-//pub(crate) mod auth;
-//mod calendar;
-//mod market;
-//mod twitter_proxy;
-//mod user;
+mod user;
+mod auth;
+mod answer;
+mod bucket;
+mod question;
 
 use warp::Reply;
 
 use warp::{path, Filter};
 
-//use self::calendar::calendar_api;
 use crate::{
-//    api::{
-//        advertisement::{ad_api, health_api},
-//        auth::auth_api,
-//        market::market_api,
-//        twitter_proxy::twitter_proxy_api,
-//        user::user_api,
-//    },
+    api::{
+        auth::auth_api,
+        user::user_api,
+        answer::answer_api,
+        bucket::bucket_api,
+        question::question_api
+    },
     state::State,
     static_files::{static_files_handler, FileConfig},
 };
@@ -31,17 +29,13 @@ pub const API_STRING: &str = "api";
 /// Anything that sits behind this filter accesses the DB in some way.
 pub fn api(state: &State) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
     path(API_STRING)
-        .map(|| "hello")
-//        .and(
-//            market_api(state)
-//                .or(calendar_api(state))
-//                .or(auth_api(state))
-//                .or(ad_api(state))
-//                .or(health_api(state))
-//                .or(user_api(state))
-//                .or(twitter_proxy_api(state)),
-//        )
-        .boxed()
+        .and(
+            bucket_api(state)
+                .or(answer_api(state))
+                .or(question_api(state))
+                .or(auth_api(state))
+                .or(user_api(state))
+        )
 }
 
 /// A filter that is responsible for configuring everything that can be served.
