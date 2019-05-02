@@ -107,6 +107,9 @@ pub fn create_google_oauth_client(redirect_url: Url) -> BasicClient {
         .add_scope(Scope::new(
             "https://www.googleapis.com/auth/plus.me".to_string(),
         ))
+        .add_scope(Scope::new(
+            "profile".to_string(),
+        ))
         .set_redirect_url(RedirectUrl::new(redirect_url));
     client
 }

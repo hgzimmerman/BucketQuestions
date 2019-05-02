@@ -51,6 +51,7 @@ table! {
     users (uuid) {
         uuid -> Uuid,
         google_user_id -> Varchar,
+        google_name -> Nullable<Varchar>,
     }
 }
 

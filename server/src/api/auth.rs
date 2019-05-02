@@ -21,6 +21,7 @@ use pool::PooledConn;
 use authorization::{JwtPayload, Secret};
 use askama::Template;
 
+/// The path segment for the auth api.
 pub const AUTH_PATH: &str = "auth";
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -43,7 +44,24 @@ pub struct TokenResponse {
     id_token: String,
 }
 
+#[derive(Clone, Debug, Deserialize)]
+struct GoogleJWTPayload {
+    sub: String,
+    name: Option<String>
+}
 
+/// The login flow is as follows:
+/// * User gets the link from /api/auth/link
+/// * User clicks link
+/// * User is taken to Google login portal
+/// * User selects account
+/// * User is redirected to /api/auth/redirect
+/// * Code is extracted from query params and used to send request to google for a google identity JWT
+/// * JWT is decoded and the user ID is extracted.
+/// * The id is used to look up or create a new user.
+/// * The new user is serialized as part of a new JWT.
+/// * The JWT is templated into a small html page, that executes a script to put the JWT in localStorage.
+/// * The page then redirects to a known page.
 pub fn auth_api(state: &State) -> impl Filter<Extract=(impl Reply,), Error=Rejection> + Clone{
 
     let get_link = path!("link")
@@ -59,18 +77,19 @@ pub fn auth_api(state: &State) -> impl Filter<Extract=(impl Reply,), Error=Rejec
 
     // TODO validate CSRF token
     // This means that the CSRF token should be uniform across multiple requests?
+
+
     let redirect = path!("redirect")
         .and(warp::get2())
         .and(query())
-//        .and(state.google_client())
         .map(|query_params: OAuthRedirectQueryParams| {
             query_params.code
         })
         .and_then(|token|create_token_request(token).map_err(Error::reject))
         .and(state.https_client())
         .and_then(make_request_for_google_jwt_token)
-        .map(|response: TokenResponse| -> Result<String, Error> {
-            extract_user_id_from_google_jwt(&response.id_token)
+        .map(|response: TokenResponse| -> Result<GoogleJWTPayload, Error> {
+            extract_payload_from_google_jwt(&response.id_token)
         })
         .and_then(crate::util::reject)
         .and(state.db())
@@ -96,8 +115,12 @@ pub fn auth_api(state: &State) -> impl Filter<Extract=(impl Reply,), Error=Rejec
         )
 }
 
-const URL: &str = "https://www.googleapis.com/oauth2/v4/token";
-fn create_token_request(token: String /*StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType>*/) -> Result<Request<Body>,Error> {
+/// The url for getting Google's JWT
+const GOOGLE_JWT_URL: &str = "https://www.googleapis.com/oauth2/v4/token";
+
+
+/// Creates the request used in getting the JWT from Google.
+fn create_token_request(token: String) -> Result<Request<Body>,Error> {
     // TODO get these from some central state.
     let google_secret = std::env::var("GOOGLE_CLIENT_SECRET")
         .expect("Missing the GOOGLE_CLIENT_SECRET environment variable.");
@@ -134,7 +157,7 @@ fn create_token_request(token: String /*StandardTokenResponse<EmptyExtraTokenFie
     info!("{}", body);
 
 
-    Request::post(URL)
+    Request::post(GOOGLE_JWT_URL)
         .header("Content-Type", "application/x-www-form-urlencoded")
         .body(Body::from(body))
         .map_err(|_| {
@@ -142,12 +165,12 @@ fn create_token_request(token: String /*StandardTokenResponse<EmptyExtraTokenFie
         })
 }
 
-
+/// Make the request to google for a JWT token.
 fn make_request_for_google_jwt_token(request: Request<Body>, https_client: HttpsClient) -> impl Future<Item = TokenResponse, Error = Rejection> {
     https_client.request(request)
         .map_err(|e|{
             warn!("requesting token failed: {}", e);
-            Error::DependentConnectionFailed(DependentConnectionError::UrlAndContext(URL.to_string(), e.to_string())).reject()
+            Error::DependentConnectionFailed(DependentConnectionError::UrlAndContext(GOOGLE_JWT_URL.to_string(), e.to_string())).reject()
         })
         .and_then(|response: Response<Body>| {
             response.into_body().concat2()
@@ -164,7 +187,8 @@ fn make_request_for_google_jwt_token(request: Request<Body>, https_client: Https
         })
 }
 
-fn extract_user_id_from_google_jwt(jwt: &str) -> Result<String, Error> {
+/// Extracts the payload from the JWT provided by Google.
+fn extract_payload_from_google_jwt(jwt: &str) -> Result<GoogleJWTPayload, Error> {
     let payload = jwt.split(".")
         .nth(1) // get the second part
         .ok_or_else(|| Error::internal_server_error("Google JWT was malformed"))?;
@@ -172,22 +196,20 @@ fn extract_user_id_from_google_jwt(jwt: &str) -> Result<String, Error> {
         .map_err(|_| Error::internal_server_error("Google JWT payload decode failure"))?;
     let payload_string = String::from_utf8_lossy(&payload).into_owned();
     info!("{}", payload_string);
-    #[derive(Debug, Deserialize)]
-    struct Payload {
-        sub: String
-    }
-    serde_json::from_slice::<Payload>(&payload)
+
+    serde_json::from_slice::<GoogleJWTPayload>(&payload)
         .map_err(|_| Error::internal_server_error("Google JWT could not be deserialized"))
-        .map(|payload| payload.sub)
 }
 
-fn get_or_create_user(id: String, conn: PooledConn) -> Result<User, Error> {
+/// Gets or creates a user.
+fn get_or_create_user(google_jwt_payload: GoogleJWTPayload, conn: PooledConn) -> Result<User, Error> {
     use diesel::result::Error as DieselError;
-    conn.get_user_by_google_id(id.clone())
+    conn.get_user_by_google_id(google_jwt_payload.sub.clone())
         .or_else(|error| {
             if let DieselError::NotFound = error {
                 let new_user = NewUser {
-                    google_user_id: id
+                    google_user_id: google_jwt_payload.sub,
+                    google_name: google_jwt_payload.name
                 };
                 conn.create_user(new_user).map_err(|_| Error::DatabaseError("Could not create user".to_string()))
             } else {

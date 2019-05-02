@@ -17,6 +17,8 @@ pub struct User {
     pub uuid: Uuid,
     /// The user's unique identifier provided by google.
     pub google_user_id: String,
+    /// The user's name as it appears in google
+    pub google_name: Option<String>
 }
 
 /// Structure used to create new users.
@@ -25,6 +27,8 @@ pub struct User {
 pub struct NewUser {
     /// The user's unique identifier provided by google
     pub google_user_id: String,
+    /// The user's name as it appears in google
+    pub google_name: Option<String>
 }
 
 /// Trait for storing and retrieving users.
