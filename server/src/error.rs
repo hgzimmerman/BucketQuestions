@@ -244,6 +244,12 @@ impl Error {
     }
 }
 
+impl From<AuthError> for Error {
+    fn from(error: AuthError) -> Self {
+        Error::AuthError(error)
+    }
+}
+
 impl From<diesel::result::Error> for Error {
     fn from(error: diesel::result::Error) -> Self {
         use self::Error::*;

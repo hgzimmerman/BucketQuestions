@@ -13,6 +13,8 @@ use pool::{init_pool, Pool, PoolConfig, PooledConn, DATABASE_URL};
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use std::path::PathBuf;
 use warp::{Filter, Rejection};
+use oauth2::basic::BasicClient;
+use crate::server_auth::create_google_oauth_client;
 
 /// Simplified type for representing a HttpClient.
 pub type HttpsClient = Client<HttpsConnector<HttpConnector<GaiResolver>>, Body>;
@@ -32,6 +34,8 @@ pub struct State {
     https: HttpsClient,
     /// Twitter consumer token
     twitter_consumer_token: KeyPair,
+    /// The client for operating with google oauth tokens
+    google_oauth_client: BasicClient,
     /// The path to the server directory.
     /// This allows file resources to have a common reference point when determining from where to serve assets.
     server_lib_root: PathBuf,
@@ -74,6 +78,10 @@ impl State {
 
         let twitter_con_token = get_twitter_con_token();
 
+
+        let redirect_url = url::Url::parse("http://localhost:8080/api/auth/redirect").unwrap();
+        let google_oauth_client = create_google_oauth_client(redirect_url);
+
         let root = conf.server_lib_root.unwrap_or_else(|| PathBuf::from("./"));
 
         State {
@@ -81,6 +89,7 @@ impl State {
             secret,
             https: client,
             twitter_consumer_token: twitter_con_token.clone(),
+            google_oauth_client,
             server_lib_root: root,
             is_production: conf.is_production,
         }
@@ -124,6 +133,18 @@ impl State {
         http_filter(self.https.clone())
     }
 
+    pub fn google_client(&self) -> impl Filter<Extract = (BasicClient,), Error = Rejection> + Clone {
+        fn client_filter(
+            client: BasicClient,
+        ) -> impl Filter<Extract = (BasicClient,), Error = Rejection> + Clone {
+            // This needs to be able to return a Result w/a Rejection, because there is no way to specify the type of
+            // warp::never::Never because it is private, precluding the possibility of using map instead of and_then().
+            // This adds space overhead, but not nearly as much as using a boxed filter.
+            warp::any().and_then(move || -> Result<BasicClient, Rejection> { Ok(client.clone()) })
+        }
+        client_filter(self.google_oauth_client.clone())
+    }
+
     /// Access the twitter consumer token.
     pub fn twitter_consumer_token(&self) -> impl Filter<Extract = (KeyPair,), Error = Rejection> + Clone {
         fn twitter_consumer_token_filter(twitter_consumer_token: KeyPair) -> impl Filter<Extract = (KeyPair,), Error = Rejection> + Clone {
@@ -153,11 +174,15 @@ impl State {
 
         let twitter_con_token = get_twitter_con_token();
 
+        let redirect_url = url::Url::parse("http://localhost:8080/api/auth/redirect").unwrap();
+        let google_oauth_client = create_google_oauth_client(redirect_url);
+
         State {
             database_connection_pool: pool,
             secret,
             https: client,
             twitter_consumer_token: twitter_con_token,
+            google_oauth_client,
             server_lib_root: PathBuf::from("./"), // THIS makes the assumption that the tests are run from the backend/server dir.
             is_production: false,
         }

@@ -44,6 +44,12 @@ where
     source.map(json).map_err(|e| e.into().reject())
 }
 
+pub fn reject<T,E>(source: Result<T, E>) -> Result<T, Rejection>
+where E: Into<Error>
+{
+    source.map_err(|e| e.into().reject())
+}
+
 /// Converts a vector of T to a vector of U then converts the U vector to a JSON reply.
 #[allow(dead_code)]
 pub fn many_json_converts<T, U>(source: impl IntoIterator<Item = T>) -> impl Reply

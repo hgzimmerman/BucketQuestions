@@ -27,6 +27,7 @@ use crate::{
     state::{State, StateConfig},
 };
 use log::info;
+use crate::server_auth::get_google_login_link;
 
 /// Starts the server.
 pub fn start(config: Config) {

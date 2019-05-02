@@ -80,8 +80,7 @@ use oauth2::{
 use url::Url;
 
 
-/// Gets the login link for Google OAuth.
-fn get_google_login_link(redirect_url: Url) -> Url {
+pub fn create_google_oauth_client(redirect_url: Url) -> BasicClient {
     let google_client_id = ClientId::new(
         env::var("GOOGLE_CLIENT_ID").expect("Missing the GOOGLE_CLIENT_ID environment variable."),
     );
@@ -105,14 +104,15 @@ fn get_google_login_link(redirect_url: Url) -> Url {
         auth_url,
         Some(token_url),
     )
-//        .add_scope(Scope::new(
-//            "https://www.googleapis.com/auth/calendar".to_string(),
-//        ))
-//        .add_scope(Scope::new(
-//            "https://www.googleapis.com/auth/plus.me".to_string(),
-//        ))
+        .add_scope(Scope::new(
+            "https://www.googleapis.com/auth/plus.me".to_string(),
+        ))
         .set_redirect_url(RedirectUrl::new(redirect_url));
+    client
+}
 
+/// Gets the login link for Google OAuth.
+pub fn get_google_login_link(client: BasicClient) -> Url {
     // Generate the authorization URL to which we'll redirect the user.
     let (authorize_url, _csrf_state) = client.authorize_url(CsrfToken::new_random);
     authorize_url

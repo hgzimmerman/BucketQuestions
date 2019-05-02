@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Login</title>
+    <script>
+      if (window.addEventListener) { // Mozilla, Netscape, Firefox
+        window.addEventListener('load', WindowLoad, false);
+      } else if (window.attachEvent) { // IE
+        window.attachEvent('onload', WindowLoad);
+      }
+      function WindowLoad(event) {
+        window.localStorage.setItem('jwt', '{{jwt|safe}}');
+        window.location.replace("{{target_url|safe}}");
+      }
+    </script>
+</head>
+<body>
+</body>
+</html>
