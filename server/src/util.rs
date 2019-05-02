@@ -44,6 +44,7 @@ where
     source.map(json).map_err(|e| e.into().reject())
 }
 
+#[allow(dead_code)]
 pub fn reject<T,E>(source: Result<T, E>) -> Result<T, Rejection>
 where E: Into<Error>
 {

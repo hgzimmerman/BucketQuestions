@@ -78,16 +78,16 @@ pub fn auth_api(state: &State) -> impl Filter<Extract=(impl Reply,), Error=Rejec
     // TODO validate CSRF token
     // This means that the CSRF token should be uniform across multiple requests?
 
-
     let redirect = path!("redirect")
         .and(warp::get2())
         .and(query())
         .map(|query_params: OAuthRedirectQueryParams| {
             query_params.code
         })
-        .and_then(|token|create_token_request(token).map_err(Error::reject))
+        .map(|token| create_token_request(token))
+        .and_then(crate::util::reject)
         .and(state.https_client())
-        .and_then(make_request_for_google_jwt_token)
+        .and_then(|request, client| make_request_for_google_jwt_token(request, client).map_err(Error::reject))
         .map(|response: TokenResponse| -> Result<GoogleJWTPayload, Error> {
             extract_payload_from_google_jwt(&response.id_token)
         })
@@ -96,7 +96,7 @@ pub fn auth_api(state: &State) -> impl Filter<Extract=(impl Reply,), Error=Rejec
         .map(get_or_create_user)
         .and_then(crate::util::reject)
         .and(state.secret())
-        .map(|user: User, secret: Secret| {
+        .map(|user: User, secret: Secret| -> Result<String, Error> {
             let lifetime = chrono::Duration::weeks(30);
             let payload = JwtPayload::new(user, lifetime);
             payload.encode_jwt_string(&secret)
@@ -106,6 +106,7 @@ pub fn auth_api(state: &State) -> impl Filter<Extract=(impl Reply,), Error=Rejec
         .map(|jwt: String| {
             login_template_render(&jwt, "/")
         })
+
         .with(warp::reply::with::header("content-type", "text/html"));
 
 
@@ -166,22 +167,22 @@ fn create_token_request(token: String) -> Result<Request<Body>,Error> {
 }
 
 /// Make the request to google for a JWT token.
-fn make_request_for_google_jwt_token(request: Request<Body>, https_client: HttpsClient) -> impl Future<Item = TokenResponse, Error = Rejection> {
+fn make_request_for_google_jwt_token(request: Request<Body>, https_client: HttpsClient) -> impl Future<Item = TokenResponse, Error = Error> {
     https_client.request(request)
         .map_err(|e|{
             warn!("requesting token failed: {}", e);
-            Error::DependentConnectionFailed(DependentConnectionError::UrlAndContext(GOOGLE_JWT_URL.to_string(), e.to_string())).reject()
+            Error::DependentConnectionFailed(DependentConnectionError::UrlAndContext(GOOGLE_JWT_URL.to_string(), e.to_string()))
         })
         .and_then(|response: Response<Body>| {
             response.into_body().concat2()
-                .map_err(|_|Error::internal_server_error("Could not deserialize body").reject()) // Await the whole body
+                .map_err(|_|Error::internal_server_error("Could not deserialize body")) // Await the whole body
         })
         .and_then(|chunk: Chunk| {
             let v = chunk.to_vec();
             let body = String::from_utf8_lossy(&v).to_string();
 
             let response: TokenResponse = serde_json::from_str(&body).map_err(|_| {
-                Error::InternalServerError(Some(format!("Could not parse response {}", body))).reject()
+                Error::InternalServerError(Some(format!("Could not parse response {}", body)))
             })?;
             Ok(response)
         })

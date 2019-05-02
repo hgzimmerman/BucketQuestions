@@ -9,15 +9,11 @@ use uuid::Uuid;
 use db::bucket::db_types::{NewBucket, Bucket, BucketUserJoin, NewBucketUserJoin, BucketUserPermissionsChangeset};
 use crate::error::Error;
 use serde::{Serialize, Deserialize};
+use db::user::User;
 
 
 pub const BUCKET_PATH: &str = "bucket";
 
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct AddSelfToBucketRequest {
-    bucket_uuid: Uuid
-}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SetPermissionsRequest {
@@ -89,6 +85,7 @@ pub fn bucket_api(state: &State) -> impl Filter<Extract=(impl Reply,), Error=Rej
         .and_then(json_or_reject);
 
     let get_public_buckets = path!("public")
+        .and(warp::path::end())
         .and(warp::get2())
         .and(state.db())
         .map(|conn: PooledConn| -> Result<Vec<Bucket>, Error> {
@@ -97,9 +94,9 @@ pub fn bucket_api(state: &State) -> impl Filter<Extract=(impl Reply,), Error=Rej
         .and_then(json_or_reject);
 
     // User is joining the bucket themselves
-    let add_self_to_bucket = path!("user")
+    let add_self_to_bucket = path!(Uuid / "user")
+        .and(warp::path::end())
         .and(warp::post2())
-        .and(json_body_filter(5))
         .and(user_filter(state))
         .and(state.db())
         .map(add_self_to_bucket_handler)
@@ -107,6 +104,7 @@ pub fn bucket_api(state: &State) -> impl Filter<Extract=(impl Reply,), Error=Rej
 
     // Gets permissions for a bucket for the logged in user.
     let get_permissions_for_self = path!( Uuid / "user")
+        .and(warp::path::end())
         .and(warp::get2())
         .and(user_filter(state))
         .and(state.db())
@@ -116,6 +114,7 @@ pub fn bucket_api(state: &State) -> impl Filter<Extract=(impl Reply,), Error=Rej
         .and_then(json_or_reject);
 
     let set_permissions = path!(Uuid / "user")
+        .and(warp::path::end())
         .and(warp::put2())
         .and(json_body_filter(2))
         .and(user_filter(state))
@@ -139,6 +138,7 @@ pub fn bucket_api(state: &State) -> impl Filter<Extract=(impl Reply,), Error=Rej
         .and_then(json_or_reject);
 
     let set_bucket_drawing = path!(Uuid)
+        .and(warp::path::end())
         .and(warp::put2())
         .and(json_body_filter(1))
         .and(user_filter(state))
@@ -154,6 +154,7 @@ pub fn bucket_api(state: &State) -> impl Filter<Extract=(impl Reply,), Error=Rej
         .and_then(json_or_reject);
 
     let set_bucket_visibility = path!(Uuid)
+        .and(warp::path::end())
         .and(warp::put2())
         .and(json_body_filter(1))
         .and(user_filter(state))
@@ -168,6 +169,15 @@ pub fn bucket_api(state: &State) -> impl Filter<Extract=(impl Reply,), Error=Rej
         })
         .and_then(json_or_reject);
 
+    let get_users_in_bucket = path!(Uuid / "users")
+        .and(warp::path::end())
+        .and(warp::get2())
+        .and(state.db())
+        .map(|bucket_uuid: Uuid, conn: PooledConn| -> Result<Vec<User>, Error> {
+            conn.get_users_in_bucket(bucket_uuid).map_err(Error::from)
+        })
+        .and_then(json_or_reject);
+
     path(BUCKET_PATH)
         .and(
             create_bucket
@@ -179,16 +189,17 @@ pub fn bucket_api(state: &State) -> impl Filter<Extract=(impl Reply,), Error=Rej
                 .or(set_permissions)
                 .or(set_bucket_drawing)
                 .or(set_bucket_visibility)
-                .or(get_bucket) // This should be near the end to avoid slugs overriding other strings
+                .or(get_users_in_bucket)
+                .or(get_bucket) // This should be near the end to avoid slugs matching before other significant paths
         )
 }
 
 /// Adds a user to the bucket.
 /// This user has no permissions by default.
-fn add_self_to_bucket_handler(request: AddSelfToBucketRequest, user_uuid: Uuid, conn: PooledConn) -> Result<BucketUserJoin, Error> {
+fn add_self_to_bucket_handler(bucket_uuid: Uuid, user_uuid: Uuid, conn: PooledConn) -> Result<BucketUserJoin, Error> {
     let new_relation = NewBucketUserJoin {
         user_uuid,
-        bucket_uuid: request.bucket_uuid,
+        bucket_uuid,
         set_visibility_permission: false,
         set_drawing_permission: false,
         grant_permissions_permission: false

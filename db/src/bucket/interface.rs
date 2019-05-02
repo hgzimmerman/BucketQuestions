@@ -6,6 +6,7 @@
 use crate::bucket::db_types::{Bucket, NewBucket, NewBucketUserJoin, BucketUserPermissionsChangeset, BucketUserJoin, BucketUserPermissions, NewQuestion, Question, NewAnswer, Answer, NewFavoriteQuestionRelation};
 use uuid::Uuid;
 use diesel::QueryResult;
+use crate::user::User;
 
 /// Functions for specifically working with buckets
 pub trait BucketRepository {
@@ -39,6 +40,8 @@ pub trait BucketUserRelationRepository {
     fn get_permissions(&self, user_uuid: Uuid, bucket_uuid: Uuid) -> QueryResult<BucketUserPermissions>;
     /// Gets the buckets the user has joined.
     fn get_buckets_user_is_a_part_of(&self, user_uuid: Uuid) -> QueryResult<Vec<Bucket>>;
+    /// Gets the users in a given bucket.
+    fn get_users_in_bucket(&self, bucket_uuid: Uuid) -> QueryResult<Vec<User>>;
 }
 
 
@@ -53,7 +56,7 @@ pub trait QuestionRepository {
     /// Gets the number of active questions.
     fn get_number_of_active_questions_for_bucket(&self, bucket_uuid: Uuid) -> QueryResult<i64>;
     /// Gets all active questions
-    fn get_all_active_questions_for_bucket(&self, bucket_uuid: Uuid) -> QueryResult<Vec<Question>>;
+    fn get_all_questions_for_bucket_of_given_archived_status(&self, bucket_uuid: Uuid, archived: bool) -> QueryResult<Vec<Question>>;
     /// Disable or Enable the question from drawing eligibility.
     fn set_archive_status_for_question(&self, question_uuid: Uuid, archived: bool) -> QueryResult<Question>;
 }

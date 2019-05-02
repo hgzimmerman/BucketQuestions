@@ -10,7 +10,8 @@ use crate::schema::{
     bucket_user_join,
     questions,
     answers,
-    user_favorite_question_join
+    user_favorite_question_join,
+    users
 };
 use diesel::query_dsl::{QueryDsl, RunQueryDsl};
 use diesel::ExpressionMethods;
@@ -18,6 +19,7 @@ use diesel::SaveChangesDsl;
 //use diesel::BelongingToDsl;
 //use diesel::query_dsl::InternalJoinDsl;
 use diesel::BoolExpressionMethods;
+use crate::user::User;
 
 
 impl BucketRepository for PgConnection {
@@ -107,6 +109,15 @@ impl BucketUserRelationRepository for PgConnection {
             .select(buckets::all_columns)
             .get_results(self)
     }
+
+    fn get_users_in_bucket(&self, bucket_uuid: Uuid) -> Result<Vec<User>, Error> {
+        bucket_user_join::table
+            .filter(bucket_user_join::bucket_uuid.eq(bucket_uuid))
+            .select(bucket_user_join::user_uuid)
+            .inner_join(users::table)
+            .select(users::all_columns)
+            .get_results(self)
+    }
 }
 
 impl QuestionRepository for PgConnection {
@@ -133,9 +144,9 @@ impl QuestionRepository for PgConnection {
             .get_result(self)
     }
 
-    fn get_all_active_questions_for_bucket(&self, bucket_uuid: Uuid) -> Result<Vec<Question>, Error> {
+    fn get_all_questions_for_bucket_of_given_archived_status(&self, bucket_uuid: Uuid, archived: bool) -> Result<Vec<Question>, Error> {
         questions::table
-            .filter(questions::bucket_uuid.eq(bucket_uuid).and(questions::archived.eq(false)))
+            .filter(questions::bucket_uuid.eq(bucket_uuid).and(questions::archived.eq(archived)))
             .get_results(self)
     }
 
