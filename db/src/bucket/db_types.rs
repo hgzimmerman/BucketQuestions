@@ -34,6 +34,7 @@ pub struct Bucket {
     pub visible: bool,
     /// Is the bucket session currently active.
     pub drawing_enabled: bool
+    // TODO consider adding a locked field here, preventing finding it via slug.
 }
 
 /// Structure used to create new users.

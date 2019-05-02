@@ -55,14 +55,6 @@ impl Into<Token> for TwitterToken {
     }
 }
 
-/// An application-specific subject section for use within a JWT
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Subject {
-    pub user_uuid: Uuid,
-    pub twitter_token: TwitterToken,
-}
-
-
 
 //use oauth2::basic::BasicClient;
 use oauth2::prelude::*;
@@ -78,6 +70,7 @@ use oauth2::{
     TokenUrl,
 };
 use url::Url;
+use db::user::User;
 
 
 pub fn create_google_oauth_client(redirect_url: Url) -> BasicClient {
@@ -161,7 +154,9 @@ pub fn user_filter(s: &State) -> BoxedFilter<(Uuid,)> {
     warp::any()
         .and(jwt_filter(s))
         .map(JwtPayload::subject)
-        .map(|subject: Subject| subject.user_uuid)
+        .map(|subject: User | -> Uuid {
+            subject.uuid
+        })
         .boxed()
 }
 
@@ -179,13 +174,6 @@ pub fn optional_user_filter(s: &State) -> BoxedFilter<(Option<Uuid>,)> {
         .boxed()
 }
 
-pub fn twitter_token_filter(s: &State) -> BoxedFilter<(Token,)> {
-    warp::any()
-        .and(jwt_filter(s))
-        .map(JwtPayload::<Subject>::subject)
-        .map(|subject: Subject| subject.twitter_token.apply(TwitterToken::into))
-        .boxed()
-}
 
 #[cfg(test)]
 mod unit_test {

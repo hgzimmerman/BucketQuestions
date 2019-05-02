@@ -31,9 +31,9 @@ pub fn api(state: &State) -> impl Filter<Extract = (impl Reply,), Error = Reject
     path(API_STRING)
         .and(
             bucket_api(state)
-                .or(answer_api(state))
-                .or(question_api(state))
-                .or(auth_api(state))
+//                .or(answer_api(state))
+//                .or(question_api(state))
+//                .or(auth_api(state))
                 .or(user_api(state))
         )
 }

@@ -98,6 +98,7 @@ impl BucketUserRelationRepository for PgConnection {
             .get_result::<BucketUserPermissions>(self)
     }
 
+
     fn get_buckets_user_is_a_part_of(&self, user_uuid: Uuid) -> Result<Vec<Bucket>, Error> {
         bucket_user_join::table
             .filter(bucket_user_join::user_uuid.eq(user_uuid))
