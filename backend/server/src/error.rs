@@ -123,7 +123,7 @@ pub fn customize_error(err: Rejection) -> Result<impl Reply, Rejection> {
             }
         }
     };
-    error!("{}", cause);
+    error!("{:?} | message: {}", cause, cause);
 
     use std::fmt::Write;
     let mut s: String = String::new();
@@ -203,18 +203,21 @@ impl Error {
 
     /// Construct a gateway error that includes the context about why the connection failed.
     #[inline]
+    #[allow(dead_code)]
     pub fn dependent_connection_failed_context<T: Into<String>>(context: T) -> Self {
         Error::DependentConnectionFailed(DependentConnectionError::Context(context.into()))
     }
 
     /// Construct a gateway error that includes the url.
     #[inline]
+    #[allow(dead_code)]
     pub fn dependent_connection_failed_url<T: Into<String>>(url: T) -> Self {
         Error::DependentConnectionFailed(DependentConnectionError::Url(url.into()))
     }
 
     /// Construct a gateway error that includes the url and a contextual note about the request.
     #[inline]
+    #[allow(dead_code)]
     pub fn dependent_connection_failed<T: Into<String>, U: Into<String>>(
         url: T,
         reason: U,
@@ -275,7 +278,7 @@ impl From<diesel::result::Error> for Error {
                 DatabaseError(e)
             }
             DieselError::NotFound => NotFound {
-                type_name: "Not implemented".to_string(),
+                type_name: "Database Entity".to_string(),
             },
             e => {
                 error!("Unhandled database error: '{}'", e);

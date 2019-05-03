@@ -34,8 +34,6 @@ pub struct State {
     secret: Secret,
     /// Https client
     https: HttpsClient,
-    /// Twitter consumer token
-    twitter_consumer_token: KeyPair,
     /// The client for operating with google oauth tokens
     google_oauth_client: BasicClient,
     /// The path to the server directory.
@@ -66,7 +64,6 @@ pub struct StateConfig {
     pub secret: Option<Secret>,
     pub max_pool_size: Option<u32>,
     pub server_lib_root: Option<PathBuf>,
-//    pub is_production: bool,
     pub environment: RunningEnvironment
 }
 
@@ -124,24 +121,18 @@ impl State {
         let https = HttpsConnector::new(4).unwrap();
         let client = Client::builder().build::<_, _>(https);
 
-        let twitter_con_token = get_twitter_con_token();
-
-
         let redirect_url = conf.environment.create_redirect_url();
-//        let redirect_url = Url::parse("http://localhost:8080/api/auth/redirect").unwrap();
         let google_oauth_client = create_google_oauth_client(redirect_url.clone());
 
         let root = conf.server_lib_root.unwrap_or_else(|| PathBuf::from("./"));
 
 
         State {
-            database_connection_pool: pool, //db_filter(pool),
+            database_connection_pool: pool,
             secret,
             https: client,
-            twitter_consumer_token: twitter_con_token.clone(),
             google_oauth_client,
             server_lib_root: root,
-//            is_production: conf.is_production,
             redirect_url
         }
     }
@@ -196,14 +187,6 @@ impl State {
         client_filter(self.google_oauth_client.clone())
     }
 
-    /// Access the twitter consumer token.
-    pub fn twitter_consumer_token(&self) -> impl Filter<Extract = (KeyPair,), Error = Rejection> + Clone {
-        fn twitter_consumer_token_filter(twitter_consumer_token: KeyPair) -> impl Filter<Extract = (KeyPair,), Error = Rejection> + Clone {
-            warp::any().and_then(move || -> Result<KeyPair, Rejection> { Ok(twitter_consumer_token.clone()) })
-        }
-        twitter_consumer_token_filter(self.twitter_consumer_token.clone())
-    }
-
 
     pub fn server_lib_root(&self) -> PathBuf {
         self.server_lib_root.clone()
@@ -212,9 +195,6 @@ impl State {
     pub fn redirect_url(&self) -> Url {
         self.redirect_url.clone()
     }
-//    pub fn is_production(&self) -> bool {
-//        self.is_production
-//    }
 
     /// Creates a new state object from an existing object pool.
     /// This is useful if using fixtures.
@@ -229,32 +209,15 @@ impl State {
         let twitter_con_token = get_twitter_con_token();
 
         let redirect_url = conf.environment.create_redirect_url();
-//        let redirect_url = url::Url::parse("http://localhost:8080/api/auth/redirect").unwrap();
         let google_oauth_client = create_google_oauth_client(redirect_url.clone());
 
         State {
             database_connection_pool: pool,
             secret,
             https: client,
-            twitter_consumer_token: twitter_con_token,
             google_oauth_client,
             server_lib_root: PathBuf::from("./"), // THIS makes the assumption that the tests are run from the backend/server dir.
             redirect_url
         }
     }
-}
-
-
-
-
-/// Gets the connection key pair for the serer.
-/// This represents the authenticity of the application
-fn get_twitter_con_token() -> KeyPair {
-    // TODO move getting these into a config object, or get them directly from the filesystem.
-    // These definitely shouldn't be in source code, but I don't care,
-    // I just want this to work right now. Also, this is a school project.
-    const KEY: &str = "Pq2sA4Lfbovd4SLQhSQ6UPEVg";
-    const SECRET: &str = "uK6U7Xqj2QThlm6H3y8dKSH3itZgpo9AVhR5or80X9umZc62ln";
-
-    egg_mode::KeyPair::new(KEY, SECRET)
 }

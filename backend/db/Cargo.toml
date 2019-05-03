@@ -14,3 +14,4 @@ serde = {version="1.0.85", features=["derive"]}
 #itertools = "0.8.0"
 
 pool = {path="../pool"}
+log = "0.4.6"

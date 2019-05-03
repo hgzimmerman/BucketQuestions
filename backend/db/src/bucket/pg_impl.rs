@@ -16,9 +16,8 @@ use crate::schema::{
 use diesel::query_dsl::{QueryDsl, RunQueryDsl};
 use diesel::ExpressionMethods;
 use diesel::SaveChangesDsl;
-//use diesel::BelongingToDsl;
-//use diesel::query_dsl::InternalJoinDsl;
 use diesel::BoolExpressionMethods;
+use log::info;
 use crate::user::User;
 
 
@@ -101,6 +100,7 @@ impl BucketUserRelationRepository for PgConnection {
 
 
     fn get_buckets_user_is_a_part_of(&self, user_uuid: Uuid) -> Result<Vec<Bucket>, Error> {
+        info!("get_buckets_user_is_a_part_of");
         bucket_user_join::table
             .filter(bucket_user_join::user_uuid.eq(user_uuid))
             .select(bucket_user_join::bucket_uuid)
@@ -110,6 +110,7 @@ impl BucketUserRelationRepository for PgConnection {
     }
 
     fn get_users_in_bucket(&self, bucket_uuid: Uuid) -> Result<Vec<User>, Error> {
+        info!("get_users_in_bucket");
         bucket_user_join::table
             .filter(bucket_user_join::bucket_uuid.eq(bucket_uuid))
             .select(bucket_user_join::user_uuid)

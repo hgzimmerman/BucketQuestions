@@ -5,6 +5,7 @@ import { BrowserRouter, Route, Switch } from "react-router-dom";
 
 import {Home} from "./components/Home"
 import {FourOFour} from "./components/FourOFour"
+import {ErrorResponse} from "./DataTypes";
 
 const App: React.FC = () => {
   return (
@@ -69,14 +70,7 @@ export function isAuthenticated(): boolean {
   return (jwt !== null)
 }
 
-/**
- * If the api doesn't fulfill a request, it will return one of these.
- */
-export interface ApiError {
-  message: string,
-  canonical_reason: string,
-  error_code: number,
-}
+
 
 export function authenticatedFetchAndDeserialize<T>(url: string, init?: RequestInit): Promise<T> {
   return authenticatedFetch(url, init)
@@ -84,7 +78,7 @@ export function authenticatedFetchAndDeserialize<T>(url: string, init?: RequestI
       if (response.ok) {
         return response.json().then((value: T) => value);
       } else {
-        return response.json().then((err: ApiError) => {throw err;});
+        return response.json().then((err: ErrorResponse) => {throw err;});
       }
     });
 }

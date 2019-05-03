@@ -42,7 +42,6 @@ pub struct ChangeVisibilityRequest {
 pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> { //impl Filter<Extract=(impl Reply,), Error=Rejection> + Clone{
     // Returning a boxed filter improves compile times significantly
 
-
     // Must be logged in to create a bucket
     let create_bucket = warp::post2()
         .and(warp::path::end())
@@ -63,22 +62,24 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> { //impl Filter<E
         })
         .and_then(json_or_reject);
 
-    let get_bucket = path!(String)
+    let get_bucket = path!("slug" / String)
         .and(warp::path::end())
         .and(warp::get2())
         .and(state.db())
         .map(|slug: String, conn: PooledConn| -> Result<Bucket, Error> {
+            info!("get_bucket");
            conn.get_bucket_by_slug(slug).map_err(Error::from)
         })
         .and_then(json_or_reject);
 
     let get_bucket_by_uuid = path!(Uuid)
+        .and(warp::path::end())
         .and(warp::get2())
         .and(state.db())
         .map(get_bucket_by_uuid_handler)
         .and_then(json_or_reject);
 
-    let get_buckets_user_is_in = path!("in")
+    let get_buckets_user_is_in = path("in")
         .and(warp::path::end())
         .and(warp::get2())
         .and(user_filter(state))
@@ -157,7 +158,7 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> { //impl Filter<E
                 .or(set_bucket_drawing)
                 .or(set_bucket_visibility)
                 .or(get_users_in_bucket)
-                .or(get_bucket) // This should be near the end to avoid slugs matching before other significant paths
+                .or(get_bucket)
         )
         .boxed()
 }
@@ -165,6 +166,7 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> { //impl Filter<E
 /// Adds a user to the bucket.
 /// This user has no permissions by default.
 fn add_self_to_bucket_handler(bucket_uuid: Uuid, user_uuid: Uuid, conn: PooledConn) -> Result<BucketUserJoin, Error> {
+    info!("add_self_to_bucket_handler");
     let new_relation = NewBucketUserJoin {
         user_uuid,
         bucket_uuid,
@@ -176,6 +178,7 @@ fn add_self_to_bucket_handler(bucket_uuid: Uuid, user_uuid: Uuid, conn: PooledCo
 }
 
 fn set_bucket_drawing_handler(bucket_uuid: Uuid, request: ChangeDrawingRequest, user_uuid: Uuid, conn: PooledConn) -> Result<Bucket, Error> {
+    info!("set_bucket_drawing_handler");
     let permissions_for_acting_user = conn.get_permissions(user_uuid, bucket_uuid).map_err(Error::from)?;
     if permissions_for_acting_user.set_drawing_permission {
         conn.change_drawing_status(bucket_uuid, request.drawing).map_err(Error::from)
@@ -185,6 +188,7 @@ fn set_bucket_drawing_handler(bucket_uuid: Uuid, request: ChangeDrawingRequest, 
 }
 
 fn set_bucket_visibility_handler(bucket_uuid: Uuid, request: ChangeVisibilityRequest, user_uuid: Uuid, conn: PooledConn) -> Result<Bucket, Error> {
+    info!("set_bucket_visibility_handler");
     let permissions_for_acting_user = conn.get_permissions(user_uuid, bucket_uuid).map_err(Error::from)?;
     if permissions_for_acting_user.set_drawing_permission {
         conn.change_visibility(bucket_uuid, request.visible).map_err(Error::from)
@@ -194,10 +198,12 @@ fn set_bucket_visibility_handler(bucket_uuid: Uuid, request: ChangeVisibilityReq
 }
 
 fn get_users_in_bucket_handler(bucket_uuid: Uuid, conn: PooledConn) -> Result<Vec<User>, Error> {
+    info!("get_users_in_bucket_handler");
     conn.get_users_in_bucket(bucket_uuid).map_err(Error::from)
 }
 
 fn set_permissions_handler(bucket_uuid: Uuid, permissions_request: SetPermissionsRequest, user_uuid: Uuid, conn: PooledConn) -> Result<BucketUserJoin, Error> {
+    info!("set_permissions_handler");
     let permissions_for_acting_user = conn.get_permissions(user_uuid, bucket_uuid).map_err(Error::from)?;
     if permissions_for_acting_user.grant_permissions_permission {
         // The permissions of the target user
@@ -216,19 +222,22 @@ fn set_permissions_handler(bucket_uuid: Uuid, permissions_request: SetPermission
 }
 
 fn get_permissions_for_self_handler(bucket_uuid: Uuid, user_uuid: Uuid, conn: PooledConn) -> Result<BucketUserPermissions, Error> {
+    info!("get_permissions_for_self_handler");
     conn.get_permissions(user_uuid, bucket_uuid).map_err(Error::from)
 }
 
 
 fn get_public_buckets_handler(conn: PooledConn) -> Result<Vec<Bucket>, Error> {
+    info!("get_public_buckets_handler");
     conn.get_publicly_visible_buckets().map_err(Error::from)
 }
 
 fn get_buckets_user_is_in_handler(user_uuid: Uuid, conn: PooledConn) -> Result<Vec<Bucket>, Error> {
-    info!("?????");
+    info!("get_buckets_user_is_in_handler");
     conn.get_buckets_user_is_a_part_of(user_uuid).map_err(Error::from)
 }
 
 fn get_bucket_by_uuid_handler(uuid: Uuid, conn: PooledConn)-> Result<Bucket, Error> {
-   conn.get_bucket_by_uuid(uuid).map_err(Error::from)
+    info!("get_bucket_by_uuid_handler");
+    conn.get_bucket_by_uuid(uuid).map_err(Error::from)
 }
