@@ -12,6 +12,8 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormGroup from '@material-ui/core/FormGroup';
 import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
+import {isAuthenticated, logout} from "../App";
+import {Button} from "@material-ui/core";
 
 const styles = createStyles({
   root: {
@@ -39,6 +41,10 @@ class MenuAppBar extends React.Component<Props, State> {
     anchorEl: null,
   };
 
+  componentDidMount(): void {
+    this.setState({auth: isAuthenticated()})
+  }
+
   handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({ auth: event.target.checked });
   };
@@ -51,6 +57,18 @@ class MenuAppBar extends React.Component<Props, State> {
     this.setState({ anchorEl: null });
   };
 
+  handleLogout = () => {
+    logout();
+    this.setState({auth: isAuthenticated(), anchorEl: null })
+  };
+
+  handleLogin = () => {
+    console.log("wants to log in");
+    // TEMPORARY
+    window.localStorage.setItem('jwt', 'test');
+    this.setState({auth: isAuthenticated()})
+  };
+
   render() {
     const { classes } = this.props;
     const { auth, anchorEl } = this.state;
@@ -58,14 +76,14 @@ class MenuAppBar extends React.Component<Props, State> {
 
     return (
       <div className={classes.root}>
-        <FormGroup>
-          <FormControlLabel
-            control={
-              <Switch checked={auth} onChange={this.handleChange} aria-label="LoginSwitch" />
-            }
-            label={auth ? 'Logout' : 'Login'}
-          />
-        </FormGroup>
+        {/*<FormGroup>*/}
+          {/*<FormControlLabel*/}
+            {/*control={*/}
+              {/*<Switch checked={auth} onChange={this.handleChange} aria-label="LoginSwitch" />*/}
+            {/*}*/}
+            {/*label={auth ? 'Logout' : 'Login'}*/}
+          {/*/>*/}
+        {/*</FormGroup>*/}
         <AppBar position="static">
           <Toolbar>
             <IconButton className={classes.menuButton} color="inherit" aria-label="Menu">
@@ -74,7 +92,8 @@ class MenuAppBar extends React.Component<Props, State> {
             <Typography variant="h6" color="inherit" className={classes.grow}>
               Bucket Questions
             </Typography>
-            {auth && (
+            {auth
+              ? (
               <div>
                 <IconButton
                   aria-owns={open ? 'menu-appbar' : undefined}
@@ -100,9 +119,22 @@ class MenuAppBar extends React.Component<Props, State> {
                 >
                   <MenuItem onClick={this.handleClose}>Profile</MenuItem>
                   <MenuItem onClick={this.handleClose}>My account</MenuItem>
+                  <MenuItem onClick={this.handleLogout}>Logout</MenuItem>
                 </Menu>
               </div>
-            )}
+              )
+              : (
+              <div>
+                <Button
+                  size={"small"}
+                  variant={"outlined"}
+                  onClick={this.handleLogin}
+                >
+                  Login
+                </Button>
+              </div>
+              )
+            }
           </Toolbar>
         </AppBar>
       </div>

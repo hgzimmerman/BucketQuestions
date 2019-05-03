@@ -1,5 +1,5 @@
 use crate::state::State;
-use warp::{Filter, Reply, Rejection};
+use warp::{Filter, Reply};
 use warp::path;
 use serde::{Serialize, Deserialize};
 use uuid::Uuid;
@@ -12,6 +12,7 @@ use db::bucket::db_types::{Question, NewFavoriteQuestionRelation};
 use db::bucket::db_types::NewQuestion;
 use crate::server_auth::{optional_user_filter, user_filter};
 use diesel::delete;
+use warp::filters::BoxedFilter;
 
 pub const QUESTION_PATH: &str = "question";
 
@@ -35,7 +36,7 @@ pub struct SetArchivedRequest {
     archived: bool
 }
 
-pub fn question_api(state: &State) -> impl Filter<Extract=(impl Reply,), Error=Rejection> + Clone{
+pub fn question_api(state: &State) -> BoxedFilter<(impl Reply,)> { // impl Filter<Extract=(impl Reply,), Error=Rejection> + Clone{
 
 
     let create_question = warp::path::end()
@@ -170,4 +171,5 @@ pub fn question_api(state: &State) -> impl Filter<Extract=(impl Reply,), Error=R
                 .or(unfavorite_question)
                 .or(get_favorite_questions)
         )
+        .boxed()
 }

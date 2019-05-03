@@ -9,6 +9,7 @@ use crate::error::Error;
 use uuid::Uuid;
 use db::bucket::interface::AnswerRepository;
 use serde::{Serialize, Deserialize};
+use warp::filters::BoxedFilter;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NewAnswerRequest{
@@ -21,7 +22,7 @@ pub struct NewAnswerRequest{
 }
 
 pub const ANSWER_PATH: &str = "answer";
-pub fn answer_api(state: &State) -> impl Filter<Extract=(impl Reply,), Error=Rejection> + Clone{
+pub fn answer_api(state: &State) -> BoxedFilter<(impl Reply,)> {//impl Filter<Extract=(impl Reply,), Error=Rejection> + Clone{
 
     let answer_question = warp::path::end()
         .and(warp::post2())
@@ -39,10 +40,14 @@ pub fn answer_api(state: &State) -> impl Filter<Extract=(impl Reply,), Error=Rej
         })
         .and_then(json_or_reject);
 
+    // TODO need a get answers?
+    // Put that under this subpath or questions?
+
 
 
     path(ANSWER_PATH)
         .and(
             answer_question
         )
+        .boxed()
 }

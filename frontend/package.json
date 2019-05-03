@@ -14,11 +14,19 @@
     "react-scripts": "3.0.0",
     "typescript": "3.4.5"
   },
+  "watch": {
+    "build": {
+      "quiet": false,
+      "extensions": "ts,tsx,html,scss",
+      "patterns": ["src"]
+    }
+  },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "watch": "npm-watch build"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -34,5 +42,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "cra-build-watch": "^1.4.0",
+    "npm-watch": "^0.6.0"
   }
 }

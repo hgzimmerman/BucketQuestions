@@ -20,6 +20,7 @@ use db::user::{User, UserRepository, NewUser};
 use pool::PooledConn;
 use authorization::{JwtPayload, Secret};
 use askama::Template;
+use warp::filters::BoxedFilter;
 
 /// The path segment for the auth api.
 pub const AUTH_PATH: &str = "auth";
@@ -62,7 +63,7 @@ struct GoogleJWTPayload {
 /// * The new user is serialized as part of a new JWT.
 /// * The JWT is templated into a small html page, that executes a script to put the JWT in localStorage.
 /// * The page then redirects to a known page.
-pub fn auth_api(state: &State) -> impl Filter<Extract=(impl Reply,), Error=Rejection> + Clone{
+pub fn auth_api(state: &State) -> BoxedFilter<(impl Reply,)> { //impl Filter<Extract=(impl Reply,), Error=Rejection> + Clone{
 
     let get_link = path!("link")
         .and(warp::get2())
@@ -106,7 +107,6 @@ pub fn auth_api(state: &State) -> impl Filter<Extract=(impl Reply,), Error=Rejec
         .map(|jwt: String| {
             login_template_render(&jwt, "/")
         })
-
         .with(warp::reply::with::header("content-type", "text/html"));
 
 
@@ -114,6 +114,7 @@ pub fn auth_api(state: &State) -> impl Filter<Extract=(impl Reply,), Error=Rejec
         .and(get_link
             .or(redirect)
         )
+        .boxed()
 }
 
 /// The url for getting Google's JWT

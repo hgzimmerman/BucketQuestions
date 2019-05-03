@@ -21,21 +21,23 @@ use crate::{
     static_files::{static_files_handler, FileConfig},
 };
 use warp::Rejection;
+use warp::filters::BoxedFilter;
 
 /// The initial segment in the uri path.
 pub const API_STRING: &str = "api";
 
 /// The core of the exposed routes.
 /// Anything that sits behind this filter accesses the DB in some way.
-pub fn api(state: &State) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+pub fn api(state: &State) -> BoxedFilter<(impl Reply,)> {//impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
     path(API_STRING)
         .and(
-            bucket_api(state)
+        bucket_api(state)
                 .or(answer_api(state))
                 .or(question_api(state))
                 .or(auth_api(state))
                 .or(user_api(state))
         )
+        .boxed()
 }
 
 /// A filter that is responsible for configuring everything that can be served.

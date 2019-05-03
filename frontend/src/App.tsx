@@ -25,6 +25,11 @@ const App: React.FC = () => {
   );
 };
 
+export function logout() {
+  console.log("Logging out");
+  window.localStorage.removeItem('jwt')
+}
+
 function getJwt(): string | null {
     return window.localStorage.getItem('jwt');
 }
