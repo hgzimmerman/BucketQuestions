@@ -11,6 +11,7 @@ use crate::error::Error;
 use serde::{Serialize, Deserialize};
 use db::user::User;
 use warp::filters::BoxedFilter;
+use log::info;
 
 
 pub const BUCKET_PATH: &str = "bucket";
@@ -202,7 +203,8 @@ fn set_permissions_handler(bucket_uuid: Uuid, permissions_request: SetPermission
         // The permissions of the target user
         let current_user_permissions = conn.get_permissions(permissions_request.target_user_uuid, bucket_uuid).map_err(Error::from)?;
         let permissions_changeset = BucketUserPermissionsChangeset {
-            uuid: current_user_permissions.uuid,
+            user_uuid,
+            bucket_uuid,
             set_visibility_permission: permissions_request.set_visibility_permission,
             set_drawing_permission: permissions_request.set_drawing_permission,
             grant_permissions_permission: permissions_request.grant_permissions_permission
@@ -223,6 +225,7 @@ fn get_public_buckets_handler(conn: PooledConn) -> Result<Vec<Bucket>, Error> {
 }
 
 fn get_buckets_user_is_in_handler(user_uuid: Uuid, conn: PooledConn) -> Result<Vec<Bucket>, Error> {
+    info!("?????");
     conn.get_buckets_user_is_a_part_of(user_uuid).map_err(Error::from)
 }
 

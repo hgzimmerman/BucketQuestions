@@ -92,7 +92,6 @@ impl BucketUserRelationRepository for PgConnection {
                 .and(bucket_user_join::bucket_uuid.eq(bucket_uuid))
             )
             .select((
-                bucket_user_join::uuid,
                 bucket_user_join::set_visibility_permission,
                 bucket_user_join::set_drawing_permission,
                 bucket_user_join::grant_permissions_permission

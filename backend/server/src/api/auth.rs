@@ -21,6 +21,7 @@ use pool::PooledConn;
 use authorization::{JwtPayload, Secret};
 use askama::Template;
 use warp::filters::BoxedFilter;
+use url::Url;
 
 /// The path segment for the auth api.
 pub const AUTH_PATH: &str = "auth";
@@ -69,7 +70,7 @@ pub fn auth_api(state: &State) -> BoxedFilter<(impl Reply,)> { //impl Filter<Ext
         .and(warp::get2())
         .and(state.google_client())
         .map(| google_client: BasicClient| {
-            let redirect_url = url::Url::parse("http://localhost:8080/api/auth/redirect").unwrap();
+//            let redirect_url = url::Url::parse("http://localhost:8080/api/auth/redirect").unwrap();
             let link = get_google_login_link(google_client);
             info!("Generating link: {}", link);
             LinkResponse { link: link.to_string() }
@@ -79,13 +80,15 @@ pub fn auth_api(state: &State) -> BoxedFilter<(impl Reply,)> { //impl Filter<Ext
     // TODO validate CSRF token
     // This means that the CSRF token should be uniform across multiple requests?
 
+    let redirect_url = state.redirect_url();
+
     let redirect = path!("redirect")
         .and(warp::get2())
         .and(query())
         .map(|query_params: OAuthRedirectQueryParams| {
             query_params.code
         })
-        .map(|token| create_token_request(token))
+        .map(move |token| create_token_request(token, redirect_url.clone()))
         .and_then(crate::util::reject)
         .and(state.https_client())
         .and_then(|request, client| make_request_for_google_jwt_token(request, client).map_err(Error::reject))
@@ -122,14 +125,14 @@ const GOOGLE_JWT_URL: &str = "https://www.googleapis.com/oauth2/v4/token";
 
 
 /// Creates the request used in getting the JWT from Google.
-fn create_token_request(token: String) -> Result<Request<Body>,Error> {
+fn create_token_request(token: String, redirect_url: Url) -> Result<Request<Body>,Error> {
     // TODO get these from some central state.
     let google_secret = std::env::var("GOOGLE_CLIENT_SECRET")
         .expect("Missing the GOOGLE_CLIENT_SECRET environment variable.");
     let google_id = std::env::var("GOOGLE_CLIENT_ID")
         .expect("Missing the GOOGLE_CLIENT_ID environment variable.");
     // TODO get this from some central state.
-    let redirect_uri = "http://localhost:8080/api/auth/redirect";
+    let redirect_uri = &redirect_url.to_string();
 
 
     let code = token;

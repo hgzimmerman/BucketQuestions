@@ -14,6 +14,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
 import {isAuthenticated, logout} from "../App";
 import {Button} from "@material-ui/core";
+import {BrowserRouter, Link} from "react-router-dom";
 
 const styles = createStyles({
   root: {
@@ -28,26 +29,40 @@ const styles = createStyles({
   },
 });
 
+interface LinkResponse {
+  link: string
+}
+
 export interface Props extends WithStyles<typeof styles> {}
 
 export interface State {
   auth: boolean;
   anchorEl: null | HTMLElement;
+  loginLink: null | string
 }
 
 class MenuAppBar extends React.Component<Props, State> {
   state: State = {
     auth: true,
     anchorEl: null,
+    loginLink: null
   };
 
   componentDidMount(): void {
-    this.setState({auth: isAuthenticated()})
+    this.getLink();
+    this.setState({auth: isAuthenticated()});
   }
 
-  handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({ auth: event.target.checked });
-  };
+  getLink() {
+    const url = "/api/auth/link";
+    fetch(url)
+      .then((response: Response) => {
+        return response.json();
+      })
+      .then((json: LinkResponse) => {
+        this.setState({loginLink: json.link})
+      })
+  }
 
   handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     this.setState({ anchorEl: event.currentTarget });
@@ -64,9 +79,11 @@ class MenuAppBar extends React.Component<Props, State> {
 
   handleLogin = () => {
     console.log("wants to log in");
-    // TEMPORARY
-    window.localStorage.setItem('jwt', 'test');
-    this.setState({auth: isAuthenticated()})
+    if (this.state.loginLink !== null) {
+      window.location.href = this.state.loginLink;
+    } else {
+      console.warn("login link not ready yet")
+    }
   };
 
   render() {
@@ -76,14 +93,6 @@ class MenuAppBar extends React.Component<Props, State> {
 
     return (
       <div className={classes.root}>
-        {/*<FormGroup>*/}
-          {/*<FormControlLabel*/}
-            {/*control={*/}
-              {/*<Switch checked={auth} onChange={this.handleChange} aria-label="LoginSwitch" />*/}
-            {/*}*/}
-            {/*label={auth ? 'Logout' : 'Login'}*/}
-          {/*/>*/}
-        {/*</FormGroup>*/}
         <AppBar position="static">
           <Toolbar>
             <IconButton className={classes.menuButton} color="inherit" aria-label="Menu">

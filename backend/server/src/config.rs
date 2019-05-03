@@ -4,6 +4,8 @@ use clap::{App, Arg};
 
 use authorization::Secret;
 use std::path::PathBuf;
+use crate::state::RunningEnvironment;
+use log::{warn, error};
 
 const DEFAULT_PORT: u16 = 8080;
 
@@ -23,8 +25,9 @@ pub struct Config {
     /// This is used to find static assets with and around the server crate.
     /// If the binary is launched from somewhere other than .../server, then this parameter needs to be supplied.
     pub server_lib_root: Option<PathBuf>,
-    /// Is the server running in production.
-    pub is_production: bool,
+//    pub is_production: bool,
+    /// What environment is the application running in?
+    pub running_environment: RunningEnvironment
 }
 
 impl Config {
@@ -71,38 +74,75 @@ impl Config {
             .arg(
                 Arg::with_name("production")
                     .long("production")
+                    .conflicts_with_all(&["development", "staging"])
                     .help("Run with configurations made for a production environment.")
             )
-            .get_matches();
+            .arg(
+                Arg::with_name("development")
+                    .long("development")
+                    .conflicts_with_all(&["production", "staging"])
+                    .help("Run with configurations made for a development environment, serving the frontend through npm start.")
+            )
+            .arg(
+                Arg::with_name("staging")
+                    .long("staging")
+                    .conflicts_with_all(&["production", "development"])
+                    .help("Run with configurations made for a staging environment.")
+            )
+            .get_matches_safe();
 
-        let port: u16 = if let Some(port) = matches.value_of("port") {
-            port.parse().expect("Port must be an integer")
-        } else {
-            DEFAULT_PORT
-        };
+        match matches {
+            Ok(matches) => {
+                let port: u16 = if let Some(port) = matches.value_of("port") {
+                    port.parse().expect("Port must be an integer")
+                } else {
+                    DEFAULT_PORT
+                };
 
-        let tls_enabled = matches.is_present("tls");
+                let tls_enabled = matches.is_present("tls");
 
-        let secret = matches.value_of("secret").map(Secret::new);
+                let secret = matches.value_of("secret").map(Secret::new);
 
-        let max_pool_size: u32 = if let Some(size) = matches.value_of("max_pool_size") {
-            size.parse().expect("Pool size must be an integer.")
-        } else {
-            10 // There should be, by default, 10 database connections in the pool.
-        };
-        let max_pool_size = max_pool_size.apply(Some);
+                let max_pool_size: u32 = if let Some(size) = matches.value_of("max_pool_size") {
+                    size.parse().expect("Pool size must be an integer.")
+                } else {
+                    10 // There should be, by default, 10 database connections in the pool.
+                };
+                let max_pool_size = max_pool_size.apply(Some);
 
-        let server_lib_root = matches.value_of("server_lib_root").map(PathBuf::from);
+                let server_lib_root = matches.value_of("server_lib_root").map(PathBuf::from);
 
-        let is_production = matches.is_present("production");
+//                let is_production = matches.is_present("production");
 
-        Config {
-            port,
-            tls_enabled,
-            secret,
-            max_pool_size,
-            server_lib_root,
-            is_production,
+                let running_environment: RunningEnvironment = {
+                    if matches.is_present("production") {
+                        RunningEnvironment::Production {origin: "https://weekendatjo.es".to_string()}
+                    } else if matches.is_present("staging") {
+                        RunningEnvironment::Staging {port}
+                    } else if matches.is_present("development") {
+                        RunningEnvironment::Node {port: 3000}
+                    } else {
+                        warn!("Implicitly starting development environment in staging mode.");
+                        RunningEnvironment::Staging {port}
+                    }
+                };
+
+
+                Config {
+                    port,
+                    tls_enabled,
+                    secret,
+                    max_pool_size,
+                    server_lib_root,
+                    running_environment
+                }
+            }
+            Err(error) => {
+                error!("Could not parse cli arguments: {}", error);
+                panic!();
+            }
         }
+
+
     }
 }

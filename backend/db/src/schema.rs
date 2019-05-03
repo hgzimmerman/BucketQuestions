@@ -19,8 +19,7 @@ table! {
 }
 
 table! {
-    bucket_user_join (uuid) {
-        uuid -> Uuid,
+    bucket_user_join (user_uuid, bucket_uuid) {
         user_uuid -> Uuid,
         bucket_uuid -> Uuid,
         set_visibility_permission -> Bool,
@@ -40,8 +39,7 @@ table! {
 }
 
 table! {
-    user_favorite_question_join (uuid) {
-        uuid -> Uuid,
+    user_favorite_question_join (user_uuid, question_uuid) {
         user_uuid -> Uuid,
         question_uuid -> Uuid,
     }

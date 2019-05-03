@@ -9,12 +9,12 @@ CREATE TABLE buckets (
 );
 
 CREATE TABLE bucket_user_join (
-  uuid UUID PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),
   user_uuid UUID NOT NULL REFERENCES users(uuid) ON DELETE CASCADE,
   bucket_uuid UUID NOT NULL REFERENCES buckets(uuid) ON DELETE CASCADE,
   set_visibility_permission BOOLEAN NOT NULL, -- Can the user make the bucket visible on the main page.
   set_drawing_permission BOOLEAN NOT NULL, -- Can the user set the mode to enable answering questions
-  grant_permissions_permission BOOLEAN NOT NULL -- Can the user grant other users permissions for this bucket
+  grant_permissions_permission BOOLEAN NOT NULL, -- Can the user grant other users permissions for this bucket
+  PRIMARY KEY (user_uuid, bucket_uuid)
 );
 
 CREATE TABLE questions (
@@ -37,7 +37,7 @@ CREATE TABLE answers (
 -- This is only local to a given bucket.
 -- The question will have to be copied if a favorited question is placed into another bucket
 CREATE TABLE user_favorite_question_join (
-  uuid UUID PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),
   user_uuid UUID NOT NULL REFERENCES users(uuid) ON DELETE CASCADE,
-  question_uuid UUID NOT NULL REFERENCES questions(uuid) ON DELETE CASCADE
+  question_uuid UUID NOT NULL REFERENCES questions(uuid) ON DELETE CASCADE,
+  PRIMARY KEY (user_uuid, question_uuid)
 );

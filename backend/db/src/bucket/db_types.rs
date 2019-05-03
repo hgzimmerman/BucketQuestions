@@ -51,11 +51,9 @@ pub struct NewBucket {
 /// A relation between users and buckets.
 /// It also contains permissions for what users can do to the bucket.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Identifiable, Queryable, Serialize, Deserialize)]
-#[primary_key(uuid)]
+#[primary_key(user_uuid, bucket_uuid)]
 #[table_name = "bucket_user_join"]
 pub struct BucketUserJoin {
-    /// The unique identifier.
-    pub uuid: Uuid,
     /// The uuid of the user.
     pub user_uuid: Uuid,
     /// The uuid of the bucket.
@@ -85,11 +83,13 @@ pub struct NewBucketUserJoin {
 }
 /// Structure used to create new join relations between users and buckets.
 #[derive(Clone, Copy, AsChangeset, Identifiable, Debug, Serialize, Deserialize)]
-#[primary_key(uuid)]
+#[primary_key(user_uuid, bucket_uuid)]
 #[table_name = "bucket_user_join"]
 pub struct BucketUserPermissionsChangeset {
-    /// The id
-    pub uuid: Uuid,
+    /// The user id
+    pub user_uuid: Uuid,
+    /// the bucket uuid
+    pub bucket_uuid: Uuid,
     /// Can the user set the visibility of the bucket.
     pub set_visibility_permission: Option<bool>,
     /// Can the user enable drawing from the bucket.
@@ -99,12 +99,8 @@ pub struct BucketUserPermissionsChangeset {
 }
 
 /// Structure that just contains the permissions for a user-bucket relation.
-#[derive(Clone, Copy, Queryable, Identifiable, Debug, Serialize, Deserialize)]
-#[primary_key(uuid)]
-#[table_name = "bucket_user_join"]
+#[derive(Clone, Copy, Queryable, Debug, Serialize, Deserialize)]
 pub struct BucketUserPermissions {
-    /// The id
-    pub uuid: Uuid,
     /// Can the user set the visibility of the bucket.
     pub set_visibility_permission: bool,
     /// Can the user enable drawing from the bucket.
@@ -181,11 +177,9 @@ pub struct NewAnswer {
 
 /// A relation for recording user's favorite questions.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Identifiable, Queryable, Serialize, Deserialize)]
-#[primary_key(uuid)]
+#[primary_key(user_uuid, question_uuid)]
 #[table_name = "user_favorite_question_join"]
 pub struct FavoriteQuestionRelation {
-    /// Unique identifier.
-    pub uuid: Uuid,
     /// User
     pub user_uuid: Uuid,
     /// Question

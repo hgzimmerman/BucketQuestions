@@ -15,6 +15,8 @@ use std::path::PathBuf;
 use warp::{Filter, Rejection};
 use oauth2::basic::BasicClient;
 use crate::server_auth::create_google_oauth_client;
+use url::Url;
+use std::fmt::{Debug, Formatter};
 
 /// Simplified type for representing a HttpClient.
 pub type HttpsClient = Client<HttpsConnector<HttpConnector<GaiResolver>>, Body>;
@@ -39,8 +41,21 @@ pub struct State {
     /// The path to the server directory.
     /// This allows file resources to have a common reference point when determining from where to serve assets.
     server_lib_root: PathBuf,
-    /// Is the server running in a production environment
-    is_production: bool,
+    /// Redirect url for Oauth
+    redirect_url: Url
+}
+
+impl Debug for State {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
+        f.debug_struct("State")
+            .field("database_connection_pool", &"pool".to_owned())
+            .field("secret", &"[REDACTED]".to_owned())
+            .field("https", &"https client".to_owned())
+            .field("google_oauth_client", &"Google Oauth Client".to_owned())
+            .field("server_lib_root", &self.server_lib_root)
+            .field("redirect_url", &self.redirect_url)
+            .finish()
+    }
 }
 
 /// Configuration object for creating the state.
@@ -51,7 +66,40 @@ pub struct StateConfig {
     pub secret: Option<Secret>,
     pub max_pool_size: Option<u32>,
     pub server_lib_root: Option<PathBuf>,
-    pub is_production: bool,
+//    pub is_production: bool,
+    pub environment: RunningEnvironment
+}
+
+/// Where is the program running
+#[derive(Debug)]
+pub enum RunningEnvironment {
+    /// Frontend is running off of `npm start`
+    Node{port: u16},
+    /// Frontend is built, and served by the app, but accessible via 0.0.0.0:port
+    Staging{port: u16},
+    /// Frontend is built and served by the app, and hidden behind a nginx reverse-proxy.
+    /// This means that, the scheme may be https instead of http,
+    /// and that the host will be an actual domain,
+    /// and that it will implicitly be running on port 443.
+    Production{origin: String}
+}
+
+impl Default for RunningEnvironment {
+    fn default() -> Self {
+        RunningEnvironment::Node {port: 3030}
+    }
+}
+
+impl RunningEnvironment {
+    fn create_redirect_url(&self) -> Url {
+        const PATH: &str = "api/auth/redirect";
+        let url = match self {
+            RunningEnvironment::Node {port} => format!("http://localhost:{}/{}", port, PATH),
+            RunningEnvironment::Staging {port} => format!("http://localhost:{}/{}", port, PATH),
+            RunningEnvironment::Production {origin} => format!("{}/{}",origin, PATH)
+        };
+        Url::parse(&url).expect("Could not parse url for redirect")
+    }
 }
 
 impl State {
@@ -79,10 +127,12 @@ impl State {
         let twitter_con_token = get_twitter_con_token();
 
 
-        let redirect_url = url::Url::parse("http://localhost:8080/api/auth/redirect").unwrap();
-        let google_oauth_client = create_google_oauth_client(redirect_url);
+        let redirect_url = conf.environment.create_redirect_url();
+//        let redirect_url = Url::parse("http://localhost:8080/api/auth/redirect").unwrap();
+        let google_oauth_client = create_google_oauth_client(redirect_url.clone());
 
         let root = conf.server_lib_root.unwrap_or_else(|| PathBuf::from("./"));
+
 
         State {
             database_connection_pool: pool, //db_filter(pool),
@@ -91,7 +141,8 @@ impl State {
             twitter_consumer_token: twitter_con_token.clone(),
             google_oauth_client,
             server_lib_root: root,
-            is_production: conf.is_production,
+//            is_production: conf.is_production,
+            redirect_url
         }
     }
 
@@ -158,9 +209,12 @@ impl State {
         self.server_lib_root.clone()
     }
 
-    pub fn is_production(&self) -> bool {
-        self.is_production
+    pub fn redirect_url(&self) -> Url {
+        self.redirect_url.clone()
     }
+//    pub fn is_production(&self) -> bool {
+//        self.is_production
+//    }
 
     /// Creates a new state object from an existing object pool.
     /// This is useful if using fixtures.
@@ -174,8 +228,9 @@ impl State {
 
         let twitter_con_token = get_twitter_con_token();
 
-        let redirect_url = url::Url::parse("http://localhost:8080/api/auth/redirect").unwrap();
-        let google_oauth_client = create_google_oauth_client(redirect_url);
+        let redirect_url = conf.environment.create_redirect_url();
+//        let redirect_url = url::Url::parse("http://localhost:8080/api/auth/redirect").unwrap();
+        let google_oauth_client = create_google_oauth_client(redirect_url.clone());
 
         State {
             database_connection_pool: pool,
@@ -184,7 +239,7 @@ impl State {
             twitter_consumer_token: twitter_con_token,
             google_oauth_client,
             server_lib_root: PathBuf::from("./"), // THIS makes the assumption that the tests are run from the backend/server dir.
-            is_production: false,
+            redirect_url
         }
     }
 }
