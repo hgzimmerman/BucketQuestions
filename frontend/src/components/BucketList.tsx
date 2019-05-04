@@ -4,7 +4,7 @@ import {Bucket} from "../DataTypes";
 import {Loadable} from "../Util";
 import {Error} from "../Util";
 import List from "@material-ui/core/List";
-import {Link, NavLink, Route} from "react-router-dom";
+import {Route} from "react-router-dom";
 import Paper from "@material-ui/core/Paper";
 
 

@@ -10,20 +10,29 @@ import {Route} from "react-router";
 import {Uuid} from "../DataTypes";
 import {isAuthenticated} from "../App";
 import {LoginIconComponent} from "./LoginIconComponent";
+import {BucketManagementModalComponent} from "./BucketManagementModalComponent";
+import ListItemIcon from "@material-ui/core/ListItemIcon";
+import HomeIcon from '@material-ui/icons/Home';
+import SettingsIcon from '@material-ui/icons/Settings';
+import bucket from '../bucket_white.png';
+import Tooltip from "@material-ui/core/Tooltip";
 
 interface Props {
   title: string,
   bucket_uuid: Uuid | null,
+  remaining_questions: number | null
 }
 
 
 interface State {
   anchorEl: null | HTMLElement;
+  modalOpen: boolean
 }
 
 export class BucketNavBarComponent extends React.Component<Props, State> {
   state: State = {
-    anchorEl: null
+    anchorEl: null,
+    modalOpen: false
   };
 
   handleMenu = (event: React.MouseEvent<HTMLElement>) => {
@@ -33,10 +42,20 @@ export class BucketNavBarComponent extends React.Component<Props, State> {
   handleClose = () => {
     this.setState({ anchorEl: null });
   };
+  handleOpenModal = () => {
+    this.setState({ anchorEl: null, modalOpen: true });
+  };
+  handleCloseModal = () => {
+    this.setState({modalOpen: false})
+  };
+
 
   render() {
-
     const open = Boolean(this.state.anchorEl);
+    let remainingQuestions = "";
+    if (this.props.remaining_questions !== null)  {
+      remainingQuestions = this.props.remaining_questions + "";
+    }
     return (
       <AppBar>
         <Toolbar>
@@ -63,16 +82,38 @@ export class BucketNavBarComponent extends React.Component<Props, State> {
                 open={open}
                 onClose={this.handleClose}
               >
-                <MenuItem onClick={() => history.push("/")}>Home</MenuItem>
+                <MenuItem onClick={() => history.push("/")}>
+                  <ListItemIcon>
+                    <HomeIcon />
+                  </ListItemIcon>
+                  Home
+                </MenuItem>
                 {
                 (this.props.bucket_uuid !== null && isAuthenticated()) &&
-                  <MenuItem onClick={this.handleClose}>Manage Bucket</MenuItem>
+                  <MenuItem onClick={this.handleOpenModal}>
+                    <ListItemIcon>
+                      <SettingsIcon />
+                    </ListItemIcon>
+                    Manage Bucket
+                  </MenuItem>
                 }
               </Menu>
+              <BucketManagementModalComponent open={this.state.modalOpen} handleClose={this.handleCloseModal}/>
 
               <Typography variant="h6" color="inherit">
                 {this.props.title}
               </Typography>
+
+
+              <div style={styles.horizSpacing}/>
+
+              <Tooltip title="Remaining Questions" aria-label="Remaining Questions">
+                <div>
+                  <img src={bucket} alt={"Remaining Questions"} style={styles.bucketImage}/>: {remainingQuestions}
+                </div>
+              </Tooltip>
+
+              <div style={styles.grow}/>
 
               <LoginIconComponent/>
             </>
@@ -84,3 +125,16 @@ export class BucketNavBarComponent extends React.Component<Props, State> {
     )
   }
 }
+
+const styles  = {
+  grow: {
+    flexGrow: 1
+  },
+  horizSpacing: {
+    width: 20
+  },
+  bucketImage: {
+    paddingTop: 7,
+    height: 18
+  }
+};

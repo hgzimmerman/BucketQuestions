@@ -165,13 +165,6 @@ export class BucketComponent extends React.Component<Props, State> {
         <Paper style={styles.smallMargin}>
           <div style={styles.questionCard}>
           {
-            this.state.questions_remaining_in_bucket.match({
-              loading: () => <></>,
-              loaded: (num: number) => <h6>Questions in Bucket {num}</h6>,
-              error: (error: Error) => <>Couldn't get number of questions in bucket</>
-            })
-          }
-          {
             this.state.question.match({
               unloaded: () => <>
                 <div style={styles.grow}/>
@@ -275,10 +268,11 @@ export class BucketComponent extends React.Component<Props, State> {
       title = bucket.bucket_name;
       bucket_uuid = bucket.uuid;
     }
+    const remaining_questions = this.state.questions_remaining_in_bucket.getLoaded();
 
     return (
       <>
-      <BucketNavBarComponent title={title} bucket_uuid={bucket_uuid}/>
+      <BucketNavBarComponent title={title} bucket_uuid={bucket_uuid} remaining_questions={remaining_questions}/>
       <div style={styles.container}>
         <div style={styles.constrainedWidth}>
           {

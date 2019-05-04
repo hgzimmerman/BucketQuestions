@@ -35,7 +35,7 @@ export class Loadable<T> {
   }
 
   getLoaded(): T | null {
-    if (this.mode == "loaded")  {
+    if (this.mode === "loaded")  {
       return this.value as any as T
     } else {
       return null
