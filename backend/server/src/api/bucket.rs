@@ -24,6 +24,8 @@ pub struct SetPermissionsRequest {
     pub set_visibility_permission: Option<bool>,
     /// Can the user enable drawing from the bucket.
     pub set_drawing_permission: Option<bool>,
+    /// Can the user set the bucket to private.
+    pub set_private_permission: Option<bool>,
     /// Can the user grant permissions to other users.
     pub grant_permissions_permission: Option<bool>
 }
@@ -55,6 +57,7 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> { //impl Filter<E
                 bucket_uuid: bucket.uuid,
                 set_visibility_permission: true,
                 set_drawing_permission: true,
+                set_private_permission: true,
                 grant_permissions_permission: true
             };
             conn.add_user_to_bucket(new_relation)?;
@@ -172,6 +175,7 @@ fn add_self_to_bucket_handler(bucket_uuid: Uuid, user_uuid: Uuid, conn: PooledCo
         bucket_uuid,
         set_visibility_permission: false,
         set_drawing_permission: false,
+        set_private_permission: false,
         grant_permissions_permission: false
     };
     conn.add_user_to_bucket(new_relation).map_err(Error::from)
@@ -213,6 +217,7 @@ fn set_permissions_handler(bucket_uuid: Uuid, permissions_request: SetPermission
             bucket_uuid,
             set_visibility_permission: permissions_request.set_visibility_permission,
             set_drawing_permission: permissions_request.set_drawing_permission,
+            set_private_permission: permissions_request.set_private_permission,
             grant_permissions_permission: permissions_request.grant_permissions_permission
         };
         conn.set_permissions(permissions_changeset).map_err(Error::from)

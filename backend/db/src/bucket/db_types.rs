@@ -81,6 +81,8 @@ pub struct NewBucketUserJoin {
     pub set_visibility_permission: bool,
     /// Can the user enable drawing from the bucket.
     pub set_drawing_permission: bool,
+    /// Can the user set the bucket to private.
+    pub set_private_permission: bool,
     /// Can the user grant permissions to other users.
     pub grant_permissions_permission: bool
 }
@@ -97,6 +99,8 @@ pub struct BucketUserPermissionsChangeset {
     pub set_visibility_permission: Option<bool>,
     /// Can the user enable drawing from the bucket.
     pub set_drawing_permission: Option<bool>,
+    /// Can the user set the bucket to private.
+    pub set_private_permission: Option<bool>,
     /// Can the user grant permissions to other users.
     pub grant_permissions_permission: Option<bool>
 }

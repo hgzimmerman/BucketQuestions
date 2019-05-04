@@ -9,6 +9,11 @@ export interface Bucket {
   private: boolean
 }
 
+export interface User {
+  uuid: Uuid,
+  google_name: string | null
+}
+
 /**
  * Response for errors
  */
