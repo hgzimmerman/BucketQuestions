@@ -52,7 +52,7 @@ pub trait QuestionRepository {
     /// Delete question
     fn delete_question(&self, uuid: Uuid) -> QueryResult<Question>;
     /// Gets a random question.
-    fn get_random_question(&self, bucket_uuid: Uuid) -> QueryResult<Question>;
+    fn get_random_question(&self, bucket_uuid: Uuid) -> QueryResult<Option<Question>>;
     /// Gets the number of active questions.
     fn get_number_of_active_questions_for_bucket(&self, bucket_uuid: Uuid) -> QueryResult<i64>;
     /// Gets all active questions

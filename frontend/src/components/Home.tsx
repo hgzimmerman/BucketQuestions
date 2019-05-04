@@ -34,7 +34,7 @@ export class Home extends React.Component<Props, State> {
     this.setState({tabPage: value})
   };
 
-  handleSearchText = (event: ChangeEvent<HTMLInputElement>) => {
+  handleSearchTextUpdate = (event: ChangeEvent<HTMLInputElement>) => {
     this.setState({bucketSearch: event.target.value})
   };
 
@@ -79,7 +79,7 @@ export class Home extends React.Component<Props, State> {
               label="Find Bucket"
               type="search"
               value={this.state.bucketSearch}
-              onChange={this.handleSearchText}
+              onChange={this.handleSearchTextUpdate}
               color={"white"}
               // className={classes.textField}
               margin="dense"

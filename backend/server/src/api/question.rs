@@ -71,7 +71,7 @@ pub fn question_api(state: &State) -> BoxedFilter<(impl Reply,)> { // impl Filte
         .and(warp::get2())
         .and(query())
         .and(state.db())
-        .map(|query: BucketUuidQueryParam, conn: PooledConn| -> Result<Question, Error> {
+        .map(|query: BucketUuidQueryParam, conn: PooledConn| -> Result<Option<Question>, Error> {
             conn.get_random_question(query.bucket_uuid).map_err(Error::from)
         })
         .and_then(json_or_reject);

@@ -77,7 +77,11 @@ export function isAuthenticated(): boolean {
 }
 
 
-
+/**
+ * Performs a fetch after trying to attach the bearer JWT
+ * @param url The url to hit.
+ * @param init The additional parameters.
+ */
 export async function authenticatedFetchAndDeserialize<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await authenticatedFetch(url, init);
   if (response.ok) {

@@ -19,6 +19,7 @@ use diesel::SaveChangesDsl;
 use diesel::BoolExpressionMethods;
 use log::info;
 use crate::user::User;
+use crate::diesel::OptionalExtension;
 
 
 impl BucketRepository for PgConnection {
@@ -129,12 +130,17 @@ impl QuestionRepository for PgConnection {
         crate::util::delete_row(questions::table, uuid, self)
     }
 
-    fn get_random_question(&self, bucket_uuid: Uuid) -> Result<Question, Error> {
+    fn get_random_question(&self, bucket_uuid: Uuid) -> Result<Option<Question>, Error> {
         no_arg_sql_function!(RANDOM, (), "Represents the sql RANDOM() function");
+
+        // Get a question in the bucket, that isn't on the floor.
+        let condition = questions::bucket_uuid.eq(bucket_uuid).and(questions::archived.eq(false));
+
         questions::table
-            .filter(questions::bucket_uuid.eq(bucket_uuid))
+            .filter(condition)
             .order(RANDOM)
             .first(self)
+            .optional()
     }
 
     fn get_number_of_active_questions_for_bucket(&self, bucket_uuid: Uuid) -> Result<i64, Error> {
