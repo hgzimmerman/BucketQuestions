@@ -11,6 +11,7 @@ import {authenticatedFetchAndDeserialize} from "../App";
 import Icon from "@material-ui/core/Icon";
 import {Add} from "@material-ui/icons";
 import Button from "@material-ui/core/Button";
+import {Link} from "react-router-dom";
 
 interface Props {
 
@@ -62,14 +63,15 @@ export class Home extends React.Component<Props, State> {
             </Tabs>
             <div style={styles.grow}/>
             <div style={styles.vertically_centered}>
-              <Button
-                // style={{height: 60}}
-                size={"medium"}
-                variant={"outlined"}
-              >
-                <Add/>
-                New Bucket
-              </Button>
+              <Link to={"/create_bucket"}>
+                <Button
+                  size={"medium"}
+                  variant={"outlined"}
+                >
+                  <Add/>
+                  New Bucket
+                </Button>
+              </Link>
             </div>
 
             <TextField

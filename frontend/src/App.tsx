@@ -6,6 +6,8 @@ import { BrowserRouter, Route, Switch } from "react-router-dom";
 import {Home} from "./components/Home"
 import {FourOFour} from "./components/FourOFour"
 import {ErrorResponse} from "./DataTypes";
+import {CreateBucket} from "./components/CreateBucket";
+import {BucketComponent} from "./components/Bucket";
 
 const App: React.FC = () => {
   return (
@@ -14,6 +16,8 @@ const App: React.FC = () => {
         <MenuAppBar/>
         <Switch>
           <Route path={"/"} exact component={Home}/>
+          <Route path={"/create_bucket"} exact component={CreateBucket}/>
+          <Route path={"/bucket/:slug"} component={BucketComponent}/>
           <Route component={FourOFour}/>
         </Switch>
       </BrowserRouter>
@@ -64,7 +68,9 @@ function authenticatedFetch(url: string, init?: RequestInit): Promise<Response> 
   }
 }
 
-
+/**
+ * Is the user authenticated
+ */
 export function isAuthenticated(): boolean {
   const jwt = getJwt();
   return (jwt !== null)
@@ -72,15 +78,15 @@ export function isAuthenticated(): boolean {
 
 
 
-export function authenticatedFetchAndDeserialize<T>(url: string, init?: RequestInit): Promise<T> {
-  return authenticatedFetch(url, init)
-    .then(response => {
-      if (response.ok) {
-        return response.json().then((value: T) => value);
-      } else {
-        return response.json().then((err: ErrorResponse) => {throw err;});
-      }
+export async function authenticatedFetchAndDeserialize<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await authenticatedFetch(url, init);
+  if (response.ok) {
+    return response.json().then((value: T) => value);
+  } else {
+    return response.json().then((err: ErrorResponse) => {
+      throw err;
     });
+  }
 }
 
 
