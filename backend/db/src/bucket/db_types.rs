@@ -33,8 +33,9 @@ pub struct Bucket {
     /// Can users find it through the UI.
     pub visible: bool,
     /// Is the bucket session currently active.
-    pub drawing_enabled: bool
-    // TODO consider adding a locked field here, preventing finding it via slug.
+    pub drawing_enabled: bool,
+    /// Can an unjoined user join the bucket.
+    pub private: bool
 }
 
 /// Structure used to create new users.
@@ -62,6 +63,8 @@ pub struct BucketUserJoin {
     pub set_visibility_permission: bool,
     /// Can the user enable drawing from the bucket.
     pub set_drawing_permission: bool,
+    /// Can the user set the bucket to private.
+    pub set_private_permission: bool,
     /// Can the user grant permissions to other users.
     pub grant_permissions_permission: bool
 }

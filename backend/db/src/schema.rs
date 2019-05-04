@@ -15,6 +15,7 @@ table! {
         bucket_slug -> Varchar,
         visible -> Bool,
         drawing_enabled -> Bool,
+        private -> Bool,
     }
 }
 
@@ -24,6 +25,7 @@ table! {
         bucket_uuid -> Uuid,
         set_visibility_permission -> Bool,
         set_drawing_permission -> Bool,
+        set_private_permission -> Bool,
         grant_permissions_permission -> Bool,
     }
 }

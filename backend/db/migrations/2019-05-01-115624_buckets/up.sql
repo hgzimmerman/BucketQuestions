@@ -5,15 +5,17 @@ CREATE TABLE buckets (
     bucket_name VARCHAR NOT NULL,
     bucket_slug VARCHAR NOT NULL UNIQUE,
     visible BOOLEAN NOT NULL DEFAULT TRUE, -- Will anyone be able to see it in a list of visible buckets
-    drawing_enabled BOOLEAN NOT NULL DEFAULT FALSE -- Is the bucket only accepting questions, or is there an active answer session going on.
+    drawing_enabled BOOLEAN NOT NULL DEFAULT FALSE, -- Is the bucket only accepting questions, or is there an active answer session going on.
+    private BOOLEAN NOT NULL DEFAULT FALSE -- Can the bucket be joined if there isn't a relation in the bucket_user_join table?
 );
 
 CREATE TABLE bucket_user_join (
   user_uuid UUID NOT NULL REFERENCES users(uuid) ON DELETE CASCADE,
   bucket_uuid UUID NOT NULL REFERENCES buckets(uuid) ON DELETE CASCADE,
   set_visibility_permission BOOLEAN NOT NULL, -- Can the user make the bucket visible on the main page.
-  set_drawing_permission BOOLEAN NOT NULL, -- Can the user set the mode to enable answering questions
-  grant_permissions_permission BOOLEAN NOT NULL, -- Can the user grant other users permissions for this bucket
+  set_drawing_permission BOOLEAN NOT NULL, -- Can the user set the mode to enable answering questions.
+  set_private_permission BOOLEAN NOT NULL, -- Can the user set the mode to disable joining by random individuals.
+  grant_permissions_permission BOOLEAN NOT NULL, -- Can the user grant other users permissions for this bucket.
   PRIMARY KEY (user_uuid, bucket_uuid)
 );
 
