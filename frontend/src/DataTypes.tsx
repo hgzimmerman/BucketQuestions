@@ -34,3 +34,19 @@ export interface NewQuestionRequest {
   bucket_uuid: Uuid,
   question_text: String
 }
+
+export interface BucketUserPermissions {
+  set_visibility_permission: boolean,
+  set_drawing_permission: boolean,
+  grant_permissions_permission: boolean
+}
+
+export interface BucketUserPermissionsChangeset {
+  set_visibility_permission?: boolean,
+  set_drawing_permission?: boolean ,
+  grant_permissions_permission?: boolean
+}
+
+export interface LinkResponse {
+  link: string
+}

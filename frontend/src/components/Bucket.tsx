@@ -1,12 +1,18 @@
 import React, {ChangeEvent} from 'react';
 import {Loadable, Error} from "../Util";
-import {authenticatedFetchAndDeserialize} from "../App";
-import {ArchiveQuestionRequest, Bucket, ErrorResponse, NewQuestionRequest, Question} from "../DataTypes";
+import {authenticatedFetchAndDeserialize, isAuthenticated} from "../App";
+import {
+  ArchiveQuestionRequest,
+  Bucket,
+  BucketUserPermissions,
+  ErrorResponse,
+  NewQuestionRequest,
+  Question, Uuid
+} from "../DataTypes";
 import {Button} from "@material-ui/core";
 import Paper from "@material-ui/core/Paper";
 import TextField from "@material-ui/core/TextField";
-import {isDefined} from "../OtherUtil";
-import {isNullOrUndefined} from "util";
+import {BucketNavBarComponent} from "./BucketNavBarComponent";
 
 interface Props {
   match: Match
@@ -19,19 +25,19 @@ interface Params {
 }
 
 interface State {
-  // slug: string
   bucket: Loadable<Bucket>,
   question: Loadable<Question | null>,
   questions_remaining_in_bucket: Loadable<number>,
+  permissions: Loadable<BucketUserPermissions>,
   newQuestionText: string
 }
 
 export class BucketComponent extends React.Component<Props, State> {
   state: State = {
-    // slug: this.props.match.params.slug,
     bucket: Loadable.loading(),
     question: Loadable.unloaded(),
     questions_remaining_in_bucket: Loadable.loading(),
+    permissions: Loadable.unloaded(),
     newQuestionText: ""
   };
 
@@ -40,14 +46,21 @@ export class BucketComponent extends React.Component<Props, State> {
       .then((bucket: Bucket | void) => {
         if (bucket != null) {
           this.getNumberOfQuestions(bucket);
+          if (isAuthenticated()) {
+            this.getPermissions(bucket.uuid)
+          }
         }
       });
   }
+
   componentDidMount(): void {
     this.getBucket()
       .then((bucket: Bucket | void) => {
         if (bucket != null) {
           this.getNumberOfQuestions(bucket);
+          if (isAuthenticated()) {
+            this.getPermissions(bucket.uuid)
+          }
         }
       });
   }
@@ -58,6 +71,14 @@ export class BucketComponent extends React.Component<Props, State> {
   };
 
   /* === Network requests */
+
+  getPermissions: (bucket_uuid: Uuid) => Promise<void> = (bucket_uuid: Uuid) => {
+    const url = `/api/bucket/${bucket_uuid}/user`;
+    return authenticatedFetchAndDeserialize<BucketUserPermissions>(url)
+      .then((permissions: BucketUserPermissions) => {
+        this.setState({permissions: Loadable.loaded(permissions)})
+      })
+  };
 
   getBucket: () => Promise<Bucket | undefined> = () => {
     const url = `/api/bucket/slug/${this.props.match.params.slug}`;
@@ -142,6 +163,7 @@ export class BucketComponent extends React.Component<Props, State> {
     return (
       <>
         <Paper style={styles.smallMargin}>
+          <div style={styles.questionCard}>
           {
             this.state.questions_remaining_in_bucket.match({
               loading: () => <></>,
@@ -152,6 +174,7 @@ export class BucketComponent extends React.Component<Props, State> {
           {
             this.state.question.match({
               unloaded: () => <>
+                <div style={styles.grow}/>
                 <Button
                   onClick={() => {
                     this.getRandomQuestion(bucket)
@@ -162,12 +185,11 @@ export class BucketComponent extends React.Component<Props, State> {
                 </Button>
               </>,
               loading: () => <>Loading</>,
-              loaded: (question: Question | null) => <div>
-                {this.render_question(question, bucket)}
-              </div>,
+              loaded: (question: Question | null) => this.render_question(question, bucket),
               error: (error: Error) => <>{error}</>
             })
           }
+          </div>
         </Paper>
         {this.render_new_question(bucket)}
       </>
@@ -187,17 +209,21 @@ export class BucketComponent extends React.Component<Props, State> {
           ? <>
               <h4>{question.question_text}</h4>
 
-              <Button onClick={() => this.setState({question: Loadable.unloaded()})}>
-                Put Back
-              </Button>
+              <div style={styles.grow}/>
 
-              <Button onClick={() => {
-                this.markQuestionAsArchived(question)
-                  .then(() => this.getNumberOfQuestions(bucket))
-                  .then(() => this.setState({question: Loadable.unloaded()}))
-              }}>
-                Discard
-              </Button>
+              <div>
+                <Button onClick={() => this.setState({question: Loadable.unloaded()})}>
+                  Put Back
+                </Button>
+
+                <Button onClick={() => {
+                  this.markQuestionAsArchived(question)
+                    .then(() => this.getNumberOfQuestions(bucket))
+                    .then(() => this.setState({question: Loadable.unloaded()}))
+                }}>
+                  Discard
+                </Button>
+              </div>
             </>
           : <>
               <h5>No Questions Available</h5>
@@ -232,17 +258,27 @@ export class BucketComponent extends React.Component<Props, State> {
             onChange={this.handleNewQuestionTextUpdate}
           />
         </div>
-        <Button
-          onClick={() => this.addQuestionToBucket(bucket).then(() => this.getNumberOfQuestions(bucket))}
-        >
-          Add to Bucket
-        </Button>
+          <Button
+            onClick={() => this.addQuestionToBucket(bucket).then(() => this.getNumberOfQuestions(bucket))}
+          >
+            Add to Bucket
+          </Button>
       </Paper>
     )
   }
 
   render() {
+    let title = "";
+    let bucket_uuid = null;
+    let bucket = this.state.bucket.getLoaded();
+    if (bucket != null) {
+      title = bucket.bucket_name;
+      bucket_uuid = bucket.uuid;
+    }
+
     return (
+      <>
+      <BucketNavBarComponent title={title} bucket_uuid={bucket_uuid}/>
       <div style={styles.container}>
         <div style={styles.constrainedWidth}>
           {
@@ -254,6 +290,7 @@ export class BucketComponent extends React.Component<Props, State> {
           }
         </div>
       </div>
+      </>
     )
   }
 }
@@ -261,10 +298,10 @@ export class BucketComponent extends React.Component<Props, State> {
 
 const styles = {
   padded: {
-    padding: "10px"
+    padding: 10
   },
   smallMargin: {
-    margin: "5px"
+    margin: 10
   },
   container: {
     display: "flex",
@@ -274,6 +311,17 @@ const styles = {
   constrainedWidth: {
     maxWidth: 700,
     width: "100%"
+  },
+  questionCard: {
+    display: "flex",
+    flexDirection: "column" as "column",
+    minHeight: 200
+  },
+  bottom: {
+    marginTop: "auto"
+  },
+  grow: {
+    flexGrow: 1
   }
 
 };

@@ -73,6 +73,7 @@ export class CreateBucket extends React.Component<Props, State> {
         <Paper style={styles.smallMargin}>
           <div style={styles.verticalContainer}>
             <div style={styles.constrainedWidth}>
+              <div style={styles.verticalSpacing}/>
               <TextField
                 label={"Bucket Name"}
                 fullWidth={true}

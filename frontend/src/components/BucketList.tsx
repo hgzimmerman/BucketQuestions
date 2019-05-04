@@ -3,10 +3,9 @@ import {ListItem} from "@material-ui/core";
 import {Bucket} from "../DataTypes";
 import {Loadable} from "../Util";
 import {Error} from "../Util";
-
-
-
-
+import List from "@material-ui/core/List";
+import {Link, NavLink, Route} from "react-router-dom";
+import Paper from "@material-ui/core/Paper";
 
 
 
@@ -29,23 +28,43 @@ export class BucketList extends React.Component<Props, State> {
         this.setState({buckets: Loadable.loaded(buckets)})
       })
       .catch((error: any) => {
-
         this.setState({buckets: Loadable.errored("Couldn't get buckets")})
       });
+  }
 
+  static render_bucket(bucket: Bucket, history: any) {
+    return (
+        <ListItem
+          key={bucket.uuid}
+          button
+          onClick={() => history.push(`/bucket/${bucket.bucket_slug}`)}
+        >
+            {bucket.bucket_name}
+        </ListItem>
+    )
+  }
+
+  static render_buckets(buckets: Array<Bucket>) {
+    return(
+      <Paper style={styles.mainList}>
+        <Route render={({ history }) => (
+          <List>
+            {buckets.map(bucket => BucketList.render_bucket(bucket, history))}
+          </List>
+        )}/>
+      </Paper>
+    )
   }
 
   render() {
     return (
-      <div>
+      <div style={styles.verticalContainer}>
       {
         this.state.buckets.match({
           loading: () => {
             return (<>{"Loading"}</>);
           },
-          loaded: (buckets: Array<Bucket>) => {
-            return (<>{"Buckets"}</>);
-          },
+          loaded: BucketList.render_buckets,
           error: (error: Error) => {
             return (<>{error}</>);
           },
@@ -55,3 +74,17 @@ export class BucketList extends React.Component<Props, State> {
     );
   }
 }
+
+const styles = {
+  verticalContainer: {
+    display: "flex",
+    flexDirection: "column" as "column",
+    alignItems: "center",
+    padding: 10
+  },
+  mainList: {
+    maxWidth: 700,
+    width: "100%",
+    marginBottom: 15
+  }
+};

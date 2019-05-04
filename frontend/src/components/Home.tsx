@@ -1,127 +1,20 @@
 import React, {ChangeEvent} from 'react';
-import logo from './../logo.svg';
-import {AppBar} from "@material-ui/core";
+import {AppBar, Theme, WithStyles} from "@material-ui/core";
 import Tabs from "@material-ui/core/Tabs";
 import Tab from "@material-ui/core/Tab";
-import TextField from "@material-ui/core/TextField";
-import classes from 'classnames';
 import {BucketList} from "./BucketList";
 import {Bucket} from "../DataTypes";
-import {authenticatedFetchAndDeserialize} from "../App";
-import Icon from "@material-ui/core/Icon";
-import {Add} from "@material-ui/icons";
-import Button from "@material-ui/core/Button";
+import {authenticatedFetchAndDeserialize, isAuthenticated} from "../App";
 import {Link} from "react-router-dom";
-
-interface Props {
-
-}
-
-type TabState = "public" | "joined"
-
-interface State {
-  tabPage: number
-  bucketSearch: string
-}
-
-export class Home extends React.Component<Props, State> {
-  state: State = {
-    tabPage: 0,
-    bucketSearch: ""
-  };
-
-  handleTabSelected = (event: any, value: number) => {
-    this.setState({tabPage: value})
-  };
-
-  handleSearchTextUpdate = (event: ChangeEvent<HTMLInputElement>) => {
-    this.setState({bucketSearch: event.target.value})
-  };
-
-  render() {
-    return (
-      <div>
-
-        <AppBar
-          position="static"
-          color={"primary"}
-        >
-          <div style={styles.horizontal_container}>
-
-            <Tabs
-              value={this.state.tabPage}
-              onChange={this.handleTabSelected}
-            >
-              <Tab
-                label="Joined"
-                style={{height: 60}}
-              />
-              <Tab
-                label="Public"
-                style={{height: 60}}
-              />
-            </Tabs>
-            <div style={styles.grow}/>
-            <div style={styles.vertically_centered}>
-              <Link to={"/create_bucket"}>
-                <Button
-                  size={"medium"}
-                  variant={"outlined"}
-                >
-                  <Add/>
-                  New Bucket
-                </Button>
-              </Link>
-            </div>
-
-            <TextField
-              id="outlined-search"
-              label="Find Bucket"
-              type="search"
-              value={this.state.bucketSearch}
-              onChange={this.handleSearchTextUpdate}
-              color={"white"}
-              // className={classes.textField}
-              margin="dense"
-              variant="filled"
-              // fullWidth={true}
-            />
-          </div>
-
-        </AppBar>
-        {this.state.tabPage === 0 &&
-          <BucketList
-            bucketListFetchPromise={get_joined_buckets}
-          />
-        }
-        {this.state.tabPage === 1 &&
-          <BucketList
-            bucketListFetchPromise={get_public_buckets}
-          />
-        }
+import Tooltip from "@material-ui/core/Tooltip";
+import Fab from "@material-ui/core/Fab";
+import AddIcon from '@material-ui/icons/Add';
+import createStyles from "@material-ui/core/styles/createStyles";
+import withStyles from "@material-ui/core/styles/withStyles";
 
 
 
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.tsx</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
-      </div>
-    )
-  }
-}
-
-const styles = {
+const styles = (theme: Theme) => createStyles({
   horizontal_container: {
     display: "flex",
     flexDirection: "row" as "row",
@@ -133,8 +26,111 @@ const styles = {
     display: "flex",
     flexDirection: "column" as "column",
     justifyContent: "center"
+  },
+  create_bucket_icon: {
+    position: "absolute"
+  },
+  absolute: {
+    position: 'absolute',
+    bottom: theme.spacing.unit * 2,
+    right: theme.spacing.unit * 3,
+  },
+});
+
+interface Props extends WithStyles<typeof styles>{
+
+}
+
+
+interface State {
+  tabPage: number
+  bucketSearch: string
+}
+
+export const Home = withStyles(styles)(
+  class extends React.Component<Props, State> {
+    state: State = {
+      tabPage: 0,
+      bucketSearch: ""
+    };
+    componentDidMount(): void {
+    }
+
+    handleTabSelected = (event: any, value: number) => {
+      this.setState({tabPage: value})
+    };
+
+    handleSearchTextUpdate = (event: ChangeEvent<HTMLInputElement>) => {
+      this.setState({bucketSearch: event.target.value})
+    };
+
+    render() {
+      const {classes} = this.props;
+      const auth: boolean = isAuthenticated();
+      return (
+        <div>
+
+          {(auth) &&
+          <AppBar
+            position="static"
+            color={"primary"}
+          >
+            <div className={classes.horizontal_container}>
+              <Tabs
+                value={this.state.tabPage}
+                onChange={this.handleTabSelected}
+              >
+                <Tab
+                  label="Joined"
+                  style={{height: 60}}
+                />
+                <Tab
+                  label="Public"
+                  style={{height: 60}}
+                />
+              </Tabs>
+              <div className={classes.grow}/>
+            </div>
+          </AppBar>
+          }
+          {(auth)
+            ? <>
+              {this.state.tabPage === 0 &&
+                <BucketList
+                  bucketListFetchPromise={get_joined_buckets}
+                />
+              }
+              {this.state.tabPage === 1 &&
+                <BucketList
+                  bucketListFetchPromise={get_public_buckets}
+                />
+              }
+              </>
+            :  <BucketList
+                  bucketListFetchPromise={get_public_buckets}
+                />
+          }
+
+          {(auth) &&
+            <Link to={"/create_bucket"}>
+              <Tooltip title="Create Bucket" aria-label="Add">
+                <Fab
+                  color="secondary"
+                  className={classes.absolute}
+                >
+                  <AddIcon />
+                </Fab>
+              </Tooltip>
+            </Link>
+          }
+        </div>
+      )
+    }
   }
-};
+);
+
+
+
 
 const get_public_buckets: () => Promise<Array<Bucket>> = () => {
   const url: string = "/api/bucket/public";

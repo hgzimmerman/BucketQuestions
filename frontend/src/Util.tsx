@@ -34,6 +34,14 @@ export class Loadable<T> {
     return new Loadable();
   }
 
+  getLoaded(): T | null {
+    if (this.mode == "loaded")  {
+      return this.value as any as T
+    } else {
+      return null
+    }
+  }
+
   match(options: LoadableMatchOptions<T> ): JSX.Element {
     switch (this.mode) {
       case "unloaded":
@@ -48,6 +56,8 @@ export class Loadable<T> {
         return options.loaded(this.value as any as T);
       case "error":
         return options.error(this.value as any as Error);
+      default:
+        return <></>
     }
   }
 }
