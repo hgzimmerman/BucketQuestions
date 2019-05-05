@@ -1,25 +1,24 @@
-use crate::state::State;
-use warp::{Filter, Reply};
-use warp::path;
-use serde::{Serialize, Deserialize};
-use uuid::Uuid;
-use warp::query;
-use pool::{PooledConn};
-use db::bucket::interface::{QuestionRepository, FavoriteQuestionRelationRepository};
-use crate::util::{json_or_reject, json_body_filter};
-use crate::error::Error;
-use db::bucket::db_types::{Question, NewFavoriteQuestionRelation};
-use db::bucket::db_types::NewQuestion;
-use crate::server_auth::{optional_user_filter, user_filter};
+use crate::{
+    error::Error,
+    server_auth::{optional_user_filter, user_filter},
+    state::State,
+    util::{json_body_filter, json_or_reject},
+};
+use db::bucket::{
+    db_types::{NewFavoriteQuestionRelation, NewQuestion, Question},
+    interface::{FavoriteQuestionRelationRepository, QuestionRepository},
+};
 use diesel::delete;
-use warp::filters::BoxedFilter;
+use pool::PooledConn;
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
+use warp::{filters::BoxedFilter, path, query, Filter, Reply};
 
 pub const QUESTION_PATH: &str = "question";
 
-
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BucketUuidQueryParam {
-    pub bucket_uuid: Uuid
+    pub bucket_uuid: Uuid,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -27,31 +26,36 @@ pub struct NewQuestionRequest {
     /// The bucket to which the question belongs.
     pub bucket_uuid: Uuid,
     /// The content of the question.
-    pub question_text: String
+    pub question_text: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SetArchivedRequest {
     question_uuid: Uuid,
-    archived: bool
+    archived: bool,
 }
 
-pub fn question_api(state: &State) -> BoxedFilter<(impl Reply,)> { // impl Filter<Extract=(impl Reply,), Error=Rejection> + Clone{
-
+pub fn question_api(state: &State) -> BoxedFilter<(impl Reply,)> {
+    // impl Filter<Extract=(impl Reply,), Error=Rejection> + Clone{
 
     let create_question = warp::path::end()
         .and(warp::post2())
         .and(json_body_filter(10))
         .and(optional_user_filter(state))
         .and(state.db())
-        .map(|request: NewQuestionRequest, user_uuid: Option<Uuid>, conn: PooledConn| -> Result<Question, Error> {
-            let new_question = NewQuestion {
-                bucket_uuid: request.bucket_uuid,
-                user_uuid,
-                question_text: request.question_text
-            };
-            conn.create_question(new_question).map_err(Error::from)
-        })
+        .map(
+            |request: NewQuestionRequest,
+             user_uuid: Option<Uuid>,
+             conn: PooledConn|
+             -> Result<Question, Error> {
+                let new_question = NewQuestion {
+                    bucket_uuid: request.bucket_uuid,
+                    user_uuid,
+                    question_text: request.question_text,
+                };
+                conn.create_question(new_question).map_err(Error::from)
+            },
+        )
         .and_then(json_or_reject);
 
     // TODO need a modify question endpoint
@@ -61,9 +65,11 @@ pub fn question_api(state: &State) -> BoxedFilter<(impl Reply,)> { // impl Filte
         .and(warp::path::end())
         .and(warp::delete2())
         .and(state.db())
-        .map(|question_uuid: Uuid, conn: PooledConn| -> Result<Question, Error> {
-           conn.delete_question(question_uuid).map_err(Error::from)
-        })
+        .map(
+            |question_uuid: Uuid, conn: PooledConn| -> Result<Question, Error> {
+                conn.delete_question(question_uuid).map_err(Error::from)
+            },
+        )
         .and_then(json_or_reject);
 
     let random_question = path!("random")
@@ -71,9 +77,12 @@ pub fn question_api(state: &State) -> BoxedFilter<(impl Reply,)> { // impl Filte
         .and(warp::get2())
         .and(query())
         .and(state.db())
-        .map(|query: BucketUuidQueryParam, conn: PooledConn| -> Result<Option<Question>, Error> {
-            conn.get_random_question(query.bucket_uuid).map_err(Error::from)
-        })
+        .map(
+            |query: BucketUuidQueryParam, conn: PooledConn| -> Result<Option<Question>, Error> {
+                conn.get_random_question(query.bucket_uuid)
+                    .map_err(Error::from)
+            },
+        )
         .and_then(json_or_reject);
 
     let num_questions_in_bucket = path!("number")
@@ -81,9 +90,12 @@ pub fn question_api(state: &State) -> BoxedFilter<(impl Reply,)> { // impl Filte
         .and(warp::get2())
         .and(query())
         .and(state.db())
-        .map(|query: BucketUuidQueryParam, conn: PooledConn| -> Result<i64, Error> {
-            conn.get_number_of_active_questions_for_bucket(query.bucket_uuid).map_err(Error::from)
-        })
+        .map(
+            |query: BucketUuidQueryParam, conn: PooledConn| -> Result<i64, Error> {
+                conn.get_number_of_active_questions_for_bucket(query.bucket_uuid)
+                    .map_err(Error::from)
+            },
+        )
         .and_then(json_or_reject);
 
     let all_questions_in_bucket = path!("in_bucket")
@@ -91,9 +103,12 @@ pub fn question_api(state: &State) -> BoxedFilter<(impl Reply,)> { // impl Filte
         .and(warp::get2())
         .and(query())
         .and(state.db())
-        .map(|query: BucketUuidQueryParam, conn: PooledConn| -> Result<Vec<Question>, Error> {
-            conn.get_all_questions_for_bucket_of_given_archived_status(query.bucket_uuid, false).map_err(Error::from)
-        })
+        .map(
+            |query: BucketUuidQueryParam, conn: PooledConn| -> Result<Vec<Question>, Error> {
+                conn.get_all_questions_for_bucket_of_given_archived_status(query.bucket_uuid, false)
+                    .map_err(Error::from)
+            },
+        )
         .and_then(json_or_reject);
 
     let all_questions_on_floor = path!("on_floor")
@@ -101,9 +116,12 @@ pub fn question_api(state: &State) -> BoxedFilter<(impl Reply,)> { // impl Filte
         .and(warp::get2())
         .and(query())
         .and(state.db())
-        .map(|query: BucketUuidQueryParam, conn: PooledConn| -> Result<Vec<Question>, Error> {
-            conn.get_all_questions_for_bucket_of_given_archived_status(query.bucket_uuid, true).map_err(Error::from)
-        })
+        .map(
+            |query: BucketUuidQueryParam, conn: PooledConn| -> Result<Vec<Question>, Error> {
+                conn.get_all_questions_for_bucket_of_given_archived_status(query.bucket_uuid, true)
+                    .map_err(Error::from)
+            },
+        )
         .and_then(json_or_reject);
 
     // TODO, this may make sense to remove, or constrain to only putting the question back in the bucket.
@@ -112,9 +130,12 @@ pub fn question_api(state: &State) -> BoxedFilter<(impl Reply,)> { // impl Filte
         .and(warp::put2())
         .and(json_body_filter(2))
         .and(state.db())
-        .map(|request: SetArchivedRequest, conn: PooledConn| -> Result<Question, Error> {
-            conn.set_archive_status_for_question(request.question_uuid, request.archived).map_err(Error::from)
-        })
+        .map(
+            |request: SetArchivedRequest, conn: PooledConn| -> Result<Question, Error> {
+                conn.set_archive_status_for_question(request.question_uuid, request.archived)
+                    .map_err(Error::from)
+            },
+        )
         .and_then(json_or_reject);
 
     let favorite_question = path!(Uuid / "favorite")
@@ -125,7 +146,7 @@ pub fn question_api(state: &State) -> BoxedFilter<(impl Reply,)> { // impl Filte
         .map(|question_uuid: Uuid, user_uuid: Uuid, conn: PooledConn| {
             let relation = NewFavoriteQuestionRelation {
                 user_uuid,
-                question_uuid
+                question_uuid,
             };
             conn.favorite_question(relation).map_err(Error::from)
         })
@@ -139,7 +160,7 @@ pub fn question_api(state: &State) -> BoxedFilter<(impl Reply,)> { // impl Filte
         .map(|question_uuid: Uuid, user_uuid: Uuid, conn: PooledConn| {
             let relation = NewFavoriteQuestionRelation {
                 user_uuid,
-                question_uuid
+                question_uuid,
             };
             conn.unfavorite_question(relation).map_err(Error::from)
         })
@@ -157,7 +178,6 @@ pub fn question_api(state: &State) -> BoxedFilter<(impl Reply,)> { // impl Filte
 
     // TODO get answers for question: api/question/<uuid>/answers
 
-
     path(QUESTION_PATH)
         .and(
             random_question
@@ -169,7 +189,7 @@ pub fn question_api(state: &State) -> BoxedFilter<(impl Reply,)> { // impl Filte
                 .or(set_question_archived_state)
                 .or(favorite_question)
                 .or(unfavorite_question)
-                .or(get_favorite_questions)
+                .or(get_favorite_questions),
         )
         .boxed()
 }

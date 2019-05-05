@@ -1,21 +1,9 @@
 //! Module for bucket related database interactions.
 
+use crate::schema::{answers, bucket_user_join, buckets, questions, user_favorite_question_join};
+use diesel::{Identifiable, Queryable};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use diesel::{
-    Identifiable, Queryable
-};
-use serde::{
-    Serialize,
-    Deserialize
-};
-use crate::schema::{
-    buckets,
-    bucket_user_join,
-    questions,
-    answers,
-    user_favorite_question_join
-};
-
 
 /// A struct representing a bucket.
 /// A bucket is a session associated with questions.
@@ -35,7 +23,7 @@ pub struct Bucket {
     /// Is the bucket session currently active.
     pub drawing_enabled: bool,
     /// Can an unjoined user join the bucket.
-    pub private: bool
+    pub private: bool,
 }
 
 /// Structure used to create new users.
@@ -60,13 +48,14 @@ pub struct BucketFlagChangeset {
     /// Is the bucket session currently active.
     pub drawing_enabled: Option<bool>,
     /// Can an unjoined user join the bucket.
-    pub private: Option<bool>
+    pub private: Option<bool>,
 }
-
 
 /// A relation between users and buckets.
 /// It also contains permissions for what users can do to the bucket.
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Identifiable, Queryable, Serialize, Deserialize)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, PartialOrd, Identifiable, Queryable, Serialize, Deserialize,
+)]
 #[primary_key(user_uuid, bucket_uuid)]
 #[table_name = "bucket_user_join"]
 pub struct BucketUserJoin {
@@ -81,7 +70,7 @@ pub struct BucketUserJoin {
     /// Can the user set the bucket to private.
     pub set_private_permission: bool,
     /// Can the user grant permissions to other users.
-    pub grant_permissions_permission: bool
+    pub grant_permissions_permission: bool,
 }
 
 /// Structure used to create new join relations between users and buckets.
@@ -99,7 +88,7 @@ pub struct NewBucketUserJoin {
     /// Can the user set the bucket to private.
     pub set_private_permission: bool,
     /// Can the user grant permissions to other users.
-    pub grant_permissions_permission: bool
+    pub grant_permissions_permission: bool,
 }
 /// Structure used to create new join relations between users and buckets.
 #[derive(Clone, Copy, AsChangeset, Identifiable, Debug, Serialize, Deserialize)]
@@ -117,7 +106,7 @@ pub struct BucketUserPermissionsChangeset {
     /// Can the user set the bucket to private.
     pub set_private_permission: Option<bool>,
     /// Can the user grant permissions to other users.
-    pub grant_permissions_permission: Option<bool>
+    pub grant_permissions_permission: Option<bool>,
 }
 
 /// Structure that just contains the permissions for a user-bucket relation.
@@ -130,9 +119,8 @@ pub struct BucketUserPermissions {
     /// Can the user make the bucket private
     pub set_private_permission: bool,
     /// Can the user grant permissions to other users.
-    pub grant_permissions_permission: bool
+    pub grant_permissions_permission: bool,
 }
-
 
 /// A struct representing a question.
 #[derive(Clone, Debug, PartialEq, PartialOrd, Identifiable, Queryable, Serialize, Deserialize)]
@@ -152,7 +140,7 @@ pub struct Question {
     /// but it can't be randomly drawn unless it is explicitly
     /// put back in the bucket.
     /// The archived flag is a formalization of the question being on the floor.
-    pub archived: bool
+    pub archived: bool,
 }
 
 /// A struct for creating new questions.
@@ -164,7 +152,7 @@ pub struct NewQuestion {
     /// The user that made the question.
     pub user_uuid: Option<Uuid>,
     /// The content of the question.
-    pub question_text: String
+    pub question_text: String,
 }
 
 /// A struct for recording answers.
@@ -181,7 +169,7 @@ pub struct Answer {
     /// Can the outside world see the answer.
     pub publicly_visible: bool,
     /// The answer
-    pub answer_text: String
+    pub answer_text: String,
 }
 
 /// A struct for creating new answers
@@ -195,19 +183,20 @@ pub struct NewAnswer {
     /// Can the outside world see the answer.
     pub publicly_visible: bool,
     /// The answer
-    pub answer_text: String
+    pub answer_text: String,
 }
 
-
 /// A relation for recording user's favorite questions.
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Identifiable, Queryable, Serialize, Deserialize)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, PartialOrd, Identifiable, Queryable, Serialize, Deserialize,
+)]
 #[primary_key(user_uuid, question_uuid)]
 #[table_name = "user_favorite_question_join"]
 pub struct FavoriteQuestionRelation {
     /// User
     pub user_uuid: Uuid,
     /// Question
-    pub question_uuid: Uuid
+    pub question_uuid: Uuid,
 }
 
 /// Structure for creating a new favorite relation.
@@ -217,5 +206,5 @@ pub struct NewFavoriteQuestionRelation {
     /// User
     pub user_uuid: Uuid,
     /// Question
-    pub question_uuid: Uuid
+    pub question_uuid: Uuid,
 }

@@ -1,6 +1,7 @@
 //! Represents the shared server resources that all requests may utilize.
 use crate::{error::Error, server_auth::secret_filter};
 
+use crate::server_auth::create_google_oauth_client;
 use apply::Apply;
 use authorization::Secret;
 use egg_mode::KeyPair;
@@ -9,14 +10,15 @@ use hyper::{
     Body, Client,
 };
 use hyper_tls::HttpsConnector;
+use oauth2::basic::BasicClient;
 use pool::{init_pool, Pool, PoolConfig, PooledConn, DATABASE_URL};
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
-use std::path::PathBuf;
-use warp::{Filter, Rejection};
-use oauth2::basic::BasicClient;
-use crate::server_auth::create_google_oauth_client;
+use std::{
+    fmt::{Debug, Formatter},
+    path::PathBuf,
+};
 use url::Url;
-use std::fmt::{Debug, Formatter};
+use warp::{Filter, Rejection};
 
 /// Simplified type for representing a HttpClient.
 pub type HttpsClient = Client<HttpsConnector<HttpConnector<GaiResolver>>, Body>;
@@ -40,7 +42,7 @@ pub struct State {
     /// This allows file resources to have a common reference point when determining from where to serve assets.
     server_lib_root: PathBuf,
     /// Redirect url for Oauth
-    redirect_url: Url
+    redirect_url: Url,
 }
 
 impl Debug for State {
@@ -64,26 +66,26 @@ pub struct StateConfig {
     pub secret: Option<Secret>,
     pub max_pool_size: Option<u32>,
     pub server_lib_root: Option<PathBuf>,
-    pub environment: RunningEnvironment
+    pub environment: RunningEnvironment,
 }
 
 /// Where is the program running
 #[derive(Debug)]
 pub enum RunningEnvironment {
     /// Frontend is running off of `npm start`
-    Node{port: u16},
+    Node { port: u16 },
     /// Frontend is built, and served by the app, but accessible via 0.0.0.0:port
-    Staging{port: u16},
+    Staging { port: u16 },
     /// Frontend is built and served by the app, and hidden behind a nginx reverse-proxy.
     /// This means that, the scheme may be https instead of http,
     /// and that the host will be an actual domain,
     /// and that it will implicitly be running on port 443.
-    Production{origin: String}
+    Production { origin: String },
 }
 
 impl Default for RunningEnvironment {
     fn default() -> Self {
-        RunningEnvironment::Node {port: 3030}
+        RunningEnvironment::Node { port: 3030 }
     }
 }
 
@@ -91,9 +93,9 @@ impl RunningEnvironment {
     fn create_redirect_url(&self) -> Url {
         const PATH: &str = "api/auth/redirect";
         let url = match self {
-            RunningEnvironment::Node {port} => format!("http://localhost:{}/{}", port, PATH),
-            RunningEnvironment::Staging {port} => format!("http://localhost:{}/{}", port, PATH),
-            RunningEnvironment::Production {origin} => format!("{}/{}",origin, PATH)
+            RunningEnvironment::Node { port } => format!("http://localhost:{}/{}", port, PATH),
+            RunningEnvironment::Staging { port } => format!("http://localhost:{}/{}", port, PATH),
+            RunningEnvironment::Production { origin } => format!("{}/{}", origin, PATH),
         };
         Url::parse(&url).expect("Could not parse url for redirect")
     }
@@ -126,21 +128,22 @@ impl State {
 
         let root = conf.server_lib_root.unwrap_or_else(|| PathBuf::from("./"));
 
-
         State {
             database_connection_pool: pool,
             secret,
             https: client,
             google_oauth_client,
             server_lib_root: root,
-            redirect_url
+            redirect_url,
         }
     }
 
     /// Gets a pooled connection to the database.
     pub fn db(&self) -> impl Filter<Extract = (PooledConn,), Error = Rejection> + Clone {
         /// Filter that exposes connections to the database to individual filter requests
-        fn db_filter(pool: Pool) -> impl Filter<Extract = (PooledConn,), Error = Rejection> + Clone {
+        fn db_filter(
+            pool: Pool,
+        ) -> impl Filter<Extract = (PooledConn,), Error = Rejection> + Clone {
             fn get_conn_from_pool(pool: &Pool) -> Result<PooledConn, Rejection> {
                 pool.clone()
                     .get() // Will get the connection from the pool, or wait a specified time until one becomes available.
@@ -150,7 +153,8 @@ impl State {
                     })
             }
 
-            warp::any().and_then(move || -> Result<PooledConn, Rejection> { get_conn_from_pool(&pool) })
+            warp::any()
+                .and_then(move || -> Result<PooledConn, Rejection> { get_conn_from_pool(&pool) })
         }
 
         db_filter(self.database_connection_pool.clone())
@@ -175,7 +179,9 @@ impl State {
         http_filter(self.https.clone())
     }
 
-    pub fn google_client(&self) -> impl Filter<Extract = (BasicClient,), Error = Rejection> + Clone {
+    pub fn google_client(
+        &self,
+    ) -> impl Filter<Extract = (BasicClient,), Error = Rejection> + Clone {
         fn client_filter(
             client: BasicClient,
         ) -> impl Filter<Extract = (BasicClient,), Error = Rejection> + Clone {
@@ -186,7 +192,6 @@ impl State {
         }
         client_filter(self.google_oauth_client.clone())
     }
-
 
     pub fn server_lib_root(&self) -> PathBuf {
         self.server_lib_root.clone()
@@ -217,7 +222,7 @@ impl State {
             https: client,
             google_oauth_client,
             server_lib_root: PathBuf::from("./"), // THIS makes the assumption that the tests are run from the backend/server dir.
-            redirect_url
+            redirect_url,
         }
     }
 }

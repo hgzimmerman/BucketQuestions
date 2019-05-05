@@ -1,12 +1,13 @@
 //! All database queries directly related to users are contained within this module.
 use crate::schema::{self, users};
 use diesel::{
-    pg::PgConnection, query_dsl::QueryDsl, result::QueryResult, ExpressionMethods, Identifiable,
-    Insertable, Queryable, RunQueryDsl,
+    pg::PgConnection,
+    query_dsl::QueryDsl,
+    result::{Error, QueryResult},
+    ExpressionMethods, Identifiable, Insertable, Queryable, RunQueryDsl,
 };
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use diesel::result::Error;
 
 /// A struct representing all the columns in the `users` table.
 #[derive(Clone, Debug, PartialEq, PartialOrd, Identifiable, Queryable, Serialize, Deserialize)]
@@ -18,7 +19,7 @@ pub struct User {
     /// The user's unique identifier provided by google.
     pub google_user_id: String,
     /// The user's name as it appears in google
-    pub google_name: Option<String>
+    pub google_name: Option<String>,
 }
 
 /// Structure used to create new users.
@@ -28,7 +29,7 @@ pub struct NewUser {
     /// The user's unique identifier provided by google
     pub google_user_id: String,
     /// The user's name as it appears in google
-    pub google_name: Option<String>
+    pub google_name: Option<String>,
 }
 
 /// Trait for storing and retrieving users.
@@ -54,4 +55,3 @@ impl UserRepository for PgConnection {
             .first::<User>(self)
     }
 }
-

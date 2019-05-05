@@ -3,10 +3,16 @@
 //! These traits should try to not include significant quantities of business logic.
 //! It should try to deal with only the types specified in db_types, and avoid wire types.
 
-use crate::bucket::db_types::{Bucket, NewBucket, NewBucketUserJoin, BucketUserPermissionsChangeset, BucketUserJoin, BucketUserPermissions, NewQuestion, Question, NewAnswer, Answer, NewFavoriteQuestionRelation, BucketFlagChangeset};
-use uuid::Uuid;
+use crate::{
+    bucket::db_types::{
+        Answer, Bucket, BucketFlagChangeset, BucketUserJoin, BucketUserPermissions,
+        BucketUserPermissionsChangeset, NewAnswer, NewBucket, NewBucketUserJoin,
+        NewFavoriteQuestionRelation, NewQuestion, Question,
+    },
+    user::User,
+};
 use diesel::QueryResult;
-use crate::user::User;
+use uuid::Uuid;
 
 /// Functions for specifically working with buckets
 pub trait BucketRepository {
@@ -21,10 +27,10 @@ pub trait BucketRepository {
     fn get_bucket_by_slug(&self, slug: String) -> QueryResult<Bucket>;
     /// Gets the bucket via its uuid.
     fn get_bucket_by_uuid(&self, uuid: Uuid) -> QueryResult<Bucket>;
-//    / Change the public visibility of the bucket.
-//    fn change_visibility(&self, bucket_uuid: Uuid, visible: bool) -> QueryResult<Bucket>;
-//    / Allow the bucket to be drawn from.
-//    fn change_drawing_status(&self, bucket_uuid: Uuid, drawing: bool) -> QueryResult<Bucket>;
+    //    / Change the public visibility of the bucket.
+    //    fn change_visibility(&self, bucket_uuid: Uuid, visible: bool) -> QueryResult<Bucket>;
+    //    / Allow the bucket to be drawn from.
+    //    fn change_drawing_status(&self, bucket_uuid: Uuid, drawing: bool) -> QueryResult<Bucket>;
     /// Change the blags that govern the buckets behavior
     fn change_bucket_flags(&self, changeset: BucketFlagChangeset) -> QueryResult<Bucket>;
 }
@@ -34,18 +40,28 @@ pub trait BucketUserRelationRepository {
     /// Adds a user to the bucket.
     fn add_user_to_bucket(&self, relation: NewBucketUserJoin) -> QueryResult<BucketUserJoin>;
     /// Removes the user from bucket.
-    fn remove_user_from_bucket(&self, user_uuid: Uuid, bucket_uuid: Uuid) -> QueryResult<BucketUserJoin>;
+    fn remove_user_from_bucket(
+        &self,
+        user_uuid: Uuid,
+        bucket_uuid: Uuid,
+    ) -> QueryResult<BucketUserJoin>;
     /// Set permissions for the user-bucket relation.
-    fn set_permissions(&self, permissions_changeset: BucketUserPermissionsChangeset) -> QueryResult<BucketUserJoin>;
+    fn set_permissions(
+        &self,
+        permissions_changeset: BucketUserPermissionsChangeset,
+    ) -> QueryResult<BucketUserJoin>;
     /// Get the permissions for the user.
     /// The user may not be a part of the bucket.
-    fn get_permissions(&self, user_uuid: Uuid, bucket_uuid: Uuid) -> QueryResult<BucketUserPermissions>;
+    fn get_permissions(
+        &self,
+        user_uuid: Uuid,
+        bucket_uuid: Uuid,
+    ) -> QueryResult<BucketUserPermissions>;
     /// Gets the buckets the user has joined.
     fn get_buckets_user_is_a_part_of(&self, user_uuid: Uuid) -> QueryResult<Vec<Bucket>>;
     /// Gets the users in a given bucket.
     fn get_users_in_bucket(&self, bucket_uuid: Uuid) -> QueryResult<Vec<User>>;
 }
-
 
 /// Functions for specifically working with questions.
 pub trait QuestionRepository {
@@ -58,11 +74,18 @@ pub trait QuestionRepository {
     /// Gets the number of active questions.
     fn get_number_of_active_questions_for_bucket(&self, bucket_uuid: Uuid) -> QueryResult<i64>;
     /// Gets all active questions
-    fn get_all_questions_for_bucket_of_given_archived_status(&self, bucket_uuid: Uuid, archived: bool) -> QueryResult<Vec<Question>>;
+    fn get_all_questions_for_bucket_of_given_archived_status(
+        &self,
+        bucket_uuid: Uuid,
+        archived: bool,
+    ) -> QueryResult<Vec<Question>>;
     /// Disable or Enable the question from drawing eligibility.
-    fn set_archive_status_for_question(&self, question_uuid: Uuid, archived: bool) -> QueryResult<Question>;
+    fn set_archive_status_for_question(
+        &self,
+        question_uuid: Uuid,
+        archived: bool,
+    ) -> QueryResult<Question>;
 }
-
 
 /// Functions for specifically working with Answers.
 pub trait AnswerRepository {
@@ -74,7 +97,6 @@ pub trait AnswerRepository {
     /// This should only be the publicly visible answers.
     fn get_answers_for_question(&self, question_uuid: Uuid) -> QueryResult<Vec<Answer>>;
 }
-
 
 /// Functions for specifically working with Favorites.
 pub trait FavoriteQuestionRelationRepository {

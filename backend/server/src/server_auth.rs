@@ -13,9 +13,9 @@ use apply::Apply;
 use authorization::{JwtPayload, Secret, AUTHORIZATION_HEADER_KEY};
 use egg_mode::{KeyPair, Token};
 use serde::{Deserialize, Serialize};
+use std::env;
 use uuid::Uuid;
 use warp::{filters::BoxedFilter, Filter, Rejection};
-use std::env;
 
 /// A serializeable variant of Egg-mode's Token::Access variant
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -55,23 +55,13 @@ impl Into<Token> for TwitterToken {
     }
 }
 
-
 //use oauth2::basic::BasicClient;
-use oauth2::prelude::*;
+use db::user::User;
 use oauth2::{
-    basic::BasicClient,
-    AuthUrl,
-    AuthorizationCode,
-    ClientId,
-    ClientSecret,
-    CsrfToken,
-    RedirectUrl,
-    Scope,
-    TokenUrl,
+    basic::BasicClient, prelude::*, AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken,
+    RedirectUrl, Scope, TokenUrl,
 };
 use url::Url;
-use db::user::User;
-
 
 pub fn create_google_oauth_client(redirect_url: Url) -> BasicClient {
     let google_client_id = ClientId::new(
@@ -97,13 +87,11 @@ pub fn create_google_oauth_client(redirect_url: Url) -> BasicClient {
         auth_url,
         Some(token_url),
     )
-        .add_scope(Scope::new(
-            "https://www.googleapis.com/auth/plus.me".to_string(),
-        ))
-        .add_scope(Scope::new(
-            "profile".to_string(),
-        ))
-        .set_redirect_url(RedirectUrl::new(redirect_url));
+    .add_scope(Scope::new(
+        "https://www.googleapis.com/auth/plus.me".to_string(),
+    ))
+    .add_scope(Scope::new("profile".to_string()))
+    .set_redirect_url(RedirectUrl::new(redirect_url));
     client
 }
 
@@ -113,8 +101,6 @@ pub fn get_google_login_link(client: BasicClient) -> Url {
     let (authorize_url, _csrf_state) = client.authorize_url(CsrfToken::new_random);
     authorize_url
 }
-
-
 
 /// This filter will attempt to extract the JWT bearer token from the header Authorization field.
 /// It will then attempt to transform the JWT into a usable JwtPayload that can be used by the app.
@@ -154,9 +140,7 @@ pub fn user_filter(s: &State) -> BoxedFilter<(Uuid,)> {
     warp::any()
         .and(jwt_filter(s))
         .map(JwtPayload::subject)
-        .map(|subject: User | -> Uuid {
-            subject.uuid
-        })
+        .map(|subject: User| -> Uuid { subject.uuid })
         .boxed()
 }
 
@@ -173,7 +157,6 @@ pub fn optional_user_filter(s: &State) -> BoxedFilter<(Option<Uuid>,)> {
         .unify::<(Option<Uuid>,)>()
         .boxed()
 }
-
 
 #[cfg(test)]
 mod unit_test {

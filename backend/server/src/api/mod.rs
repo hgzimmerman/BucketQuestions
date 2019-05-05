@@ -1,9 +1,9 @@
 //! The api defines all of the routes that are supported for the server.
-mod user;
-mod auth;
 mod answer;
+mod auth;
 mod bucket;
 mod question;
+mod user;
 
 use warp::Reply;
 
@@ -11,31 +11,28 @@ use warp::{path, Filter};
 
 use crate::{
     api::{
-        auth::auth_api,
+        answer::answer_api, auth::auth_api, bucket::bucket_api, question::question_api,
         user::user_api,
-        answer::answer_api,
-        bucket::bucket_api,
-        question::question_api
     },
     state::State,
     static_files::{static_files_handler, FileConfig},
 };
-use warp::Rejection;
-use warp::filters::BoxedFilter;
+use warp::{filters::BoxedFilter, Rejection};
 
 /// The initial segment in the uri path.
 pub const API_STRING: &str = "api";
 
 /// The core of the exposed routes.
 /// Anything that sits behind this filter accesses the DB in some way.
-pub fn api(state: &State) -> BoxedFilter<(impl Reply,)> {//impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+pub fn api(state: &State) -> BoxedFilter<(impl Reply,)> {
+    //impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
     path(API_STRING)
         .and(
-        bucket_api(state)
+            bucket_api(state)
                 .or(answer_api(state))
                 .or(question_api(state))
                 .or(auth_api(state))
-                .or(user_api(state))
+                .or(user_api(state)),
         )
         .boxed()
 }
@@ -377,7 +374,6 @@ mod integration_test {
                 assert_eq!(1, r[0].transactions[0].quantity)
             });
         }
-
 
     }
 

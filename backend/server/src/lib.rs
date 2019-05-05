@@ -16,18 +16,18 @@ mod error;
 mod server_auth;
 mod state;
 mod static_files;
-#[cfg(test)]
-mod testing_fixtures;
+//#[cfg(test)]
+//mod testing_fixtures;
 mod util;
 
 pub use config::Config;
 
 use crate::{
     api::routes,
+    server_auth::get_google_login_link,
     state::{State, StateConfig},
 };
 use log::info;
-use crate::server_auth::get_google_login_link;
 
 /// Starts the server.
 pub fn start(config: Config) {
@@ -35,14 +35,12 @@ pub fn start(config: Config) {
     let localhost = [0, 0, 0, 0];
     let addr = (localhost, config.port);
 
-
-
     let state_config = StateConfig {
         secret: config.secret,
         max_pool_size: config.max_pool_size,
         server_lib_root: config.server_lib_root,
-//        is_production: config.is_production,
-        environment: config.running_environment
+        //        is_production: config.is_production,
+        environment: config.running_environment,
     };
 
     let state = State::new(state_config);

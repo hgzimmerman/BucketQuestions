@@ -45,8 +45,9 @@ where
 }
 
 #[allow(dead_code)]
-pub fn reject<T,E>(source: Result<T, E>) -> Result<T, Rejection>
-where E: Into<Error>
+pub fn reject<T, E>(source: Result<T, E>) -> Result<T, Rejection>
+where
+    E: Into<Error>,
 {
     source.map_err(|e| e.into().reject())
 }

@@ -2,10 +2,10 @@
 use apply::Apply;
 use clap::{App, Arg};
 
-use authorization::Secret;
-use std::path::PathBuf;
 use crate::state::RunningEnvironment;
-use log::{warn, error};
+use authorization::Secret;
+use log::{error, warn};
+use std::path::PathBuf;
 
 const DEFAULT_PORT: u16 = 8080;
 
@@ -25,9 +25,9 @@ pub struct Config {
     /// This is used to find static assets with and around the server crate.
     /// If the binary is launched from somewhere other than .../server, then this parameter needs to be supplied.
     pub server_lib_root: Option<PathBuf>,
-//    pub is_production: bool,
+    //    pub is_production: bool,
     /// What environment is the application running in?
-    pub running_environment: RunningEnvironment
+    pub running_environment: RunningEnvironment,
 }
 
 impl Config {
@@ -112,21 +112,22 @@ impl Config {
 
                 let server_lib_root = matches.value_of("server_lib_root").map(PathBuf::from);
 
-//                let is_production = matches.is_present("production");
+                //                let is_production = matches.is_present("production");
 
                 let running_environment: RunningEnvironment = {
                     if matches.is_present("production") {
-                        RunningEnvironment::Production {origin: "https://weekendatjo.es".to_string()}
+                        RunningEnvironment::Production {
+                            origin: "https://weekendatjo.es".to_string(),
+                        }
                     } else if matches.is_present("staging") {
-                        RunningEnvironment::Staging {port}
+                        RunningEnvironment::Staging { port }
                     } else if matches.is_present("development") {
-                        RunningEnvironment::Node {port: 3000}
+                        RunningEnvironment::Node { port: 3000 }
                     } else {
                         warn!("Implicitly starting development environment in staging mode.");
-                        RunningEnvironment::Staging {port}
+                        RunningEnvironment::Staging { port }
                     }
                 };
-
 
                 Config {
                     port,
@@ -134,7 +135,7 @@ impl Config {
                     secret,
                     max_pool_size,
                     server_lib_root,
-                    running_environment
+                    running_environment,
                 }
             }
             Err(error) => {
@@ -142,7 +143,5 @@ impl Config {
                 panic!();
             }
         }
-
-
     }
 }
