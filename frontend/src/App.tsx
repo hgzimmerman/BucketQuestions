@@ -1,8 +1,6 @@
 import React from 'react';
 import './App.css';
-import MenuAppBar from "./components/MenuAppBar";
 import { BrowserRouter, Route, Switch } from "react-router-dom";
-
 import {Home} from "./components/Home"
 import {FourOFour} from "./components/FourOFour"
 import {ErrorResponse} from "./DataTypes";
@@ -13,7 +11,6 @@ const App: React.FC = () => {
   return (
     <div className="App">
       <BrowserRouter>
-        {/*<MenuAppBar/>*/}
         <Switch>
           <Route path={"/"} exact component={Home}/>
           <Route path={"/create_bucket"} exact component={CreateBucket}/>

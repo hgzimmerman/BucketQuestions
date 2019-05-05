@@ -13,6 +13,7 @@ import createStyles from "@material-ui/core/styles/createStyles";
 import withStyles from "@material-ui/core/styles/withStyles";
 import {LoginIconComponent} from "./LoginIconComponent";
 import Toolbar from "@material-ui/core/Toolbar";
+import Typography from "@material-ui/core/Typography";
 
 
 
@@ -73,30 +74,33 @@ export const Home = withStyles(styles)(
       return (
         <div>
 
-          {(auth) &&
           <AppBar
             position="static"
             color={"primary"}
           >
             <Toolbar>
-                <Tabs
-                  value={this.state.tabPage}
-                  onChange={this.handleTabSelected}
-                >
-                  <Tab
-                    label="Joined"
-                    style={{height: 60}}
-                  />
-                  <Tab
-                    label="Public"
-                    style={{height: 60}}
-                  />
-                </Tabs>
+              {(auth)
+                ? <Tabs
+                    value={this.state.tabPage}
+                    onChange={this.handleTabSelected}
+                  >
+                    <Tab
+                      label="Joined"
+                      style={{height: 60}}
+                    />
+                    <Tab
+                      label="Public"
+                      style={{height: 60}}
+                    />
+                  </Tabs>
+                : <Typography variant="h6" color="inherit">
+                    Bucket Questions
+                  </Typography>
+              }
                 <div className={classes.grow}/>
                 <LoginIconComponent/>
             </Toolbar>
           </AppBar>
-          }
           {(auth)
             ? <>
               {this.state.tabPage === 0 &&
