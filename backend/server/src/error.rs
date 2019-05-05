@@ -180,12 +180,14 @@ impl Error {
 
     /// Transform a compatible error and reject it.
     #[inline]
+    #[allow(dead_code)]
     pub fn from_reject<T: Into<Error>>(error: T) -> Rejection {
         error.into().apply(Self::reject)
     }
 
     /// Construct a bad request error.
     #[inline]
+    #[allow(dead_code)]
     pub fn bad_request<T: Into<String>>(message: T) -> Self {
         Error::BadRequest(message.into())
     }
@@ -288,10 +290,6 @@ impl From<diesel::result::Error> for Error {
     }
 }
 
-/// Convenience function that allows terse error handling in and_then combinators.
-pub fn err_to_rejection<T>(result: Result<T, Error>) -> Result<T, Rejection> {
-    result.map_err(Error::reject)
-}
 
 /// Error response template for when the errors are rewritten.
 #[derive(Serialize)]

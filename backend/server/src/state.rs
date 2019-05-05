@@ -4,7 +4,6 @@ use crate::{error::Error, server_auth::secret_filter};
 use crate::server_auth::create_google_oauth_client;
 use apply::Apply;
 use authorization::Secret;
-use egg_mode::KeyPair;
 use hyper::{
     client::{connect::dns::GaiResolver, HttpConnector},
     Body, Client,

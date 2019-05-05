@@ -244,10 +244,6 @@ fn set_permissions_handler(
         .get_permissions(user_uuid, bucket_uuid)
         .map_err(Error::from)?;
     if permissions_for_acting_user.grant_permissions_permission {
-        // The permissions of the target user
-        let current_user_permissions = conn
-            .get_permissions(permissions_request.target_user_uuid, bucket_uuid)
-            .map_err(Error::from)?;
         let permissions_changeset = BucketUserPermissionsChangeset {
             user_uuid,
             bucket_uuid,

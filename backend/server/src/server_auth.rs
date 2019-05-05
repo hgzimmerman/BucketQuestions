@@ -9,7 +9,6 @@
 //!
 
 use crate::{error::Error, state::State};
-use apply::Apply;
 use authorization::{JwtPayload, Secret, AUTHORIZATION_HEADER_KEY};
 use egg_mode::{KeyPair, Token};
 use serde::{Deserialize, Serialize};
@@ -55,10 +54,9 @@ impl Into<Token> for TwitterToken {
     }
 }
 
-//use oauth2::basic::BasicClient;
 use db::user::User;
 use oauth2::{
-    basic::BasicClient, prelude::*, AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken,
+    basic::BasicClient, prelude::*, AuthUrl, ClientId, ClientSecret, CsrfToken,
     RedirectUrl, Scope, TokenUrl,
 };
 use url::Url;

@@ -1,7 +1,7 @@
 use crate::{
     error::{
         DependentConnectionError,
-        Error::{self, AuthError},
+        Error::{self},
     },
     get_google_login_link,
     state::{HttpsClient, State},
@@ -13,14 +13,12 @@ use futures::{future::Future, stream::Stream};
 use hyper::{body::Body, Chunk, Request, Response};
 use log::{error, info, warn};
 use oauth2::{
-    basic::{BasicClient, BasicTokenType},
-    prelude::SecretNewType,
-    AuthorizationCode, EmptyExtraTokenFields, StandardTokenResponse, TokenType,
+    basic::{BasicClient},
 };
 use pool::PooledConn;
 use serde::{Deserialize, Serialize};
 use url::Url;
-use warp::{filters::BoxedFilter, path, query::query, Filter, Rejection, Reply};
+use warp::{filters::BoxedFilter, path, query::query, Filter, Reply};
 
 /// The path segment for the auth api.
 pub const AUTH_PATH: &str = "auth";

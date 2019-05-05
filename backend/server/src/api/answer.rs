@@ -11,7 +11,7 @@ use db::bucket::{
 use pool::PooledConn;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use warp::{filters::BoxedFilter, path, Filter, Rejection, Reply};
+use warp::{filters::BoxedFilter, path, Filter, Reply};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NewAnswerRequest {

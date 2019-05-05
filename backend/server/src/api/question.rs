@@ -8,7 +8,6 @@ use db::bucket::{
     db_types::{NewFavoriteQuestionRelation, NewQuestion, Question},
     interface::{FavoriteQuestionRelationRepository, QuestionRepository},
 };
-use diesel::delete;
 use pool::PooledConn;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
