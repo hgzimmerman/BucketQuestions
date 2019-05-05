@@ -1,21 +1,21 @@
 import React from 'react';
 import './App.css';
 import { BrowserRouter, Route, Switch } from "react-router-dom";
-import {Home} from "./components/Home"
-import {FourOFour} from "./components/FourOFour"
+import {HomePage} from "./components/HomePage";
+import {FourOFourPage} from "./components/FourOFourPage";
 import {ErrorResponse} from "./DataTypes";
-import {CreateBucket} from "./components/CreateBucket";
-import {BucketComponent} from "./components/Bucket";
+import {CreateBucketPage} from "./components/CreateBucketPage";
+import {BucketPage} from "./components/BucketPage";
 
 const App: React.FC = () => {
   return (
     <div className="App">
       <BrowserRouter>
         <Switch>
-          <Route path={"/"} exact component={Home}/>
-          <Route path={"/create_bucket"} exact component={CreateBucket}/>
-          <Route path={"/bucket/:slug"} component={BucketComponent}/>
-          <Route component={FourOFour}/>
+          <Route path={"/"} exact component={HomePage}/>
+          <Route path={"/create_bucket"} exact component={CreateBucketPage}/>
+          <Route path={"/bucket/:slug"} component={BucketPage}/>
+          <Route component={FourOFourPage}/>
         </Switch>
       </BrowserRouter>
 

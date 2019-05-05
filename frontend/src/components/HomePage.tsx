@@ -51,7 +51,7 @@ interface State {
   bucketSearch: string
 }
 
-export const Home = withStyles(styles)(
+export const HomePage = withStyles(styles)(
   class extends React.Component<Props, State> {
     state: State = {
       tabPage: 0,
@@ -85,11 +85,11 @@ export const Home = withStyles(styles)(
                   >
                     <Tab
                       label="Joined"
-                      style={{height: 60}}
+                      style={{height: 64}}
                     />
                     <Tab
                       label="Public"
-                      style={{height: 60}}
+                      style={{height: 64}}
                     />
                   </Tabs>
                 : <Typography variant="h6" color="inherit">

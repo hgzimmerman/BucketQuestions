@@ -52,12 +52,11 @@ export class LoginIconComponent extends React.Component<Props, State> {
 
   handleLogout = () => {
     logout();
-    this.setState({auth: isAuthenticated(), anchorEl: null })
+    this.setState({auth: isAuthenticated(), anchorEl: null });
     this.getLink()
   };
 
   handleLogin = () => {
-    console.log("wants to log in");
     if (this.state.loginLink !== null) {
       window.location.href = this.state.loginLink;
     } else {
@@ -70,51 +69,49 @@ export class LoginIconComponent extends React.Component<Props, State> {
     const open = Boolean(anchorEl);
 
     return (
-      <>
-        {auth
-          ? (
-          <div>
-            <Tooltip title={"Account"} placement={"bottom"}>
-              <IconButton
-                aria-owns={open ? 'menu-appbar' : undefined}
-                aria-haspopup="true"
-                onClick={this.handleMenu}
-                color="inherit"
-              >
-                <AccountCircle />
-              </IconButton>
-            </Tooltip>
-            <Menu
-              id="menu-appbar"
-              anchorEl={anchorEl}
-              anchorOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              open={open}
-              onClose={this.handleClose}
+      auth
+        ? (
+        <div>
+          <Tooltip title={"Account"} placement={"bottom"}>
+            <IconButton
+              aria-owns={open ? 'menu-appbar' : undefined}
+              aria-haspopup="true"
+              onClick={this.handleMenu}
+              color="inherit"
             >
-              <MenuItem onClick={this.handleLogout}>Logout</MenuItem>
-            </Menu>
-          </div>
-          )
-          : (
-          <div>
-            <Button
-              size={"small"}
-              variant={"outlined"}
-              onClick={this.handleLogin}
-            >
-              Login
-            </Button>
-          </div>
-          )
-        }
-        </>
+              <AccountCircle />
+            </IconButton>
+          </Tooltip>
+          <Menu
+            id="menu-appbar"
+            anchorEl={anchorEl}
+            anchorOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
+            open={open}
+            onClose={this.handleClose}
+          >
+            <MenuItem onClick={this.handleLogout}>Logout</MenuItem>
+          </Menu>
+        </div>
+        )
+        : (
+        <div>
+          <Button
+            size={"small"}
+            variant={"outlined"}
+            onClick={this.handleLogin}
+          >
+            Login
+          </Button>
+        </div>
+        )
     )
+
   }
 }

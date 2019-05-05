@@ -10,7 +10,7 @@ interface State {
 
 }
 
-export class FourOFour extends React.Component<Props, State> {
+export class FourOFourPage extends React.Component<Props, State> {
   render() {
     return (
       <>

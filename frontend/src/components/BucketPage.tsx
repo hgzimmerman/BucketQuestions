@@ -36,7 +36,7 @@ interface State {
   modalOpen: boolean
 }
 
-export class BucketComponent extends React.Component<Props, State> {
+export class BucketPage extends React.Component<Props, State> {
   state: State = {
     bucket: Loadable.loading(),
     question: Loadable.unloaded(),

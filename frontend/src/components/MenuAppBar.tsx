@@ -50,7 +50,9 @@ class MenuAppBar extends React.Component<Props, State> {
     const { classes } = this.props;
 
     return (
-        <AppBar style={{"position": "static"}}>
+        <AppBar
+          position="static"
+        >
           <Toolbar>
             <LinkIconButton
               to={"/"}

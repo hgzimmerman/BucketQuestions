@@ -22,7 +22,7 @@ interface CreateBucketRequest {
   bucket_slug: string
 }
 
-export class CreateBucket extends React.Component<Props, State> {
+export class CreateBucketPage extends React.Component<Props, State> {
   state: State = {
     name: "",
     slug: "",
@@ -102,7 +102,6 @@ const styles = {
   verticalContainer: {
     display: "flex",
     flexDirection: "column" as "column",
-    // justify: "center",
     alignItems: "center",
     padding: "15px"
   },
