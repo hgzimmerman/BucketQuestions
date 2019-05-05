@@ -13,7 +13,7 @@ const App: React.FC = () => {
   return (
     <div className="App">
       <BrowserRouter>
-        <MenuAppBar/>
+        {/*<MenuAppBar/>*/}
         <Switch>
           <Route path={"/"} exact component={Home}/>
           <Route path={"/create_bucket"} exact component={CreateBucket}/>

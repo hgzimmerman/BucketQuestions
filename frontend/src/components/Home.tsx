@@ -11,6 +11,8 @@ import Fab from "@material-ui/core/Fab";
 import AddIcon from '@material-ui/icons/Add';
 import createStyles from "@material-ui/core/styles/createStyles";
 import withStyles from "@material-ui/core/styles/withStyles";
+import {LoginIconComponent} from "./LoginIconComponent";
+import Toolbar from "@material-ui/core/Toolbar";
 
 
 
@@ -18,6 +20,7 @@ const styles = (theme: Theme) => createStyles({
   horizontal_container: {
     display: "flex",
     flexDirection: "row" as "row",
+    width: "100%"
   },
   grow: {
     flexGrow: 1
@@ -75,22 +78,23 @@ export const Home = withStyles(styles)(
             position="static"
             color={"primary"}
           >
-            <div className={classes.horizontal_container}>
-              <Tabs
-                value={this.state.tabPage}
-                onChange={this.handleTabSelected}
-              >
-                <Tab
-                  label="Joined"
-                  style={{height: 60}}
-                />
-                <Tab
-                  label="Public"
-                  style={{height: 60}}
-                />
-              </Tabs>
-              <div className={classes.grow}/>
-            </div>
+            <Toolbar>
+                <Tabs
+                  value={this.state.tabPage}
+                  onChange={this.handleTabSelected}
+                >
+                  <Tab
+                    label="Joined"
+                    style={{height: 60}}
+                  />
+                  <Tab
+                    label="Public"
+                    style={{height: 60}}
+                  />
+                </Tabs>
+                <div className={classes.grow}/>
+                <LoginIconComponent/>
+            </Toolbar>
           </AppBar>
           }
           {(auth)

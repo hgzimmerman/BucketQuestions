@@ -5,6 +5,7 @@ import TextField from "@material-ui/core/TextField";
 import {authenticatedFetchAndDeserialize} from "../App";
 import {Route} from "react-router";
 import Button from "@material-ui/core/Button";
+import MenuAppBar from "./MenuAppBar";
 
 interface Props {
 
@@ -70,6 +71,7 @@ export class CreateBucket extends React.Component<Props, State> {
   render() {
     return (
       <div >
+        <MenuAppBar/>
         <Paper style={styles.smallMargin}>
           <div style={styles.verticalContainer}>
             <div style={styles.constrainedWidth}>

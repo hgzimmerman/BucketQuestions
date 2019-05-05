@@ -4,9 +4,10 @@ import { createStyles, withStyles, WithStyles } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
-import IconButton from '@material-ui/core/IconButton';
-import MenuIcon from '@material-ui/icons/Menu';
+import IconButton, {IconButtonProps} from '@material-ui/core/IconButton';
+import HomeIcon from '@material-ui/icons/Home';
 import {LoginIconComponent} from "./LoginIconComponent";
+import {Link} from "react-router-dom";
 
 const styles = createStyles({
   root: {
@@ -28,6 +29,15 @@ export interface Props extends WithStyles<typeof styles> {}
 export interface State {
 }
 
+interface LinkIconButtonProps extends IconButtonProps {
+  to: string;
+  replace?: boolean;
+}
+
+const LinkIconButton = (props: LinkIconButtonProps) => (
+  <IconButton {...props} component={Link as any} />
+);
+
 class MenuAppBar extends React.Component<Props, State> {
   state: State = {
   };
@@ -40,20 +50,22 @@ class MenuAppBar extends React.Component<Props, State> {
     const { classes } = this.props;
 
     return (
-      <div className={classes.root}>
-        <AppBar position="static">
+        <AppBar style={{"position": "static"}}>
           <Toolbar>
-            <IconButton className={classes.menuButton} color="inherit" aria-label="Menu">
-              <MenuIcon />
-            </IconButton>
+            <LinkIconButton
+              to={"/"}
+              className={classes.menuButton}
+              color="inherit"
+              aria-label="Home"
+            >
+              <HomeIcon />
+            </LinkIconButton>
             <Typography variant="h6" color="inherit" className={classes.grow}>
-              Bucket Questions
+              Create Bucket
             </Typography>
             <LoginIconComponent/>
-
           </Toolbar>
         </AppBar>
-      </div>
     );
   }
 }

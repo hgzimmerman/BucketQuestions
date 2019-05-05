@@ -60,7 +60,7 @@ export class BucketNavBarComponent extends React.Component<Props, State> {
       remainingQuestions = this.props.remaining_questions + "";
     }
     return (
-      <AppBar>
+      <AppBar style={{"position": "static"}}>
         <Toolbar>
 
           <Route render={({ history }) => (
