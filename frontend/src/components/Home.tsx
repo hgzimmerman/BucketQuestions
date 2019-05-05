@@ -72,8 +72,7 @@ export const Home = withStyles(styles)(
       const {classes} = this.props;
       const auth: boolean = isAuthenticated();
       return (
-        <div>
-
+        <>
           <AppBar
             position="static"
             color={"primary"}
@@ -101,6 +100,8 @@ export const Home = withStyles(styles)(
                 <LoginIconComponent/>
             </Toolbar>
           </AppBar>
+
+          <main>
           {(auth)
             ? <>
               {this.state.tabPage === 0 &&
@@ -118,6 +119,7 @@ export const Home = withStyles(styles)(
                   bucketListFetchPromise={get_public_buckets}
                 />
           }
+          </main>
 
           {(auth) &&
             <Link to={"/create_bucket"}>
@@ -131,7 +133,7 @@ export const Home = withStyles(styles)(
               </Tooltip>
             </Link>
           }
-        </div>
+        </>
       )
     }
   }

@@ -12,3 +12,16 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+#root {
+  height: 100vh
+}
+
+/*
+ * Main indicates scrollable content enabled by parent's height being constrained and set to hide overflow
+ * Since you cant reasonably semantically represent 2 main sections, this might be refactored into a utility component.
+ */
+main {
+  flex: 1; /* takes the remaining height of the "container" div */
+  overflow-y: auto; /* to scroll just the "main" div */
+}

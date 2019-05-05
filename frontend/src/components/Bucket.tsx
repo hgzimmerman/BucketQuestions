@@ -93,12 +93,15 @@ export class BucketComponent extends React.Component<Props, State> {
 
   /* === Network requests */
 
-  getPermissions: (bucket_uuid: Uuid) => Promise<void> = (bucket_uuid: Uuid) => {
+  getPermissions = (bucket_uuid: Uuid) => {
     const url = `/api/bucket/${bucket_uuid}/user`;
     return authenticatedFetchAndDeserialize<BucketUserPermissions>(url)
       .then((permissions: BucketUserPermissions) => {
         this.setState({permissions: Loadable.loaded(permissions)})
       })
+      .catch((error: ErrorResponse) => {
+        this.setState({permissions: Loadable.errored(error.message)})
+      });
   };
 
   changeBucketFlagsRequest = (bucket_uuid: Uuid, changes: ChangeBucketFlagsRequest) => {
@@ -324,17 +327,19 @@ export class BucketComponent extends React.Component<Props, State> {
     return (
       <>
         <BucketNavBarComponent title={title}  remaining_questions={remaining_questions} handleOpenModal={this.handleOpenModal} permissionsModalReady={permissionsModalReady}/>
-        <div style={styles.container}>
-          <div style={styles.constrainedWidth}>
-            {
-              this.state.bucket.match({
-                loading: () => <>Loading</>,
-                loaded: this.render_bucket,
-                error: (error: Error) => <>Could not get bucket - {error}</>
-              })
-            }
+        <main>
+          <div style={styles.container}>
+            <div style={styles.constrainedWidth}>
+              {
+                this.state.bucket.match({
+                  loading: () => <>Loading</>,
+                  loaded: this.render_bucket,
+                  error: (error: Error) => <>Could not get bucket - {error}</>
+                })
+              }
+            </div>
           </div>
-        </div>
+        </main>
         {
           (bucket !== null && permissions !== null) &&
           <BucketManagementModalComponent

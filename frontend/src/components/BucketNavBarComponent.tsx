@@ -92,7 +92,7 @@ export class BucketNavBarComponent extends React.Component<Props, State> {
                   Home
                 </MenuItem>
                 {
-                (this.props.permissionsModalReady !== null && isAuthenticated()) &&
+                (this.props.permissionsModalReady && isAuthenticated()) &&
                   <MenuItem onClick={this.handleOpenModal}>
                     <ListItemIcon>
                       <SettingsIcon />

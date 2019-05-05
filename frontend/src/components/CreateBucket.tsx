@@ -70,28 +70,30 @@ export class CreateBucket extends React.Component<Props, State> {
 
   render() {
     return (
-      <div >
+      <>
         <MenuAppBar/>
-        <Paper style={styles.smallMargin}>
-          <div style={styles.verticalContainer}>
-            <div style={styles.constrainedWidth}>
-              <div style={styles.verticalSpacing}/>
-              <TextField
-                label={"Bucket Name"}
-                fullWidth={true}
-                onChange={this.handleNameUpdate}
-              />
-              <TextField
-                label={"URL Slug"}
-                fullWidth={true}
-                onChange={this.handleSlugUpdate}
-              />
+        <main>
+          <Paper style={styles.smallMargin}>
+            <div style={styles.verticalContainer}>
+              <div style={styles.constrainedWidth}>
+                <div style={styles.verticalSpacing}/>
+                <TextField
+                  label={"Bucket Name"}
+                  fullWidth={true}
+                  onChange={this.handleNameUpdate}
+                />
+                <TextField
+                  label={"URL Slug"}
+                  fullWidth={true}
+                  onChange={this.handleSlugUpdate}
+                />
+              </div>
+            <div style={styles.verticalSpacing}/>
+            {this.submitButton()}
             </div>
-          <div style={styles.verticalSpacing}/>
-          {this.submitButton()}
-          </div>
-        </Paper>
-      </div>
+          </Paper>
+        </main>
+      </>
     )
   }
 }
