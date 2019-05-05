@@ -20,19 +20,18 @@ import Tooltip from "@material-ui/core/Tooltip";
 interface Props {
   title: string,
   bucket_uuid: Uuid | null,
-  remaining_questions: number | null
+  remaining_questions: number | null,
+  handleOpenModal: () => void
 }
 
 
 interface State {
   anchorEl: null | HTMLElement;
-  modalOpen: boolean
 }
 
 export class BucketNavBarComponent extends React.Component<Props, State> {
   state: State = {
     anchorEl: null,
-    modalOpen: false
   };
 
   handleMenu = (event: React.MouseEvent<HTMLElement>) => {
@@ -42,12 +41,12 @@ export class BucketNavBarComponent extends React.Component<Props, State> {
   handleClose = () => {
     this.setState({ anchorEl: null });
   };
+
   handleOpenModal = () => {
-    this.setState({ anchorEl: null, modalOpen: true });
+    this.props.handleOpenModal();
+    this.setState({ anchorEl: null});
   };
-  handleCloseModal = () => {
-    this.setState({modalOpen: false})
-  };
+
 
 
   render() {
@@ -98,7 +97,6 @@ export class BucketNavBarComponent extends React.Component<Props, State> {
                   </MenuItem>
                 }
               </Menu>
-              <BucketManagementModalComponent open={this.state.modalOpen} handleClose={this.handleCloseModal}/>
 
               <Typography variant="h6" color="inherit">
                 {this.props.title}

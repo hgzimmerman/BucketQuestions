@@ -112,6 +112,8 @@ pub struct BucketUserPermissions {
     pub set_visibility_permission: bool,
     /// Can the user enable drawing from the bucket.
     pub set_drawing_permission: bool,
+    /// Can the user make the bucket private
+    pub set_private_permission: bool,
     /// Can the user grant permissions to other users.
     pub grant_permissions_permission: bool
 }

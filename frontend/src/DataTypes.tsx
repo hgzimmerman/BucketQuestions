@@ -45,13 +45,33 @@ export interface NewQuestionRequest {
 export interface BucketUserPermissions {
   set_visibility_permission: boolean,
   set_drawing_permission: boolean,
+  set_private_permission: boolean,
   grant_permissions_permission: boolean
 }
 
-export interface BucketUserPermissionsChangeset {
-  set_visibility_permission?: boolean,
-  set_drawing_permission?: boolean ,
-  grant_permissions_permission?: boolean
+
+export interface BucketUserJoin {
+  user_uuid: Uuid,
+  bucket_uuid: Uuid,
+  set_visibility_permission: boolean,
+  set_drawing_permission: boolean,
+  set_private_permission: boolean,
+  grant_permissions_permission: boolean
+}
+
+// export interface BucketUserPermissionsChangeset {
+//   set_visibility_permission?: boolean,
+//   set_drawing_permission?: boolean ,
+//   grant_permissions_permission?: boolean
+// }
+
+// TODO consider the ?: syntax instead of boolean | null
+export interface SetPermissionsRequest {
+    target_user_uuid: Uuid,
+    set_visibility_permission: boolean| null,
+    set_drawing_permission: boolean | null,
+    set_private_permission: boolean | null,
+    grant_permissions_permission: boolean | null
 }
 
 export interface LinkResponse {

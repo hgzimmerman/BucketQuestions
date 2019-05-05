@@ -7,12 +7,13 @@ import {
   BucketUserPermissions,
   ErrorResponse,
   NewQuestionRequest,
-  Question, Uuid
+  Question, SetPermissionsRequest, User, Uuid
 } from "../DataTypes";
 import {Button} from "@material-ui/core";
 import Paper from "@material-ui/core/Paper";
 import TextField from "@material-ui/core/TextField";
 import {BucketNavBarComponent} from "./BucketNavBarComponent";
+import {BucketManagementModalComponent} from "./BucketManagementModalComponent";
 
 interface Props {
   match: Match
@@ -29,7 +30,10 @@ interface State {
   question: Loadable<Question | null>,
   questions_remaining_in_bucket: Loadable<number>,
   permissions: Loadable<BucketUserPermissions>,
-  newQuestionText: string
+  user: Loadable<User>,
+  newQuestionText: string,
+  // anchorElModal: null | HTMLElement;
+  modalOpen: boolean
 }
 
 export class BucketComponent extends React.Component<Props, State> {
@@ -38,7 +42,10 @@ export class BucketComponent extends React.Component<Props, State> {
     question: Loadable.unloaded(),
     questions_remaining_in_bucket: Loadable.loading(),
     permissions: Loadable.unloaded(),
-    newQuestionText: ""
+    user: Loadable.unloaded(),
+    newQuestionText: "",
+    // anchorElModal: null,
+    modalOpen: false
   };
 
   componentWillReceiveProps(nextProps: Readonly<Props>, nextContext: any): void {
@@ -47,7 +54,10 @@ export class BucketComponent extends React.Component<Props, State> {
         if (bucket != null) {
           this.getNumberOfQuestions(bucket);
           if (isAuthenticated()) {
-            this.getPermissions(bucket.uuid)
+            Promise.all([
+              this.getPermissions(bucket.uuid),
+              // this.getSelf()
+            ])
           }
         }
       });
@@ -65,6 +75,18 @@ export class BucketComponent extends React.Component<Props, State> {
       });
   }
 
+  /*
+   * Handle UI Events
+   */
+
+  handleCloseModal = () => {
+    this.setState({modalOpen: false})
+  };
+
+  handleOpenModal = () => {
+    this.setState({ modalOpen: true });
+  };
+
 
   handleNewQuestionTextUpdate = (event: ChangeEvent<HTMLInputElement>) => {
     this.setState({newQuestionText: event.target.value})
@@ -78,6 +100,30 @@ export class BucketComponent extends React.Component<Props, State> {
       .then((permissions: BucketUserPermissions) => {
         this.setState({permissions: Loadable.loaded(permissions)})
       })
+  };
+
+  // getSelf = () => {
+  //   const url = `/api/user`;
+  //   return authenticatedFetchAndDeserialize<User>(url)
+  //     .then((user: User) => {
+  //       this.setState({user: Loadable.loaded(user)})
+  //
+  //     })
+  // };
+
+  setPermissions = (permissions: SetPermissionsRequest, bucket_uuid: Uuid) => {
+    const user_uuid = permissions.target_user_uuid;
+    const url = `/api/bucket/${bucket_uuid}/user`;
+    const body = JSON.stringify(permissions);
+    const options = {
+      method: "PUT",
+      body
+    };
+    authenticatedFetchAndDeserialize<BucketUserPermissions>(url, options)
+      .then((response: BucketUserPermissions) => {
+        console.log(JSON.stringify(response)) // TODO remove this.
+        // TODO Might need some logic for setting own permissions vs others
+      });
   };
 
   getBucket: () => Promise<Bucket | undefined> = () => {
@@ -272,18 +318,19 @@ export class BucketComponent extends React.Component<Props, State> {
 
     return (
       <>
-      <BucketNavBarComponent title={title} bucket_uuid={bucket_uuid} remaining_questions={remaining_questions}/>
-      <div style={styles.container}>
-        <div style={styles.constrainedWidth}>
-          {
-            this.state.bucket.match({
-              loading: () => <>Loading</>,
-              loaded: this.render_bucket,
-              error: (error: Error) => <>Could not get bucket - {error}</>
-            })
-          }
+        <BucketNavBarComponent title={title} bucket_uuid={bucket_uuid} remaining_questions={remaining_questions} handleOpenModal={this.handleOpenModal}/>
+        <div style={styles.container}>
+          <div style={styles.constrainedWidth}>
+            {
+              this.state.bucket.match({
+                loading: () => <>Loading</>,
+                loaded: this.render_bucket,
+                error: (error: Error) => <>Could not get bucket - {error}</>
+              })
+            }
+          </div>
         </div>
-      </div>
+        <BucketManagementModalComponent open={this.state.modalOpen} handleClose={this.handleCloseModal}/>
       </>
     )
   }
