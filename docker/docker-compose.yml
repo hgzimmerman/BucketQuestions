@@ -1,0 +1,56 @@
+version: "2"
+
+services:
+  # https://medium.com/@pentacent/nginx-and-lets-encrypt-with-docker-in-less-than-5-minutes-b4b8a60d3a71
+  nginx:
+    image: nginx:1.15-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./data/nginx:/etc/nginx/conf.d
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+  app:
+    build: ./
+    ports: 
+      - "8080:8080"
+    volumes:
+      - ../:/usr/src/app # Stick the root directory in the docker container
+    links: # Links are deprecated, experiment in removing this line and still getting the whole thing to work.
+      - db
+    environment:
+      DATABASE_URL: 'postgres://user:example@db:5432/bucketquestions'
+      TEST_DATABASE_URL: 'postgres://user:example@db:5432/bucketquestions_test'
+      TEST_DATABASE_NAME: 'bucketquestions_test'
+      DROP_DATABASE_URL: 'postgres://user:example@db:5432/postgres'
+
+
+
+    # diesel infer_schema macro gives warnings with this flag.
+    # environment:
+    #   - CARGO_INCREMENTAL=1
+    command: bash -c "bash ./build.sh"
+
+  db:
+    image: "postgres:11"
+    ports: 
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data/pgdata
+    environment:
+      POSTGRES_PASSWORD: example
+      POSTGRES_USER: user
+      POSTGRES_DB: bucketquestions
+      PGDATA: /var/lib/postgresql/data/pgdata
+
+# cargo will try to redownload packages @ docker-compose up so store them here.
+volumes:
+  pgdata: {}
