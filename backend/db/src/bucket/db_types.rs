@@ -48,6 +48,21 @@ pub struct NewBucket {
     bucket_slug: String,
 }
 
+/// A changeset for the bucket flags
+#[derive(Clone, Copy, AsChangeset, Identifiable, Debug, Serialize, Deserialize)]
+#[primary_key(uuid)]
+#[table_name = "buckets"]
+pub struct BucketFlagChangeset {
+    /// Identifier of bucket
+    pub uuid: Uuid,
+    /// Is the bucket visible
+    pub visible: Option<bool>,
+    /// Is the bucket session currently active.
+    pub drawing_enabled: Option<bool>,
+    /// Can an unjoined user join the bucket.
+    pub private: Option<bool>
+}
+
 
 /// A relation between users and buckets.
 /// It also contains permissions for what users can do to the bucket.

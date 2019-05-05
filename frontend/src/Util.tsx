@@ -42,6 +42,10 @@ export class Loadable<T> {
     }
   }
 
+  isLoaded(): boolean {
+    return this.mode === "loaded"
+  }
+
   match(options: LoadableMatchOptions<T> ): JSX.Element {
     switch (this.mode) {
       case "unloaded":

@@ -4,7 +4,7 @@ import {authenticatedFetchAndDeserialize, isAuthenticated} from "../App";
 import {
   ArchiveQuestionRequest,
   Bucket,
-  BucketUserPermissions,
+  BucketUserPermissions, ChangeBucketFlagsRequest,
   ErrorResponse,
   NewQuestionRequest,
   Question, SetPermissionsRequest, User, Uuid
@@ -32,7 +32,6 @@ interface State {
   permissions: Loadable<BucketUserPermissions>,
   user: Loadable<User>,
   newQuestionText: string,
-  // anchorElModal: null | HTMLElement;
   modalOpen: boolean
 }
 
@@ -44,7 +43,6 @@ export class BucketComponent extends React.Component<Props, State> {
     permissions: Loadable.unloaded(),
     user: Loadable.unloaded(),
     newQuestionText: "",
-    // anchorElModal: null,
     modalOpen: false
   };
 
@@ -80,13 +78,14 @@ export class BucketComponent extends React.Component<Props, State> {
    */
 
   handleCloseModal = () => {
+    console.log("handling closing the modal");
     this.setState({modalOpen: false})
   };
 
   handleOpenModal = () => {
+    console.log("handling opening the modal");
     this.setState({ modalOpen: true });
   };
-
 
   handleNewQuestionTextUpdate = (event: ChangeEvent<HTMLInputElement>) => {
     this.setState({newQuestionText: event.target.value})
@@ -102,14 +101,19 @@ export class BucketComponent extends React.Component<Props, State> {
       })
   };
 
-  // getSelf = () => {
-  //   const url = `/api/user`;
-  //   return authenticatedFetchAndDeserialize<User>(url)
-  //     .then((user: User) => {
-  //       this.setState({user: Loadable.loaded(user)})
-  //
-  //     })
-  // };
+  changeBucketFlagsRequest = (bucket_uuid: Uuid, changes: ChangeBucketFlagsRequest) => {
+    const url = `/api/bucket/${bucket_uuid}`;
+    const body = JSON.stringify(changes);
+    const options = {
+      method: "PUT",
+      body
+    };
+    authenticatedFetchAndDeserialize<Bucket>(url, options)
+      .then((bucket: Bucket) => {
+        this.setState({bucket: Loadable.loaded(bucket)})
+      })
+  };
+
 
   setPermissions = (permissions: SetPermissionsRequest, bucket_uuid: Uuid) => {
     const user_uuid = permissions.target_user_uuid;
@@ -308,17 +312,18 @@ export class BucketComponent extends React.Component<Props, State> {
 
   render() {
     let title = "";
-    let bucket_uuid = null;
     let bucket = this.state.bucket.getLoaded();
     if (bucket != null) {
       title = bucket.bucket_name;
-      bucket_uuid = bucket.uuid;
     }
     const remaining_questions = this.state.questions_remaining_in_bucket.getLoaded();
+    const permissionsModalReady = this.state.permissions.isLoaded() && this.state.bucket.isLoaded();
+
+    const permissions =  this.state.permissions.getLoaded();
 
     return (
       <>
-        <BucketNavBarComponent title={title} bucket_uuid={bucket_uuid} remaining_questions={remaining_questions} handleOpenModal={this.handleOpenModal}/>
+        <BucketNavBarComponent title={title}  remaining_questions={remaining_questions} handleOpenModal={this.handleOpenModal} permissionsModalReady={permissionsModalReady}/>
         <div style={styles.container}>
           <div style={styles.constrainedWidth}>
             {
@@ -330,7 +335,16 @@ export class BucketComponent extends React.Component<Props, State> {
             }
           </div>
         </div>
-        <BucketManagementModalComponent open={this.state.modalOpen} handleClose={this.handleCloseModal}/>
+        {
+          (bucket !== null && permissions !== null) &&
+          <BucketManagementModalComponent
+            open={this.state.modalOpen}
+            handleClose={this.handleCloseModal}
+            bucket={bucket as Bucket}
+            permissions={permissions as BucketUserPermissions}
+            setBucketStateCallback={this.changeBucketFlagsRequest}
+          />
+        }
       </>
     )
   }

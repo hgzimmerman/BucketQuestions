@@ -12,6 +12,7 @@
     "@types/react-dom": "16.8.4",
     "@types/react-router-dom": "^4.3.2",
     "http-proxy-middleware": "^0.19.1",
+    "lodash-es": "^4.17.11",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-router-dom": "^5.0.0",
@@ -50,6 +51,7 @@
     ]
   },
   "devDependencies": {
+    "@types/lodash-es": "^4.17.3",
     "cra-build-watch": "^1.4.0",
     "npm-watch": "^0.6.0"
   }

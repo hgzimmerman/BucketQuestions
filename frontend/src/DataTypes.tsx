@@ -77,3 +77,9 @@ export interface SetPermissionsRequest {
 export interface LinkResponse {
   link: string
 }
+
+export interface ChangeBucketFlagsRequest {
+  visible?: boolean,
+  drawing_enabled?: boolean,
+  private?: boolean
+}

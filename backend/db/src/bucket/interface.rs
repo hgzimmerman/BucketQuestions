@@ -3,7 +3,7 @@
 //! These traits should try to not include significant quantities of business logic.
 //! It should try to deal with only the types specified in db_types, and avoid wire types.
 
-use crate::bucket::db_types::{Bucket, NewBucket, NewBucketUserJoin, BucketUserPermissionsChangeset, BucketUserJoin, BucketUserPermissions, NewQuestion, Question, NewAnswer, Answer, NewFavoriteQuestionRelation};
+use crate::bucket::db_types::{Bucket, NewBucket, NewBucketUserJoin, BucketUserPermissionsChangeset, BucketUserJoin, BucketUserPermissions, NewQuestion, Question, NewAnswer, Answer, NewFavoriteQuestionRelation, BucketFlagChangeset};
 use uuid::Uuid;
 use diesel::QueryResult;
 use crate::user::User;
@@ -21,10 +21,12 @@ pub trait BucketRepository {
     fn get_bucket_by_slug(&self, slug: String) -> QueryResult<Bucket>;
     /// Gets the bucket via its uuid.
     fn get_bucket_by_uuid(&self, uuid: Uuid) -> QueryResult<Bucket>;
-    /// Change the public visibility of the bucket.
-    fn change_visibility(&self, bucket_uuid: Uuid, visible: bool) -> QueryResult<Bucket>;
-    /// Allow the bucket to be drawn from.
-    fn change_drawing_status(&self, bucket_uuid: Uuid, drawing: bool) -> QueryResult<Bucket>;
+//    / Change the public visibility of the bucket.
+//    fn change_visibility(&self, bucket_uuid: Uuid, visible: bool) -> QueryResult<Bucket>;
+//    / Allow the bucket to be drawn from.
+//    fn change_drawing_status(&self, bucket_uuid: Uuid, drawing: bool) -> QueryResult<Bucket>;
+    /// Change the blags that govern the buckets behavior
+    fn change_bucket_flags(&self, changeset: BucketFlagChangeset) -> QueryResult<Bucket>;
 }
 
 /// Functions for specifically working with bucket user relations.

@@ -7,10 +7,8 @@ import MenuIcon from '@material-ui/icons/Menu';
 import Menu from "@material-ui/core/Menu";
 import MenuItem from "@material-ui/core/MenuItem";
 import {Route} from "react-router";
-import {Uuid} from "../DataTypes";
 import {isAuthenticated} from "../App";
 import {LoginIconComponent} from "./LoginIconComponent";
-import {BucketManagementModalComponent} from "./BucketManagementModalComponent";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import HomeIcon from '@material-ui/icons/Home';
 import SettingsIcon from '@material-ui/icons/Settings';
@@ -18,9 +16,15 @@ import bucket from '../bucket_white.png';
 import Tooltip from "@material-ui/core/Tooltip";
 
 interface Props {
+  // The title displayed in the nav bar.
   title: string,
-  bucket_uuid: Uuid | null,
+  // In order for the modal menu option to be shown,
+  // the bucket component needs to have confirmed the user has permissions to do so,
+  // and that the requisite data is fetched.
+  permissionsModalReady: boolean,
+  // How many questions are in the bucket?
   remaining_questions: number | null,
+  // A callback to open the modal from the parent component.
   handleOpenModal: () => void
 }
 
@@ -88,7 +92,7 @@ export class BucketNavBarComponent extends React.Component<Props, State> {
                   Home
                 </MenuItem>
                 {
-                (this.props.bucket_uuid !== null && isAuthenticated()) &&
+                (this.props.permissionsModalReady !== null && isAuthenticated()) &&
                   <MenuItem onClick={this.handleOpenModal}>
                     <ListItemIcon>
                       <SettingsIcon />

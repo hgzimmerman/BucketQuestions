@@ -2,7 +2,7 @@
 
 use crate::bucket::interface::{BucketRepository, BucketUserRelationRepository, QuestionRepository, AnswerRepository, FavoriteQuestionRelationRepository};
 use diesel::pg::PgConnection;
-use crate::bucket::db_types::{NewBucket, Bucket, NewBucketUserJoin, BucketUserJoin, BucketUserPermissionsChangeset, BucketUserPermissions, NewQuestion, Question, NewAnswer, Answer, NewFavoriteQuestionRelation, FavoriteQuestionRelation};
+use crate::bucket::db_types::{NewBucket, Bucket, NewBucketUserJoin, BucketUserJoin, BucketUserPermissionsChangeset, BucketUserPermissions, NewQuestion, Question, NewAnswer, Answer, NewFavoriteQuestionRelation, FavoriteQuestionRelation, BucketFlagChangeset};
 use diesel::result::Error;
 use uuid::Uuid;
 use crate::schema::{
@@ -47,23 +47,27 @@ impl BucketRepository for PgConnection {
         crate::util::get_row(buckets::table, uuid, self)
     }
 
-    fn change_visibility(&self, bucket_uuid: Uuid, visible: bool) -> Result<Bucket, Error> {
-        let target = buckets::table
-            .find(bucket_uuid);
-
-        diesel::update(target)
-            .set(buckets::visible.eq(visible))
-            .get_result(self)
+    fn change_bucket_flags(&self, changeset: BucketFlagChangeset) -> Result<Bucket, Error> {
+        changeset.save_changes(self)
     }
 
-    fn change_drawing_status(&self, bucket_uuid: Uuid, drawing: bool) -> Result<Bucket, Error> {
-        let target = buckets::table
-            .find(bucket_uuid);
-
-        diesel::update(target)
-            .set(buckets::drawing_enabled.eq(drawing))
-            .get_result(self)
-    }
+//    fn change_visibility(&self, bucket_uuid: Uuid, visible: bool) -> Result<Bucket, Error> {
+//        let target = buckets::table
+//            .find(bucket_uuid);
+//
+//        diesel::update(target)
+//            .set(buckets::visible.eq(visible))
+//            .get_result(self)
+//    }
+//
+//    fn change_drawing_status(&self, bucket_uuid: Uuid, drawing: bool) -> Result<Bucket, Error> {
+//        let target = buckets::table
+//            .find(bucket_uuid);
+//
+//        diesel::update(target)
+//            .set(buckets::drawing_enabled.eq(drawing))
+//            .get_result(self)
+//    }
 }
 
 impl BucketUserRelationRepository for PgConnection {
