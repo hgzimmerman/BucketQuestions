@@ -10,50 +10,10 @@
 
 use crate::{error::Error, state::State};
 use authorization::{JwtPayload, Secret, AUTHORIZATION_HEADER_KEY};
-use egg_mode::{KeyPair, Token};
 use serde::{Deserialize, Serialize};
 use std::env;
 use uuid::Uuid;
 use warp::{filters::BoxedFilter, Filter, Rejection};
-
-/// A serializeable variant of Egg-mode's Token::Access variant
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct TwitterToken {
-    consumer_key: String,
-    consumer_secret: String,
-    access_key: String,
-    access_secret: String,
-}
-
-impl From<Token> for TwitterToken {
-    fn from(value: Token) -> Self {
-        match value {
-            Token::Access { consumer, access } => TwitterToken {
-                consumer_key: consumer.key.to_string(),
-                consumer_secret: consumer.secret.to_string(),
-                access_key: access.key.to_string(),
-                access_secret: access.secret.to_string(),
-            },
-            _ => panic!("No support for non-access tokens"),
-        }
-    }
-}
-
-impl Into<Token> for TwitterToken {
-    fn into(self) -> Token {
-        Token::Access {
-            consumer: KeyPair {
-                key: self.consumer_key.into(),
-                secret: self.consumer_secret.into(),
-            },
-            access: KeyPair {
-                key: self.access_key.into(),
-                secret: self.access_secret.into(),
-            },
-        }
-    }
-}
-
 use db::user::User;
 use oauth2::{
     basic::BasicClient, prelude::*, AuthUrl, ClientId, ClientSecret, CsrfToken,
