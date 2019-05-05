@@ -8,7 +8,6 @@ stdenv.mkDerivation rec {
     postgresql # Db and Db lib for Diesel
     openssl # Lib for TLS integration needed for Diesel + Warp
     pkgconfig # resolve dependencies
-    geckodriver # Web driver for testing
   ];
   shellHook = ''
     export PGDATA='pgsql'
