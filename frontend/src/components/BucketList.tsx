@@ -6,6 +6,7 @@ import {Error} from "../Util";
 import List from "@material-ui/core/List";
 import {Route} from "react-router-dom";
 import Paper from "@material-ui/core/Paper";
+import {LoadingComponent} from "./LoadingComponent";
 
 
 
@@ -61,9 +62,7 @@ export class BucketList extends React.Component<Props, State> {
       <div style={styles.verticalContainer}>
       {
         this.state.buckets.match({
-          loading: () => {
-            return (<>{"Loading"}</>);
-          },
+          loading: () => <LoadingComponent delay={"200ms"}/>,
           loaded: BucketList.render_buckets,
           error: (error: Error) => {
             return (<>{error}</>);

@@ -14,6 +14,7 @@ import Paper from "@material-ui/core/Paper";
 import TextField from "@material-ui/core/TextField";
 import {BucketNavBarComponent} from "./BucketNavBarComponent";
 import {BucketManagementModalComponent} from "./BucketManagementModalComponent";
+import {LoadingComponent} from "./LoadingComponent";
 
 interface Props {
   match: Match
@@ -230,7 +231,7 @@ export class BucketComponent extends React.Component<Props, State> {
                   Draw Random Question
                 </Button>
               </>,
-              loading: () => <>Loading</>,
+              loading: () => <LoadingComponent/>,
               loaded: (question: Question | null) => this.render_question(question, bucket),
               error: (error: Error) => <>{error}</>
             })
@@ -332,7 +333,7 @@ export class BucketComponent extends React.Component<Props, State> {
             <div style={styles.constrainedWidth}>
               {
                 this.state.bucket.match({
-                  loading: () => <>Loading</>,
+                  loading: () => <LoadingComponent/>,
                   loaded: this.render_bucket,
                   error: (error: Error) => <>Could not get bucket - {error}</>
                 })
