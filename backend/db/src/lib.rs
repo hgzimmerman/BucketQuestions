@@ -22,6 +22,7 @@ pub mod bucket;
 pub mod user;
 pub mod mock;
 mod util;
+mod test;
 
 use crate::{
     bucket::interface::{

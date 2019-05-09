@@ -32,10 +32,11 @@ hyper-tls = "0.3.1"
 tokio = "0.1.15"
 rand = "0.6.5"
 serde_urlencoded = "0.5.5"
-#egg-mode = {git = "https://github.com/QuietMisdreavus/twitter-rs", rev = "8491554282f5e8a43f9144208198b756ce5ed07a"}
 tokio-core = "0.1.17"
 askama = "0.8.0"
 oauth2 = "2.0.0-beta.2"
 url = "1.7.2"
 base64 = "0.10.1"
 
+[dev-dependencies]
+diesel_reset = {path="../diesel_reset"}

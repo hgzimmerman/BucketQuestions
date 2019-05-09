@@ -16,3 +16,6 @@ serde = {version="1.0.85", features=["derive"]}
 pool = {path="../pool"}
 log = "0.4.6"
 rand = "0.6.5"
+
+[dev-dependencies]
+diesel_reset = {path="../diesel_reset"}

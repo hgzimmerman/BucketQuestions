@@ -2,7 +2,7 @@
 members = [
     "db",
     "server",
-    "testing_common",
+    "diesel_reset",
     "pool",
     "auth",
 ]

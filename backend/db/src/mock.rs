@@ -45,7 +45,7 @@ impl DatabaseErrorInformation for DummyDbErrorInfo {
 }
 
 /// A mock object that should have parity with database operations.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct MockDatabase {
     users: Vec<User>,
     buckets: Vec<Bucket>,
@@ -54,6 +54,7 @@ pub struct MockDatabase {
     answers: Vec<Answer>,
     favorite_question_relations: Vec<FavoriteQuestionRelation>
 }
+
 
 impl UserRepository for Mutex<MockDatabase> {
     fn create_user(&self, user: NewUser) -> Result<User, Error> {
