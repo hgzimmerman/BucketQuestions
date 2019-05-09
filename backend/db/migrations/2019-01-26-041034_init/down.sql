@@ -4,4 +4,4 @@
 -- DROP TABLE stock_transactions;
 -- DROP TABLE stocks;
 -- DROP TABLE events;
-DROP TABLE users;
+DROP TABLE bq_user;

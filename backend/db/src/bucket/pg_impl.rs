@@ -13,7 +13,7 @@ use crate::{
         },
     },
     diesel::OptionalExtension,
-    schema::{answers, bucket_user_join, buckets, questions, user_favorite_question_join, users},
+    schema::{answer, bucket_user_relation, bucket, question, user_question_favorite_relation, bq_user},
     user::User,
 };
 use diesel::{
@@ -27,27 +27,27 @@ use uuid::Uuid;
 
 impl BucketRepository for PgConnection {
     fn create_bucket(&self, new_bucket: NewBucket) -> Result<Bucket, Error> {
-        crate::util::create_row(buckets::table, new_bucket, self)
+        crate::util::create_row(bucket::table, new_bucket, self)
     }
 
     fn delete_bucket(&self, bucket_uuid: Uuid) -> Result<Bucket, Error> {
-        crate::util::delete_row(buckets::table, bucket_uuid, self)
+        crate::util::delete_row(bucket::table, bucket_uuid, self)
     }
 
     fn get_publicly_visible_buckets(&self) -> Result<Vec<Bucket>, Error> {
-        buckets::table
-            .filter(buckets::visible.eq(true))
+        bucket::table
+            .filter(bucket::visible.eq(true))
             .get_results(self)
     }
 
     fn get_bucket_by_slug(&self, slug: String) -> Result<Bucket, Error> {
-        buckets::table
-            .filter(&buckets::bucket_slug.eq(slug))
+        bucket::table
+            .filter(&bucket::bucket_slug.eq(slug))
             .first(self)
     }
 
     fn get_bucket_by_uuid(&self, uuid: Uuid) -> Result<Bucket, Error> {
-        crate::util::get_row(buckets::table, uuid, self)
+        crate::util::get_row(bucket::table, uuid, self)
     }
 
     fn change_bucket_flags(&self, changeset: BucketFlagChangeset) -> Result<Bucket, Error> {
@@ -67,7 +67,7 @@ impl BucketRepository for PgConnection {
 
 impl BucketUserRelationRepository for PgConnection {
     fn add_user_to_bucket(&self, relation: NewBucketUserJoin) -> Result<BucketUserJoin, Error> {
-        crate::util::create_row(bucket_user_join::table, relation, self)
+        crate::util::create_row(bucket_user_relation::table, relation, self)
     }
 
     fn remove_user_from_bucket(
@@ -75,10 +75,10 @@ impl BucketUserRelationRepository for PgConnection {
         user_uuid: Uuid,
         bucket_uuid: Uuid,
     ) -> Result<BucketUserJoin, Error> {
-        let target = bucket_user_join::table.filter(
-            bucket_user_join::user_uuid
+        let target = bucket_user_relation::table.filter(
+            bucket_user_relation::user_uuid
                 .eq(user_uuid)
-                .and(bucket_user_join::bucket_uuid.eq(bucket_uuid)),
+                .and(bucket_user_relation::bucket_uuid.eq(bucket_uuid)),
         );
         diesel::delete(target).get_result(self)
     }
@@ -95,60 +95,60 @@ impl BucketUserRelationRepository for PgConnection {
         user_uuid: Uuid,
         bucket_uuid: Uuid,
     ) -> Result<BucketUserPermissions, Error> {
-        bucket_user_join::table
+        bucket_user_relation::table
             .filter(
-                bucket_user_join::user_uuid
+                bucket_user_relation::user_uuid
                     .eq(user_uuid)
-                    .and(bucket_user_join::bucket_uuid.eq(bucket_uuid)),
+                    .and(bucket_user_relation::bucket_uuid.eq(bucket_uuid)),
             )
             .select((
-                bucket_user_join::set_visibility_permission,
-                bucket_user_join::set_drawing_permission,
-                bucket_user_join::set_private_permission,
-                bucket_user_join::grant_permissions_permission,
+                bucket_user_relation::set_visibility_permission,
+                bucket_user_relation::set_drawing_permission,
+                bucket_user_relation::set_private_permission,
+                bucket_user_relation::grant_permissions_permission,
             ))
             .get_result::<BucketUserPermissions>(self)
     }
 
     fn get_buckets_user_is_a_part_of(&self, user_uuid: Uuid) -> Result<Vec<Bucket>, Error> {
         info!("get_buckets_user_is_a_part_of");
-        bucket_user_join::table
-            .filter(bucket_user_join::user_uuid.eq(user_uuid))
-            .select(bucket_user_join::bucket_uuid)
-            .inner_join(buckets::table)
-            .select(buckets::all_columns)
+        bucket_user_relation::table
+            .filter(bucket_user_relation::user_uuid.eq(user_uuid))
+            .select(bucket_user_relation::bucket_uuid)
+            .inner_join(bucket::table)
+            .select(bucket::all_columns)
             .get_results(self)
     }
 
     fn get_users_in_bucket(&self, bucket_uuid: Uuid) -> Result<Vec<User>, Error> {
         info!("get_users_in_bucket");
-        bucket_user_join::table
-            .filter(bucket_user_join::bucket_uuid.eq(bucket_uuid))
-            .select(bucket_user_join::user_uuid)
-            .inner_join(users::table)
-            .select(users::all_columns)
+        bucket_user_relation::table
+            .filter(bucket_user_relation::bucket_uuid.eq(bucket_uuid))
+            .select(bucket_user_relation::user_uuid)
+            .inner_join(bq_user::table)
+            .select(bq_user::all_columns)
             .get_results(self)
     }
 }
 
 impl QuestionRepository for PgConnection {
     fn create_question(&self, question: NewQuestion) -> Result<Question, Error> {
-        crate::util::create_row(questions::table, question, self)
+        crate::util::create_row(question::table, question, self)
     }
 
     fn delete_question(&self, uuid: Uuid) -> Result<Question, Error> {
-        crate::util::delete_row(questions::table, uuid, self)
+        crate::util::delete_row(question::table, uuid, self)
     }
 
     fn get_random_question(&self, bucket_uuid: Uuid) -> Result<Option<Question>, Error> {
         no_arg_sql_function!(RANDOM, (), "Represents the sql RANDOM() function");
 
         // Get a question in the bucket, that isn't on the floor.
-        let condition = questions::bucket_uuid
+        let condition = question::bucket_uuid
             .eq(bucket_uuid)
-            .and(questions::archived.eq(false));
+            .and(question::archived.eq(false));
 
-        questions::table
+        question::table
             .filter(condition)
             .order(RANDOM)
             .first(self)
@@ -156,11 +156,11 @@ impl QuestionRepository for PgConnection {
     }
 
     fn get_number_of_active_questions_for_bucket(&self, bucket_uuid: Uuid) -> Result<i64, Error> {
-        questions::table
+        question::table
             .filter(
-                questions::bucket_uuid
+                question::bucket_uuid
                     .eq(bucket_uuid)
-                    .and(questions::archived.eq(false)),
+                    .and(question::archived.eq(false)),
             )
             .count()
             .get_result(self)
@@ -171,11 +171,11 @@ impl QuestionRepository for PgConnection {
         bucket_uuid: Uuid,
         archived: bool,
     ) -> Result<Vec<Question>, Error> {
-        questions::table
+        question::table
             .filter(
-                questions::bucket_uuid
+                question::bucket_uuid
                     .eq(bucket_uuid)
-                    .and(questions::archived.eq(archived)),
+                    .and(question::archived.eq(archived)),
             )
             .get_results(self)
     }
@@ -185,52 +185,52 @@ impl QuestionRepository for PgConnection {
         question_uuid: Uuid,
         archived: bool,
     ) -> Result<Question, Error> {
-        let target = questions::table.find(question_uuid);
+        let target = question::table.find(question_uuid);
 
         diesel::update(target)
-            .set(questions::archived.eq(archived))
+            .set(question::archived.eq(archived))
             .get_result(self)
     }
 }
 
 impl AnswerRepository for PgConnection {
     fn create_answer(&self, answer: NewAnswer) -> Result<Answer, Error> {
-        crate::util::create_row(answers::table, answer, self)
+        crate::util::create_row(answer::table, answer, self)
     }
 
     fn delete_answer(&self, uuid: Uuid) -> Result<Answer, Error> {
-        crate::util::delete_row(answers::table, uuid, self)
+        crate::util::delete_row(answer::table, uuid, self)
     }
 
     fn get_answers_for_question(&self, question_uuid: Uuid) -> Result<Vec<Answer>, Error> {
-        answers::table
-            .filter(answers::question_uuid.eq(question_uuid))
+        answer::table
+            .filter(answer::question_uuid.eq(question_uuid))
             .get_results(self)
     }
 }
 
 impl FavoriteQuestionRelationRepository for PgConnection {
     fn favorite_question(&self, relation: NewFavoriteQuestionRelation) -> Result<(), Error> {
-        crate::util::create_row(user_favorite_question_join::table, relation, self)
+        crate::util::create_row(user_question_favorite_relation::table, relation, self)
             .map(|_: FavoriteQuestionRelation| ())
     }
 
     fn unfavorite_question(&self, relation: NewFavoriteQuestionRelation) -> Result<(), Error> {
-        let target = user_favorite_question_join::table.filter(
-            user_favorite_question_join::user_uuid
+        let target = user_question_favorite_relation::table.filter(
+            user_question_favorite_relation::user_uuid
                 .eq(relation.user_uuid)
-                .and(user_favorite_question_join::question_uuid.eq(relation.question_uuid)),
+                .and(user_question_favorite_relation::question_uuid.eq(relation.question_uuid)),
         );
         diesel::delete(target).execute(self).map(|_| ())
     }
 
     fn get_favorite_questions(&self, user_uuid: Uuid) -> Result<Vec<Question>, Error> {
-        use user_favorite_question_join as favorites;
-        favorites::table
-            .filter(favorites::user_uuid.eq(user_uuid))
-            .select(favorites::question_uuid)
-            .inner_join(questions::table)
-            .select(questions::all_columns)
+        use user_question_favorite_relation  as favorite;
+        favorite::table
+            .filter(favorite::user_uuid.eq(user_uuid))
+            .select(favorite::question_uuid)
+            .inner_join(question::table)
+            .select(question::all_columns)
             .get_results(self)
     }
 }

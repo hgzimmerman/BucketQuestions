@@ -1,74 +1,84 @@
 table! {
-    answers (uuid) {
+    answer (uuid) {
         uuid -> Uuid,
         user_uuid -> Nullable<Uuid>,
         question_uuid -> Uuid,
         publicly_visible -> Bool,
         answer_text -> Varchar,
+        updated_at -> Timestamp,
+        created_at -> Timestamp,
     }
 }
 
 table! {
-    buckets (uuid) {
-        uuid -> Uuid,
-        bucket_name -> Varchar,
-        bucket_slug -> Varchar,
-        visible -> Bool,
-        drawing_enabled -> Bool,
-        private -> Bool,
-    }
-}
-
-table! {
-    bucket_user_join (user_uuid, bucket_uuid) {
-        user_uuid -> Uuid,
-        bucket_uuid -> Uuid,
-        set_visibility_permission -> Bool,
-        set_drawing_permission -> Bool,
-        set_private_permission -> Bool,
-        grant_permissions_permission -> Bool,
-    }
-}
-
-table! {
-    questions (uuid) {
-        uuid -> Uuid,
-        bucket_uuid -> Uuid,
-        user_uuid -> Nullable<Uuid>,
-        question_text -> Varchar,
-        archived -> Bool,
-    }
-}
-
-table! {
-    user_favorite_question_join (user_uuid, question_uuid) {
-        user_uuid -> Uuid,
-        question_uuid -> Uuid,
-    }
-}
-
-table! {
-    users (uuid) {
+    bq_user (uuid) {
         uuid -> Uuid,
         google_user_id -> Varchar,
         google_name -> Nullable<Varchar>,
     }
 }
 
-joinable!(answers -> questions (question_uuid));
-joinable!(answers -> users (user_uuid));
-joinable!(bucket_user_join -> buckets (bucket_uuid));
-joinable!(bucket_user_join -> users (user_uuid));
-joinable!(questions -> buckets (bucket_uuid));
-joinable!(questions -> users (user_uuid));
-joinable!(user_favorite_question_join -> questions (question_uuid));
-joinable!(user_favorite_question_join -> users (user_uuid));
+table! {
+    bucket (uuid) {
+        uuid -> Uuid,
+        bucket_name -> Varchar,
+        bucket_slug -> Varchar,
+        visible -> Bool,
+        drawing_enabled -> Bool,
+        private -> Bool,
+        updated_at -> Timestamp,
+        created_at -> Timestamp,
+    }
+}
+
+table! {
+    bucket_user_relation (user_uuid, bucket_uuid) {
+        user_uuid -> Uuid,
+        bucket_uuid -> Uuid,
+        set_visibility_permission -> Bool,
+        set_drawing_permission -> Bool,
+        set_private_permission -> Bool,
+        grant_permissions_permission -> Bool,
+        updated_at -> Timestamp,
+        created_at -> Timestamp,
+    }
+}
+
+table! {
+    question (uuid) {
+        uuid -> Uuid,
+        bucket_uuid -> Uuid,
+        user_uuid -> Nullable<Uuid>,
+        question_text -> Varchar,
+        archived -> Bool,
+        updated_at -> Timestamp,
+        created_at -> Timestamp,
+    }
+}
+
+table! {
+    user_question_favorite_relation (user_uuid, question_uuid) {
+        user_uuid -> Uuid,
+        question_uuid -> Uuid,
+        updated_at -> Timestamp,
+        created_at -> Timestamp,
+    }
+}
+
+joinable!(answer -> bq_user (user_uuid));
+joinable!(answer -> question (question_uuid));
+joinable!(bucket_user_relation -> bq_user (user_uuid));
+joinable!(bucket_user_relation -> bucket (bucket_uuid));
+joinable!(question -> bq_user (user_uuid));
+joinable!(question -> bucket (bucket_uuid));
+joinable!(user_question_favorite_relation -> bq_user (user_uuid));
+joinable!(user_question_favorite_relation -> question (question_uuid));
 
 allow_tables_to_appear_in_same_query!(
-    answers,
-    buckets,
-    bucket_user_join,
-    questions,
-    user_favorite_question_join,
-    users,
+    answer,
+    bq_user,
+    bucket,
+    bucket_user_relation,
+    question,
+    user_question_favorite_relation,
 );

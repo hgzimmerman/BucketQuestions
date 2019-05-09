@@ -102,7 +102,9 @@ impl BucketRepository for Mutex<MockDatabase> {
             bucket_slug: new_bucket.bucket_slug,
             visible: true,
             drawing_enabled: true,
-            private: false
+            private: false,
+            updated_at: chrono::Utc::now().naive_utc(),
+            created_at: chrono::Utc::now().naive_utc()
         };
         if db.buckets.iter().find(|b| b.uuid == uuid).is_some() {
             return Err(Error::DatabaseError(DatabaseErrorKind::UniqueViolation, Box::new(DummyDbErrorInfo::new())))
@@ -169,7 +171,9 @@ impl BucketUserRelationRepository for Mutex<MockDatabase> {
             set_visibility_permission: relation.set_visibility_permission,
             set_drawing_permission: relation.set_drawing_permission,
             set_private_permission: relation.set_private_permission,
-            grant_permissions_permission: relation.grant_permissions_permission
+            grant_permissions_permission: relation.grant_permissions_permission,
+            updated_at: chrono::Utc::now().naive_utc(),
+            created_at: chrono::Utc::now().naive_utc()
         };
         if db.user_bucket_relations.iter().find(|r| {
             r.user_uuid == relation.user_uuid
@@ -272,7 +276,9 @@ impl QuestionRepository for Mutex<MockDatabase> {
             bucket_uuid: question.bucket_uuid,
             user_uuid: question.user_uuid,
             question_text: question.question_text,
-            archived: false
+            archived: false,
+            updated_at: chrono::Utc::now().naive_utc(),
+            created_at: chrono::Utc::now().naive_utc()
         };
         let mut db = self.lock().unwrap();
         if db.questions
@@ -332,7 +338,9 @@ impl AnswerRepository for Mutex<MockDatabase> {
             user_uuid: answer.user_uuid,
             question_uuid: answer.question_uuid,
             publicly_visible: answer.publicly_visible,
-            answer_text: answer.answer_text
+            answer_text: answer.answer_text,
+            updated_at: chrono::Utc::now().naive_utc(),
+            created_at: chrono::Utc::now().naive_utc()
         };
         let mut db = self.lock().unwrap();
         if db.answers
@@ -366,7 +374,9 @@ impl FavoriteQuestionRelationRepository for Mutex<MockDatabase> {
         let mut db = self.lock().unwrap();
         let relation = FavoriteQuestionRelation {
             user_uuid: relation.user_uuid,
-            question_uuid: relation.question_uuid
+            question_uuid: relation.question_uuid,
+            updated_at: chrono::Utc::now().naive_utc(),
+            created_at: chrono::Utc::now().naive_utc()
         };
         if db.favorite_question_relations
             .iter()

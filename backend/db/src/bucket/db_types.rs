@@ -1,15 +1,16 @@
 //! Module for bucket related database interactions.
 
-use crate::schema::{answers, bucket_user_join, buckets, questions, user_favorite_question_join};
+use crate::schema::{answer, bucket_user_relation, bucket, question, user_question_favorite_relation};
 use diesel::{Identifiable, Queryable};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::NaiveDateTime;
 
 /// A struct representing a bucket.
 /// A bucket is a session associated with questions.
 #[derive(Clone, Debug, PartialEq, PartialOrd, Identifiable, Queryable, Serialize, Deserialize)]
 #[primary_key(uuid)]
-#[table_name = "buckets"]
+#[table_name = "bucket"]
 pub struct Bucket {
     /// The bucket's unique identifier within the application.
     pub uuid: Uuid,
@@ -24,11 +25,15 @@ pub struct Bucket {
     pub drawing_enabled: bool,
     /// Can an unjoined user join the bucket.
     pub private: bool,
+    /// When the row was last updated.
+    pub updated_at: NaiveDateTime,
+    /// When the row was created.
+    pub created_at: NaiveDateTime
 }
 
 /// Structure used to create new users.
 #[derive(Clone, Insertable, Debug, Serialize, Deserialize)]
-#[table_name = "buckets"]
+#[table_name = "bucket"]
 pub struct NewBucket {
     /// The name of the bucket
     pub bucket_name: String,
@@ -39,7 +44,7 @@ pub struct NewBucket {
 /// A changeset for the bucket flags
 #[derive(Clone, Copy, AsChangeset, Identifiable, Debug, Serialize, Deserialize)]
 #[primary_key(uuid)]
-#[table_name = "buckets"]
+#[table_name = "bucket"]
 pub struct BucketFlagChangeset {
     /// Identifier of bucket
     pub uuid: Uuid,
@@ -57,7 +62,7 @@ pub struct BucketFlagChangeset {
     Clone, Copy, Debug, PartialEq, PartialOrd, Identifiable, Queryable, Serialize, Deserialize,
 )]
 #[primary_key(user_uuid, bucket_uuid)]
-#[table_name = "bucket_user_join"]
+#[table_name = "bucket_user_relation"]
 pub struct BucketUserJoin {
     /// The uuid of the user.
     pub user_uuid: Uuid,
@@ -71,12 +76,16 @@ pub struct BucketUserJoin {
     pub set_private_permission: bool,
     /// Can the user grant permissions to other users.
     pub grant_permissions_permission: bool,
+    /// When the row was last updated.
+    pub updated_at: NaiveDateTime,
+    /// When the row was created.
+    pub created_at: NaiveDateTime
 }
 
 // TODO, remove this because it isn't distinct from the Bucket User Join
 /// Structure used to create new join relations between users and buckets.
 #[derive(Clone, Copy, Insertable, Debug, Serialize, Deserialize)]
-#[table_name = "bucket_user_join"]
+#[table_name = "bucket_user_relation"]
 pub struct NewBucketUserJoin {
     /// The uuid of the user.
     pub user_uuid: Uuid,
@@ -94,7 +103,7 @@ pub struct NewBucketUserJoin {
 /// Structure used to create new join relations between users and buckets.
 #[derive(Clone, Copy, AsChangeset, Identifiable, Debug, Serialize, Deserialize)]
 #[primary_key(user_uuid, bucket_uuid)]
-#[table_name = "bucket_user_join"]
+#[table_name = "bucket_user_relation"]
 pub struct BucketUserPermissionsChangeset {
     /// The user id
     pub user_uuid: Uuid,
@@ -126,7 +135,7 @@ pub struct BucketUserPermissions {
 /// A struct representing a question.
 #[derive(Clone, Debug, PartialEq, PartialOrd, Identifiable, Queryable, Serialize, Deserialize)]
 #[primary_key(uuid)]
-#[table_name = "questions"]
+#[table_name = "question"]
 pub struct Question {
     /// The question's unique identifier within the application.
     pub uuid: Uuid,
@@ -142,11 +151,15 @@ pub struct Question {
     /// put back in the bucket.
     /// The archived flag is a formalization of the question being on the floor.
     pub archived: bool,
+    /// When the row was last updated.
+    pub updated_at: NaiveDateTime,
+    /// When the row was created.
+    pub created_at: NaiveDateTime
 }
 
 /// A struct for creating new questions.
 #[derive(Clone, Insertable, Debug, Serialize, Deserialize)]
-#[table_name = "questions"]
+#[table_name = "question"]
 pub struct NewQuestion {
     /// The bucket to which the question belongs.
     pub bucket_uuid: Uuid,
@@ -159,7 +172,7 @@ pub struct NewQuestion {
 /// A struct for recording answers.
 #[derive(Clone, Debug, PartialEq, PartialOrd, Identifiable, Queryable, Serialize, Deserialize)]
 #[primary_key(uuid)]
-#[table_name = "answers"]
+#[table_name = "answer"]
 pub struct Answer {
     /// The unique identifier for the answer
     pub uuid: Uuid,
@@ -171,11 +184,15 @@ pub struct Answer {
     pub publicly_visible: bool,
     /// The answer
     pub answer_text: String,
+    /// When the row was last updated.
+    pub updated_at: NaiveDateTime,
+    /// When the row was created.
+    pub created_at: NaiveDateTime
 }
 
 /// A struct for creating new answers
 #[derive(Clone, Insertable, Debug, Serialize, Deserialize)]
-#[table_name = "answers"]
+#[table_name = "answer"]
 pub struct NewAnswer {
     /// The user who made the answer
     pub user_uuid: Option<Uuid>,
@@ -192,21 +209,25 @@ pub struct NewAnswer {
     Clone, Copy, Debug, PartialEq, PartialOrd, Identifiable, Queryable, Serialize, Deserialize,
 )]
 #[primary_key(user_uuid, question_uuid)]
-#[table_name = "user_favorite_question_join"]
+#[table_name = "user_question_favorite_relation"]
 pub struct FavoriteQuestionRelation {
     /// User
     pub user_uuid: Uuid,
     /// Question
     pub question_uuid: Uuid,
+    /// When the row was last updated.
+    pub updated_at: NaiveDateTime,
+    /// When the row was created.
+    pub created_at: NaiveDateTime
 }
 
-// TODO delete me
 /// Structure for creating a new favorite relation.
 #[derive(Clone, Copy, Insertable, Debug, Serialize, Deserialize)]
-#[table_name = "user_favorite_question_join"]
+#[table_name = "user_question_favorite_relation"]
 pub struct NewFavoriteQuestionRelation {
     /// User
     pub user_uuid: Uuid,
     /// Question
     pub question_uuid: Uuid,
+
 }
