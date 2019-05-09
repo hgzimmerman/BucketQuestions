@@ -36,7 +36,7 @@ impl BucketRepository for PgConnection {
 
     fn get_publicly_visible_buckets(&self) -> Result<Vec<Bucket>, Error> {
         bucket::table
-            .filter(bucket::visible.eq(true))
+            .filter(bucket::public_viewable.eq(true))
             .get_results(self)
     }
 
@@ -102,9 +102,9 @@ impl BucketUserRelationRepository for PgConnection {
                     .and(bucket_user_relation::bucket_uuid.eq(bucket_uuid)),
             )
             .select((
-                bucket_user_relation::set_visibility_permission,
+                bucket_user_relation::set_public_permission,
                 bucket_user_relation::set_drawing_permission,
-                bucket_user_relation::set_private_permission,
+                bucket_user_relation::set_exclusive_permission,
                 bucket_user_relation::grant_permissions_permission,
             ))
             .get_result::<BucketUserPermissions>(self)

@@ -100,9 +100,9 @@ impl BucketRepository for Mutex<MockDatabase> {
             uuid,
             bucket_name: new_bucket.bucket_name,
             bucket_slug: new_bucket.bucket_slug,
-            visible: true,
+            public_viewable: true,
             drawing_enabled: true,
-            private: false,
+            exclusive: false,
             updated_at: chrono::Utc::now().naive_utc(),
             created_at: chrono::Utc::now().naive_utc()
         };
@@ -121,7 +121,7 @@ impl BucketRepository for Mutex<MockDatabase> {
 
     fn get_publicly_visible_buckets(&self) -> Result<Vec<Bucket>, Error> {
         let db = self.lock().unwrap();
-        let visible = db.buckets.iter().filter(|b| b.visible).cloned().collect();
+        let visible = db.buckets.iter().filter(|b| b.public_viewable).cloned().collect();
         Ok(visible)
     }
 
@@ -148,14 +148,14 @@ impl BucketRepository for Mutex<MockDatabase> {
             .find(|b| b.uuid == uuid)
             .ok_or_else(|| Error::NotFound)?;
 
-        if let Some(visible) = changeset.visible {
-           bucket.visible = visible;
+        if let Some(visible) = changeset.public_viewable {
+           bucket.public_viewable = visible;
         }
         if let Some(drawing_enabled) = changeset.drawing_enabled {
             bucket.drawing_enabled = drawing_enabled;
         }
-        if let Some(private) = changeset.private {
-            bucket.private = private;
+        if let Some(private) = changeset.exclusive {
+            bucket.exclusive = private;
         }
 
         Ok(bucket.clone())
@@ -168,9 +168,9 @@ impl BucketUserRelationRepository for Mutex<MockDatabase> {
         let relation = BucketUserJoin {
             user_uuid: relation.user_uuid,
             bucket_uuid: relation.bucket_uuid,
-            set_visibility_permission: relation.set_visibility_permission,
+            set_public_permission: relation.set_public_permission,
             set_drawing_permission: relation.set_drawing_permission,
-            set_private_permission: relation.set_private_permission,
+            set_exclusive_permission: relation.set_exclusive_permission,
             grant_permissions_permission: relation.grant_permissions_permission,
             updated_at: chrono::Utc::now().naive_utc(),
             created_at: chrono::Utc::now().naive_utc()
@@ -205,14 +205,14 @@ impl BucketUserRelationRepository for Mutex<MockDatabase> {
             })
             .ok_or_else(|| Error::NotFound)?;
 
-        if let Some(visible) = permissions_changeset.set_visibility_permission {
-           relation.set_visibility_permission = visible;
+        if let Some(visible) = permissions_changeset.set_public_permission {
+           relation.set_public_permission = visible;
         }
         if let Some(drawing_enabled) = permissions_changeset.set_drawing_permission {
             relation.set_drawing_permission= drawing_enabled;
         }
-        if let Some(private) = permissions_changeset.set_private_permission {
-            relation.set_private_permission = private;
+        if let Some(private) = permissions_changeset.set_exclusive_permission {
+            relation.set_exclusive_permission = private;
         }
 
         Ok(relation.clone())
@@ -229,9 +229,9 @@ impl BucketUserRelationRepository for Mutex<MockDatabase> {
             .ok_or_else(|| Error::NotFound)
             .map(|r| {
                 BucketUserPermissions {
-                    set_visibility_permission: r.set_visibility_permission,
+                    set_public_permission: r.set_public_permission,
                     set_drawing_permission: r.set_drawing_permission,
-                    set_private_permission: r.set_private_permission,
+                    set_exclusive_permission: r.set_exclusive_permission,
                     grant_permissions_permission: r.grant_permissions_permission
                 }
             })

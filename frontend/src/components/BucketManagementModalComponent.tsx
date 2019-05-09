@@ -42,14 +42,14 @@ export class BucketManagementModalComponent extends React.Component<Props, State
   handleChange = (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
     let bucket = this.state.bucket;
     switch (event.target.value) {
-      case "visible":
-        bucket.visible = checked;
+      case "public":
+        bucket.public_viewable = checked;
         break;
       case "drawing":
         bucket.drawing_enabled= checked;
         break;
-      case "private":
-        bucket.private = checked;
+      case "exclusive":
+        bucket.exclusive = checked;
         break;
       default: console.error("unreachable default")
     }
@@ -58,9 +58,9 @@ export class BucketManagementModalComponent extends React.Component<Props, State
 
   saveChanges = () => {
     const changeset: ChangeBucketFlagsRequest = {
-      visible: this.state.bucket.visible,
+      public_viewable: this.state.bucket.public_viewable,
       drawing_enabled: this.state.bucket.drawing_enabled,
-      private: this.state.bucket.private
+      exclusive: this.state.bucket.exclusive
     };
     this.props.setBucketStateCallback(this.state.bucket.uuid, changeset)
   };
@@ -92,26 +92,26 @@ export class BucketManagementModalComponent extends React.Component<Props, State
                 <FormControlLabel
                   control={
                     <Switch
-                      checked={this.state.bucket.visible}
+                      checked={this.state.bucket.public_viewable}
                       onChange={this.handleChange}
-                      disabled={!this.props.permissions.set_visibility_permission}
-                      value="visible"
+                      disabled={!this.props.permissions.set_public_permission}
+                      value="public"
                     />
                   }
-                  label="Visible"
+                  label="Public"
                 />
                 <FormLabel>Allows the bucket to be seen from the home page.</FormLabel>
 
                 <FormControlLabel
                   control={
                     <Switch
-                      checked={this.state.bucket.private}
+                      checked={this.state.bucket.exclusive}
                       onChange={this.handleChange}
-                      disabled={!this.props.permissions.set_private_permission}
-                      value="private"
+                      disabled={!this.props.permissions.set_exclusive_permission}
+                      value="exclusive"
                     />
                   }
-                  label="Private"
+                  label="Exclusive"
                 />
                 <FormLabel>Prevents anyone who hasn't already joined from joining the bucket.</FormLabel>
               </FormGroup>

@@ -23,9 +23,9 @@ table! {
         uuid -> Uuid,
         bucket_name -> Varchar,
         bucket_slug -> Varchar,
-        visible -> Bool,
+        public_viewable -> Bool,
         drawing_enabled -> Bool,
-        private -> Bool,
+        exclusive -> Bool,
         updated_at -> Timestamp,
         created_at -> Timestamp,
     }
@@ -35,9 +35,9 @@ table! {
     bucket_user_relation (user_uuid, bucket_uuid) {
         user_uuid -> Uuid,
         bucket_uuid -> Uuid,
-        set_visibility_permission -> Bool,
+        set_public_permission -> Bool,
         set_drawing_permission -> Bool,
-        set_private_permission -> Bool,
+        set_exclusive_permission -> Bool,
         grant_permissions_permission -> Bool,
         updated_at -> Timestamp,
         created_at -> Timestamp,

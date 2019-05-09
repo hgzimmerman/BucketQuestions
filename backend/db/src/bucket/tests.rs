@@ -26,9 +26,9 @@ fn create_bucket_default_flags() {
         bucket_slug: "slug".to_string()
     };
     let bucket = db.create_bucket(new_bucket).expect("Bucket should be created");
-    assert!(bucket.visible);
+    assert!(bucket.public_viewable);
     assert!(bucket.drawing_enabled);
-    assert!(!bucket.private);
+    assert!(!bucket.exclusive);
 }
 
 #[test]
@@ -56,16 +56,16 @@ fn change_visibility_bucket() {
     let (fixture, db) = setup::<BucketFixture>();
     let mut changeset = BucketFlagChangeset {
         uuid: fixture.bucket.uuid,
-        visible: Some(true),
+        public_viewable: Some(true),
         drawing_enabled: None,
-        private: None
+        exclusive: None
     };
     let bucket = db.change_bucket_flags(changeset).expect("Should be able to change visibility");
-    assert!(bucket.visible);
+    assert!(bucket.public_viewable);
 
-    changeset.visible = Some(false); // set to false
+    changeset.public_viewable = Some(false); // set to false
     let bucket = db.change_bucket_flags(changeset).expect("Should be able to change visibility");
-    assert!(!bucket.visible);
+    assert!(!bucket.public_viewable);
 }
 
 #[test]
@@ -73,9 +73,9 @@ fn bucket_all_none_changeset_does_not_affect_record() {
     let (fixture, db) = setup::<BucketFixture>();
     let changeset = BucketFlagChangeset {
         uuid: fixture.bucket.uuid,
-        visible: None,
+        public_viewable: None,
         drawing_enabled: None,
-        private: None
+        exclusive: None
     };
     let bucket = db.change_bucket_flags(changeset).expect("Should be able to change visibility");
     assert_eq!(bucket, fixture.bucket)
@@ -86,9 +86,9 @@ fn get_visible_buckets() {
     let (fixture, db) = setup::<BucketFixture>();
     let changeset = BucketFlagChangeset {
         uuid: fixture.bucket.uuid,
-        visible: Some(true),
+        public_viewable: Some(true),
         drawing_enabled: None,
-        private: None
+        exclusive: None
     };
     let bucket = db.change_bucket_flags(changeset).expect("Should be able to change visibility");
 

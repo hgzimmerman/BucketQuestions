@@ -4,9 +4,9 @@ CREATE TABLE bucket (
     uuid UUID PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),
     bucket_name VARCHAR NOT NULL,
     bucket_slug VARCHAR NOT NULL UNIQUE,
-    visible BOOLEAN NOT NULL DEFAULT TRUE, -- Will anyone be able to see it in a list of visible buckets
+    public_viewable BOOLEAN NOT NULL DEFAULT TRUE, -- Will anyone be able to see it in a list of visible buckets
     drawing_enabled BOOLEAN NOT NULL DEFAULT TRUE, -- Is the bucket only accepting questions, or is there an active answer session going on.
-    private BOOLEAN NOT NULL DEFAULT FALSE, -- Can the bucket be joined if there isn't a relation in the bucket_user_join table?
+    exclusive BOOLEAN NOT NULL DEFAULT FALSE, -- Can the bucket be joined if there isn't a relation in the bucket_user_join table?
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
@@ -14,9 +14,9 @@ CREATE TABLE bucket (
 CREATE TABLE bucket_user_relation (
   user_uuid UUID NOT NULL REFERENCES bq_user(uuid) ON DELETE CASCADE,
   bucket_uuid UUID NOT NULL REFERENCES bucket(uuid) ON DELETE CASCADE,
-  set_visibility_permission BOOLEAN NOT NULL, -- Can the user make the bucket visible on the main page.
+  set_public_permission BOOLEAN NOT NULL, -- Can the user make the bucket visible on the main page.
   set_drawing_permission BOOLEAN NOT NULL, -- Can the user set the mode to enable answering questions.
-  set_private_permission BOOLEAN NOT NULL, -- Can the user set the mode to disable joining by random individuals.
+  set_exclusive_permission BOOLEAN NOT NULL, -- Can the user set the mode to disable joining by random individuals.
   grant_permissions_permission BOOLEAN NOT NULL, -- Can the user grant other users permissions for this bucket.
   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),

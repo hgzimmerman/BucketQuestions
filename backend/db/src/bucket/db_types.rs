@@ -20,11 +20,11 @@ pub struct Bucket {
     /// Must be unique.
     pub bucket_slug: String,
     /// Can users find it through the UI.
-    pub visible: bool,
+    pub public_viewable: bool,
     /// Is the bucket session currently active.
     pub drawing_enabled: bool,
     /// Can an unjoined user join the bucket.
-    pub private: bool,
+    pub exclusive: bool,
     /// When the row was last updated.
     pub updated_at: NaiveDateTime,
     /// When the row was created.
@@ -49,11 +49,11 @@ pub struct BucketFlagChangeset {
     /// Identifier of bucket
     pub uuid: Uuid,
     /// Is the bucket visible
-    pub visible: Option<bool>,
+    pub public_viewable: Option<bool>,
     /// Is the bucket session currently active.
     pub drawing_enabled: Option<bool>,
     /// Can an unjoined user join the bucket.
-    pub private: Option<bool>,
+    pub exclusive: Option<bool>,
 }
 
 /// A relation between users and buckets.
@@ -69,11 +69,11 @@ pub struct BucketUserJoin {
     /// The uuid of the bucket.
     pub bucket_uuid: Uuid,
     /// Can the user set the visibility of the bucket.
-    pub set_visibility_permission: bool,
+    pub set_public_permission: bool,
     /// Can the user enable drawing from the bucket.
     pub set_drawing_permission: bool,
     /// Can the user set the bucket to private.
-    pub set_private_permission: bool,
+    pub set_exclusive_permission: bool,
     /// Can the user grant permissions to other users.
     pub grant_permissions_permission: bool,
     /// When the row was last updated.
@@ -82,7 +82,6 @@ pub struct BucketUserJoin {
     pub created_at: NaiveDateTime
 }
 
-// TODO, remove this because it isn't distinct from the Bucket User Join
 /// Structure used to create new join relations between users and buckets.
 #[derive(Clone, Copy, Insertable, Debug, Serialize, Deserialize)]
 #[table_name = "bucket_user_relation"]
@@ -92,11 +91,11 @@ pub struct NewBucketUserJoin {
     /// The uuid of the bucket.
     pub bucket_uuid: Uuid,
     /// Can the user set the visibility of the bucket.
-    pub set_visibility_permission: bool,
+    pub set_public_permission: bool,
     /// Can the user enable drawing from the bucket.
     pub set_drawing_permission: bool,
     /// Can the user set the bucket to private.
-    pub set_private_permission: bool,
+    pub set_exclusive_permission: bool,
     /// Can the user grant permissions to other users.
     pub grant_permissions_permission: bool,
 }
@@ -110,11 +109,11 @@ pub struct BucketUserPermissionsChangeset {
     /// the bucket uuid
     pub bucket_uuid: Uuid,
     /// Can the user set the visibility of the bucket.
-    pub set_visibility_permission: Option<bool>,
+    pub set_public_permission: Option<bool>,
     /// Can the user enable drawing from the bucket.
     pub set_drawing_permission: Option<bool>,
     /// Can the user set the bucket to private.
-    pub set_private_permission: Option<bool>,
+    pub set_exclusive_permission: Option<bool>,
     /// Can the user grant permissions to other users.
     pub grant_permissions_permission: Option<bool>,
 }
@@ -123,11 +122,11 @@ pub struct BucketUserPermissionsChangeset {
 #[derive(Clone, Copy, Queryable, Debug, Serialize, Deserialize)]
 pub struct BucketUserPermissions {
     /// Can the user set the visibility of the bucket.
-    pub set_visibility_permission: bool,
+    pub set_public_permission: bool,
     /// Can the user enable drawing from the bucket.
     pub set_drawing_permission: bool,
     /// Can the user make the bucket private
-    pub set_private_permission: bool,
+    pub set_exclusive_permission: bool,
     /// Can the user grant permissions to other users.
     pub grant_permissions_permission: bool,
 }

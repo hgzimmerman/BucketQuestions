@@ -71,9 +71,9 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
                 let new_relation = NewBucketUserJoin {
                     user_uuid,
                     bucket_uuid: bucket.uuid,
-                    set_visibility_permission: true,
+                    set_public_permission: true,
                     set_drawing_permission: true,
-                    set_private_permission: true,
+                    set_exclusive_permission: true,
                     grant_permissions_permission: true,
                 };
                 conn.add_user_to_bucket(new_relation)?;
@@ -184,9 +184,9 @@ fn add_self_to_bucket_handler(
     let new_relation = NewBucketUserJoin {
         user_uuid,
         bucket_uuid,
-        set_visibility_permission: false,
+        set_public_permission: false,
         set_drawing_permission: false,
-        set_private_permission: false,
+        set_exclusive_permission: false,
         grant_permissions_permission: false,
     };
     conn.add_user_to_bucket(new_relation).map_err(Error::from)
@@ -212,16 +212,16 @@ fn set_bucket_flags_handler(
     }
     let changeset = BucketFlagChangeset {
         uuid: bucket_uuid,
-        visible: verify_permission(
-            permissions_for_acting_user.set_visibility_permission,
+        public_viewable: verify_permission(
+            permissions_for_acting_user.set_public_permission,
             request.visible,
         ),
         drawing_enabled: verify_permission(
             permissions_for_acting_user.set_drawing_permission,
             request.drawing_enabled,
         ),
-        private: verify_permission(
-            permissions_for_acting_user.set_private_permission,
+        exclusive: verify_permission(
+            permissions_for_acting_user.set_exclusive_permission,
             request.drawing_enabled,
         ),
     };
@@ -247,9 +247,9 @@ fn set_permissions_handler(
         let permissions_changeset = BucketUserPermissionsChangeset {
             user_uuid,
             bucket_uuid,
-            set_visibility_permission: permissions_request.set_visibility_permission,
+            set_public_permission: permissions_request.set_visibility_permission,
             set_drawing_permission: permissions_request.set_drawing_permission,
-            set_private_permission: permissions_request.set_private_permission,
+            set_exclusive_permission: permissions_request.set_private_permission,
             grant_permissions_permission: permissions_request.grant_permissions_permission,
         };
         conn.set_permissions(permissions_changeset)

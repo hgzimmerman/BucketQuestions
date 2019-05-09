@@ -4,9 +4,9 @@ export interface Bucket {
   uuid: string;
   bucket_name: string;
   bucket_slug: string;
-  visible: boolean;
+  public_viewable: boolean;
   drawing_enabled: boolean;
-  private: boolean
+  exclusive: boolean
 }
 
 export interface User {
@@ -43,19 +43,19 @@ export interface NewQuestionRequest {
 }
 
 export interface BucketUserPermissions {
-  set_visibility_permission: boolean,
+  set_public_permission: boolean,
   set_drawing_permission: boolean,
-  set_private_permission: boolean,
+  set_exclusive_permission: boolean,
   grant_permissions_permission: boolean
 }
 
 
-export interface BucketUserJoin {
+export interface BucketUserRelation {
   user_uuid: Uuid,
   bucket_uuid: Uuid,
-  set_visibility_permission: boolean,
+  set_public_permission: boolean,
   set_drawing_permission: boolean,
-  set_private_permission: boolean,
+  set_exclusive_permission: boolean,
   grant_permissions_permission: boolean
 }
 
@@ -68,9 +68,9 @@ export interface BucketUserJoin {
 // TODO consider the ?: syntax instead of boolean | null
 export interface SetPermissionsRequest {
     target_user_uuid: Uuid,
-    set_visibility_permission: boolean| null,
+    set_public_permission: boolean| null,
     set_drawing_permission: boolean | null,
-    set_private_permission: boolean | null,
+    set_exclusive_permission: boolean | null,
     grant_permissions_permission: boolean | null
 }
 
@@ -79,7 +79,7 @@ export interface LinkResponse {
 }
 
 export interface ChangeBucketFlagsRequest {
-  visible?: boolean,
+  public_viewable?: boolean,
   drawing_enabled?: boolean,
-  private?: boolean
+  exclusive?: boolean
 }
