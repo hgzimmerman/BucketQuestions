@@ -1,6 +1,6 @@
 //! Module for the database mock object.
 use crate::user::{User, UserRepository, NewUser};
-use crate::bucket::db_types::{Bucket, BucketUserJoin, Question, Answer, FavoriteQuestionRelation, NewBucket, BucketFlagChangeset, NewBucketUserJoin, BucketUserPermissionsChangeset, BucketUserPermissions, NewQuestion, NewAnswer, NewFavoriteQuestionRelation};
+use crate::bucket::db_types::{Bucket, BucketUserRelation, Question, Answer, FavoriteQuestionRelation, NewBucket, BucketFlagChangeset, NewBucketUserRelation, BucketUserPermissionsChangeset, BucketUserPermissions, NewQuestion, NewAnswer, NewFavoriteQuestionRelation};
 use diesel::result::{Error, DatabaseErrorKind, DatabaseErrorInformation};
 use uuid::Uuid;
 use std::sync::Mutex;
@@ -49,7 +49,7 @@ impl DatabaseErrorInformation for DummyDbErrorInfo {
 pub struct MockDatabase {
     users: Vec<User>,
     buckets: Vec<Bucket>,
-    user_bucket_relations: Vec<BucketUserJoin>,
+    user_bucket_relations: Vec<BucketUserRelation>,
     questions: Vec<Question>,
     answers: Vec<Answer>,
     favorite_question_relations: Vec<FavoriteQuestionRelation>
@@ -163,9 +163,9 @@ impl BucketRepository for Mutex<MockDatabase> {
 }
 
 impl BucketUserRelationRepository for Mutex<MockDatabase> {
-    fn add_user_to_bucket(&self, relation: NewBucketUserJoin) -> Result<BucketUserJoin, Error> {
+    fn add_user_to_bucket(&self, relation: NewBucketUserRelation) -> Result<BucketUserRelation, Error> {
         let mut db = self.lock().unwrap();
-        let relation = BucketUserJoin {
+        let relation = BucketUserRelation {
             user_uuid: relation.user_uuid,
             bucket_uuid: relation.bucket_uuid,
             set_public_permission: relation.set_public_permission,
@@ -185,7 +185,7 @@ impl BucketUserRelationRepository for Mutex<MockDatabase> {
         return Ok(relation)
     }
 
-    fn remove_user_from_bucket(&self, user_uuid: Uuid, bucket_uuid: Uuid) -> Result<BucketUserJoin, Error> {
+    fn remove_user_from_bucket(&self, user_uuid: Uuid, bucket_uuid: Uuid) -> Result<BucketUserRelation, Error> {
         let mut db = self.lock().unwrap();
         let index = db.user_bucket_relations.iter().position(|r| {
             r.user_uuid == user_uuid
@@ -196,7 +196,7 @@ impl BucketUserRelationRepository for Mutex<MockDatabase> {
         Ok(db.user_bucket_relations.remove(index))
     }
 
-    fn set_permissions(&self, permissions_changeset: BucketUserPermissionsChangeset) -> Result<BucketUserJoin, Error> {
+    fn set_permissions(&self, permissions_changeset: BucketUserPermissionsChangeset) -> Result<BucketUserRelation, Error> {
         let mut db = self.lock().unwrap();
         let relation = db.user_bucket_relations.iter_mut()
             .find(|r| {

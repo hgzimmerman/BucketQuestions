@@ -1,4 +1,3 @@
-use crate::user::{User, NewUser};
 use crate::Repository;
 use diesel_reset::fixture::Fixture;
 use crate::bucket::db_types::{NewBucket, Bucket};

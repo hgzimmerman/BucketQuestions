@@ -3,9 +3,9 @@
 use crate::{
     bucket::{
         db_types::{
-            Answer, Bucket, BucketFlagChangeset, BucketUserJoin, BucketUserPermissions,
+            Answer, Bucket, BucketFlagChangeset, BucketUserRelation, BucketUserPermissions,
             BucketUserPermissionsChangeset, FavoriteQuestionRelation, NewAnswer, NewBucket,
-            NewBucketUserJoin, NewFavoriteQuestionRelation, NewQuestion, Question,
+            NewBucketUserRelation, NewFavoriteQuestionRelation, NewQuestion, Question,
         },
         interface::{
             AnswerRepository, BucketRepository, BucketUserRelationRepository,
@@ -66,7 +66,7 @@ impl BucketRepository for PgConnection {
 }
 
 impl BucketUserRelationRepository for PgConnection {
-    fn add_user_to_bucket(&self, relation: NewBucketUserJoin) -> Result<BucketUserJoin, Error> {
+    fn add_user_to_bucket(&self, relation: NewBucketUserRelation) -> Result<BucketUserRelation, Error> {
         crate::util::create_row(bucket_user_relation::table, relation, self)
     }
 
@@ -74,7 +74,7 @@ impl BucketUserRelationRepository for PgConnection {
         &self,
         user_uuid: Uuid,
         bucket_uuid: Uuid,
-    ) -> Result<BucketUserJoin, Error> {
+    ) -> Result<BucketUserRelation, Error> {
         let target = bucket_user_relation::table.filter(
             bucket_user_relation::user_uuid
                 .eq(user_uuid)
@@ -86,7 +86,7 @@ impl BucketUserRelationRepository for PgConnection {
     fn set_permissions(
         &self,
         permissions_changeset: BucketUserPermissionsChangeset,
-    ) -> Result<BucketUserJoin, Error> {
+    ) -> Result<BucketUserRelation, Error> {
         permissions_changeset.save_changes(self)
     }
 

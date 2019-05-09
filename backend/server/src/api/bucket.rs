@@ -7,8 +7,8 @@ use crate::{
 use db::{
     bucket::{
         db_types::{
-            Bucket, BucketFlagChangeset, BucketUserJoin, BucketUserPermissions,
-            BucketUserPermissionsChangeset, NewBucket, NewBucketUserJoin,
+            Bucket, BucketFlagChangeset, BucketUserRelation, BucketUserPermissions,
+            BucketUserPermissionsChangeset, NewBucket, NewBucketUserRelation,
         },
         interface::{BucketRepository, BucketUserRelationRepository},
     },
@@ -68,7 +68,7 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .map(
             |request: NewBucket, user_uuid: Uuid, conn: PooledConn| -> Result<Bucket, Error> {
                 let bucket = conn.create_bucket(request)?;
-                let new_relation = NewBucketUserJoin {
+                let new_relation = NewBucketUserRelation {
                     user_uuid,
                     bucket_uuid: bucket.uuid,
                     set_public_permission: true,
@@ -179,9 +179,9 @@ fn add_self_to_bucket_handler(
     bucket_uuid: Uuid,
     user_uuid: Uuid,
     conn: PooledConn,
-) -> Result<BucketUserJoin, Error> {
+) -> Result<BucketUserRelation, Error> {
     info!("add_self_to_bucket_handler");
-    let new_relation = NewBucketUserJoin {
+    let new_relation = NewBucketUserRelation {
         user_uuid,
         bucket_uuid,
         set_public_permission: false,
@@ -238,7 +238,7 @@ fn set_permissions_handler(
     permissions_request: SetPermissionsRequest,
     user_uuid: Uuid,
     conn: PooledConn,
-) -> Result<BucketUserJoin, Error> {
+) -> Result<BucketUserRelation, Error> {
     info!("set_permissions_handler");
     let permissions_for_acting_user = conn
         .get_permissions(user_uuid, bucket_uuid)

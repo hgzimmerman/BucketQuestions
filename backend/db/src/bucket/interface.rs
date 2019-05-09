@@ -5,8 +5,8 @@
 
 use crate::{
     bucket::db_types::{
-        Answer, Bucket, BucketFlagChangeset, BucketUserJoin, BucketUserPermissions,
-        BucketUserPermissionsChangeset, NewAnswer, NewBucket, NewBucketUserJoin,
+        Answer, Bucket, BucketFlagChangeset, BucketUserRelation, BucketUserPermissions,
+        BucketUserPermissionsChangeset, NewAnswer, NewBucket, NewBucketUserRelation,
         NewFavoriteQuestionRelation, NewQuestion, Question,
     },
     user::User,
@@ -33,18 +33,18 @@ pub trait BucketRepository {
 /// Functions for specifically working with bucket user relations.
 pub trait BucketUserRelationRepository {
     /// Adds a user to the bucket.
-    fn add_user_to_bucket(&self, relation: NewBucketUserJoin) -> QueryResult<BucketUserJoin>;
+    fn add_user_to_bucket(&self, relation: NewBucketUserRelation) -> QueryResult<BucketUserRelation>;
     /// Removes the user from bucket.
     fn remove_user_from_bucket(
         &self,
         user_uuid: Uuid,
         bucket_uuid: Uuid,
-    ) -> QueryResult<BucketUserJoin>;
+    ) -> QueryResult<BucketUserRelation>;
     /// Set permissions for the user-bucket relation.
     fn set_permissions(
         &self,
         permissions_changeset: BucketUserPermissionsChangeset,
-    ) -> QueryResult<BucketUserJoin>;
+    ) -> QueryResult<BucketUserRelation>;
     /// Get the permissions for the user.
     /// The user may not be a part of the bucket.
     fn get_permissions(

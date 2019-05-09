@@ -1,5 +1,3 @@
-use crate::user::NewUser;
-use crate::test::user_fixture::{UserFixture};
 use crate::test::empty_fixture::EmptyFixture;
 use crate::test::setup;
 use crate::bucket::db_types::{NewBucket, BucketFlagChangeset};
@@ -8,7 +6,7 @@ use diesel::result::Error;
 
 #[test]
 fn create_bucket() {
-    let (fixture, db) = setup::<EmptyFixture>();
+    let (_fixture, db) = setup::<EmptyFixture>();
 
     let new_bucket = NewBucket {
         bucket_name: "bucket".to_string(),
@@ -19,7 +17,7 @@ fn create_bucket() {
 
 #[test]
 fn create_bucket_default_flags() {
-    let (fixture, db) = setup::<EmptyFixture>();
+    let (_fixture, db) = setup::<EmptyFixture>();
 
     let new_bucket = NewBucket {
         bucket_name: "bucket".to_string(),
@@ -90,7 +88,7 @@ fn get_visible_buckets() {
         drawing_enabled: None,
         exclusive: None
     };
-    let bucket = db.change_bucket_flags(changeset).expect("Should be able to change visibility");
+    let _bucket = db.change_bucket_flags(changeset).expect("Should be able to change visibility");
 
     let visible_buckets = db.get_publicly_visible_buckets().expect("Should find public buckets");
     assert!(visible_buckets.contains(&fixture.bucket))

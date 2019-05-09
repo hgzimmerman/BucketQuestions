@@ -63,7 +63,7 @@ pub struct BucketFlagChangeset {
 )]
 #[primary_key(user_uuid, bucket_uuid)]
 #[table_name = "bucket_user_relation"]
-pub struct BucketUserJoin {
+pub struct BucketUserRelation {
     /// The uuid of the user.
     pub user_uuid: Uuid,
     /// The uuid of the bucket.
@@ -85,7 +85,7 @@ pub struct BucketUserJoin {
 /// Structure used to create new join relations between users and buckets.
 #[derive(Clone, Copy, Insertable, Debug, Serialize, Deserialize)]
 #[table_name = "bucket_user_relation"]
-pub struct NewBucketUserJoin {
+pub struct NewBucketUserRelation {
     /// The uuid of the user.
     pub user_uuid: Uuid,
     /// The uuid of the bucket.
