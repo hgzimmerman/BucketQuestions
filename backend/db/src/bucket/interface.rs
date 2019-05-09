@@ -40,6 +40,12 @@ pub trait BucketUserRelationRepository {
         user_uuid: Uuid,
         bucket_uuid: Uuid,
     ) -> QueryResult<BucketUserRelation>;
+    /// Get the bucket user relation
+    fn get_user_bucket_relation(
+        &self,
+        user_uuid: Uuid,
+        bucket_uuid: Uuid
+    ) -> QueryResult<BucketUserRelation>;
     /// Set permissions for the user-bucket relation.
     fn set_permissions(
         &self,

@@ -83,11 +83,31 @@ impl BucketUserRelationRepository for PgConnection {
         diesel::delete(target).get_result(self)
     }
 
+    fn get_user_bucket_relation(&self, user_uuid: Uuid, bucket_uuid: Uuid) -> Result<BucketUserRelation, Error> {
+        bucket_user_relation::table
+            .filter(
+                bucket_user_relation::user_uuid
+                    .eq(user_uuid)
+                    .and(bucket_user_relation::bucket_uuid.eq(bucket_uuid)),
+            )
+            .get_result(self)
+    }
+
     fn set_permissions(
         &self,
         permissions_changeset: BucketUserPermissionsChangeset,
     ) -> Result<BucketUserRelation, Error> {
         permissions_changeset.save_changes(self)
+            .or_else(|error: Error| {
+                // The query will return an error if there are no changes,
+                // if that is the case, just fetch the whole bucket.
+                match error {
+                    Error::QueryBuilderError(_) => {
+                        self.get_user_bucket_relation(permissions_changeset.user_uuid, permissions_changeset.bucket_uuid)
+                    }
+                    other => Err(other)
+                }
+            })
     }
 
     fn get_permissions(

@@ -196,6 +196,17 @@ impl BucketUserRelationRepository for Mutex<MockDatabase> {
         Ok(db.user_bucket_relations.remove(index))
     }
 
+    fn get_user_bucket_relation(&self, user_uuid: Uuid, bucket_uuid: Uuid) -> Result<BucketUserRelation, Error> {
+        let db = self.lock().unwrap();
+        db.user_bucket_relations
+            .iter()
+            .find(|r| {
+                r.user_uuid== user_uuid && r.bucket_uuid == bucket_uuid
+            })
+            .cloned()
+            .ok_or_else(|| Error::NotFound)
+    }
+
     fn set_permissions(&self, permissions_changeset: BucketUserPermissionsChangeset) -> Result<BucketUserRelation, Error> {
         let mut db = self.lock().unwrap();
         let relation = db.user_bucket_relations.iter_mut()
@@ -211,22 +222,18 @@ impl BucketUserRelationRepository for Mutex<MockDatabase> {
         if let Some(drawing_enabled) = permissions_changeset.set_drawing_permission {
             relation.set_drawing_permission= drawing_enabled;
         }
-        if let Some(private) = permissions_changeset.set_exclusive_permission {
-            relation.set_exclusive_permission = private;
+        if let Some(exclusive) = permissions_changeset.set_exclusive_permission {
+            relation.set_exclusive_permission = exclusive;
+        }
+        if let Some(admin) = permissions_changeset.grant_permissions_permission {
+            relation.grant_permissions_permission = admin
         }
 
         Ok(relation.clone())
     }
 
     fn get_permissions(&self, user_uuid: Uuid, bucket_uuid: Uuid) -> Result<BucketUserPermissions, Error> {
-        let db = self.lock().unwrap();
-        db.user_bucket_relations
-            .iter()
-            .find(|r| {
-                r.user_uuid== user_uuid && r.bucket_uuid == bucket_uuid
-            })
-            .cloned()
-            .ok_or_else(|| Error::NotFound)
+        self.get_user_bucket_relation(user_uuid, bucket_uuid)
             .map(|r| {
                 BucketUserPermissions {
                     set_public_permission: r.set_public_permission,
@@ -257,13 +264,14 @@ impl BucketUserRelationRepository for Mutex<MockDatabase> {
         let user_uuids: Vec<Uuid> = db.user_bucket_relations
             .iter()
             .filter(|r| r.bucket_uuid == bucket_uuid)
-            .map(|r| r.bucket_uuid)
+            .map(|r| r.user_uuid)
             .collect();
         let users = db.users
             .iter()
             .filter(|b| user_uuids.iter().any(|uuid| &b.uuid == uuid))
             .cloned()
             .collect();
+
         Ok(users)
     }
 }
