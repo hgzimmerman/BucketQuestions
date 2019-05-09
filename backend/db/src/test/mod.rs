@@ -1,71 +1,51 @@
-
-#[cfg(test)]
-mod user_fixture;
-
-#[cfg(test)]
-mod tests {
-    use crate::Repository;
-    use crate::UserRepository;
-    use crate::mock::MockDatabase;
-    use crate::user::NewUser;
-    use std::sync::Mutex;
-    use crate::test::user_fixture::{UserFixture, EmptyFixture};
-    use pool::PooledConn;
-    use std::ops::Deref;
-    use diesel::PgConnection;
-    use diesel_reset::fixture::Fixture;
+//! Test module for convienence functions and fixtures
+pub mod user_fixture;
+pub mod empty_fixture;
+pub mod bucket_fixture;
 
 
-    pub fn setup<Fix>() -> (Fix,  Box<Repository>)
-    where
-        Fix: Fixture<Repository = Box<Repository>>
-    {
-        // TODO swap this around based on feature flags
-        if !cfg!(feature="integration") {
-            let db = Mutex::new(MockDatabase::default());
-            let db: Box<dyn Repository> = Box::new(db);
-            let fixture = Fix::generate(&(db));
-            (fixture, db)
-        } else {
-            let db: PgConnection = diesel_reset::setup::setup_single_connection();
-            let db: Box<dyn Repository> = Box::new(db);
-            let fixture = Fix::generate(&db);
-            (fixture, db)
-        }
+use crate::Repository;
+use diesel_reset::fixture::Fixture;
+use std::sync::Mutex;
+use diesel::PgConnection;
+use crate::mock::MockDatabase;
+
+/// Sets up a fixture and repository to a state defined by the fixture's initialization function.
+/// The repository implementation is chosen by a feature flag.
+///
+/// If the binary is compiled with the `integration` flag enabled, it will use the database.
+/// Otherwise, it will use the mock object more suitable for unit testing.
+pub fn setup<Fix>() -> (Fix,  Box<Repository>)
+where
+    Fix: Fixture<Repository = Box<Repository>>
+{
+    if !cfg!(feature="integration") {
+        setup_mock()
+    } else {
+        setup_database()
     }
-
-    #[test]
-    fn get_user() {
-        let (fixture, db) = setup::<UserFixture>();
-        let user = db.get_user(fixture.user.uuid).unwrap();
-        assert_eq!(user, fixture.user);
-    }
-
-    #[test]
-    fn create_get_user() {
-        let (_, db) = setup::<EmptyFixture>();
-        let new_user = NewUser {
-            google_user_id: "12345".to_string(),
-            google_name: Some("YEET".to_string())
-        };
-        let user = db.create_user(new_user.clone()).unwrap();
-        assert_eq!(user.google_user_id, new_user.google_user_id);
-        assert_eq!(user.google_name, new_user.google_name);
-
-        let user = db.get_user(user.uuid).unwrap();
-        assert_eq!(user.google_user_id, new_user.google_user_id);
-        assert_eq!(user.google_name, new_user.google_name);
-    }
+}
 
 
-    #[test]
-    fn create_get_by_id_user() {
-        let (fixture, db) = setup::<UserFixture>();
+/// Sets up a fixture and a mock repository
+pub fn setup_mock<Fix>() -> (Fix, Box<Repository>)
+where
+    Fix: Fixture<Repository = Box<Repository>>
+{
+    let db = Mutex::new(MockDatabase::default());
+    let db: Box<dyn Repository> = Box::new(db);
+    let fixture = Fix::generate(&db);
+    (fixture, db)
+}
 
-        let user = db.get_user_by_google_id(fixture.user.google_user_id.clone()).unwrap();
-        assert_eq!(user.google_name, fixture.user.google_name);
-        assert_eq!(user, fixture.user);
-    }
-
+/// Sets up a fixture and a database-backed repository
+pub fn setup_database<Fix>() -> (Fix, Box<Repository>)
+where
+    Fix: Fixture<Repository = Box<Repository>>
+{
+    let db: PgConnection = diesel_reset::setup::setup_single_connection();
+    let db: Box<dyn Repository> = Box::new(db);
+    let fixture = Fix::generate(&db);
+    (fixture, db)
 }
 

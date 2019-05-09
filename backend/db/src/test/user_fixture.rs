@@ -1,10 +1,8 @@
-use crate::user::{User, NewUser, UserRepository};
-use diesel::pg::PgConnection;
+use crate::user::{User, NewUser};
 use crate::Repository;
 use diesel_reset::fixture::Fixture;
-use crate::mock::MockDatabase;
-use pool::PooledConn;
 
+/// Fixture that creates one user record in the repository.
 pub struct UserFixture {
     pub user: User,
 }
@@ -22,14 +20,5 @@ impl Fixture for UserFixture
         let user = conn.create_user(new_user).unwrap();
 
         UserFixture { user }
-    }
-}
-
-pub struct EmptyFixture;
-
-impl Fixture for EmptyFixture {
-    type Repository = Box<dyn Repository>;
-    fn generate(conn: &Box<Repository>) -> Self  {
-        EmptyFixture
     }
 }

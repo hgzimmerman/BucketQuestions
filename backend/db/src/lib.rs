@@ -22,6 +22,7 @@ pub mod bucket;
 pub mod user;
 pub mod mock;
 mod util;
+#[cfg(test)]
 mod test;
 
 use crate::{

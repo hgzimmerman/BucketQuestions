@@ -22,15 +22,10 @@ pub trait BucketRepository {
     fn delete_bucket(&self, bucket_uuid: Uuid) -> QueryResult<Bucket>;
     /// Gets all publicly visible buckets.
     fn get_publicly_visible_buckets(&self) -> QueryResult<Vec<Bucket>>;
-
     /// Gets the bucket via its slug.
     fn get_bucket_by_slug(&self, slug: String) -> QueryResult<Bucket>;
     /// Gets the bucket via its uuid.
     fn get_bucket_by_uuid(&self, uuid: Uuid) -> QueryResult<Bucket>;
-    //    / Change the public visibility of the bucket.
-    //    fn change_visibility(&self, bucket_uuid: Uuid, visible: bool) -> QueryResult<Bucket>;
-    //    / Allow the bucket to be drawn from.
-    //    fn change_drawing_status(&self, bucket_uuid: Uuid, drawing: bool) -> QueryResult<Bucket>;
     /// Change the blags that govern the buckets behavior
     fn change_bucket_flags(&self, changeset: BucketFlagChangeset) -> QueryResult<Bucket>;
 }

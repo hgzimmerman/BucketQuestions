@@ -52,25 +52,17 @@ impl BucketRepository for PgConnection {
 
     fn change_bucket_flags(&self, changeset: BucketFlagChangeset) -> Result<Bucket, Error> {
         changeset.save_changes(self)
+            .or_else(|error: Error| {
+                // The query will return an error if there are no changes,
+                // if that is the case, just fetch the whole bucket.
+                match error {
+                    Error::QueryBuilderError(_) => {
+                        self.get_bucket_by_uuid(changeset.uuid)
+                    }
+                    other => Err(other)
+                }
+            })
     }
-
-    //    fn change_visibility(&self, bucket_uuid: Uuid, visible: bool) -> Result<Bucket, Error> {
-    //        let target = buckets::table
-    //            .find(bucket_uuid);
-    //
-    //        diesel::update(target)
-    //            .set(buckets::visible.eq(visible))
-    //            .get_result(self)
-    //    }
-    //
-    //    fn change_drawing_status(&self, bucket_uuid: Uuid, drawing: bool) -> Result<Bucket, Error> {
-    //        let target = buckets::table
-    //            .find(bucket_uuid);
-    //
-    //        diesel::update(target)
-    //            .set(buckets::drawing_enabled.eq(drawing))
-    //            .get_result(self)
-    //    }
 }
 
 impl BucketUserRelationRepository for PgConnection {

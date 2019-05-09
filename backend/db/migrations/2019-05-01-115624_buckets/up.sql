@@ -5,7 +5,7 @@ CREATE TABLE buckets (
     bucket_name VARCHAR NOT NULL,
     bucket_slug VARCHAR NOT NULL UNIQUE,
     visible BOOLEAN NOT NULL DEFAULT TRUE, -- Will anyone be able to see it in a list of visible buckets
-    drawing_enabled BOOLEAN NOT NULL DEFAULT FALSE, -- Is the bucket only accepting questions, or is there an active answer session going on.
+    drawing_enabled BOOLEAN NOT NULL DEFAULT TRUE, -- Is the bucket only accepting questions, or is there an active answer session going on.
     private BOOLEAN NOT NULL DEFAULT FALSE -- Can the bucket be joined if there isn't a relation in the bucket_user_join table?
 );
 
