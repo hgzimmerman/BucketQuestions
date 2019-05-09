@@ -3,6 +3,14 @@ use crate::error::Error;
 use serde::{Deserialize, Serialize};
 use warp::{Filter, Rejection, Reply};
 
+
+/// A path filter that specifies the remaining segment(s) to match upon.
+#[allow(dead_code)]
+pub fn terminal_path(path: &'static str) -> impl Filter<Extract=(), Error = Rejection> + Copy {
+    warp::path(path)
+        .and(warp::path::end())
+}
+
 const KILOBYTE: u64 = 1024;
 /// Extracts the body of a request after stipulating that it has a reasonable size in kilobytes.
 ///

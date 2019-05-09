@@ -112,8 +112,6 @@ impl Config {
 
                 let server_lib_root = matches.value_of("server_lib_root").map(PathBuf::from);
 
-                //                let is_production = matches.is_present("production");
-
                 let running_environment: RunningEnvironment = {
                     if matches.is_present("production") {
                         RunningEnvironment::Production {

@@ -20,6 +20,7 @@ mod schema;
 //pub mod stock;
 pub mod bucket;
 pub mod user;
+pub mod mock;
 mod util;
 
 use crate::{

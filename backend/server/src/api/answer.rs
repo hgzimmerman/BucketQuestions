@@ -25,7 +25,6 @@ pub struct NewAnswerRequest {
 
 pub const ANSWER_PATH: &str = "answer";
 pub fn answer_api(state: &State) -> BoxedFilter<(impl Reply,)> {
-    //impl Filter<Extract=(impl Reply,), Error=Rejection> + Clone{
 
     let answer_question = warp::path::end()
         .and(warp::post2())

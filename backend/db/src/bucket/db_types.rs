@@ -31,9 +31,9 @@ pub struct Bucket {
 #[table_name = "buckets"]
 pub struct NewBucket {
     /// The name of the bucket
-    bucket_name: String,
+    pub bucket_name: String,
     /// The slug in the url for the bucket
-    bucket_slug: String,
+    pub bucket_slug: String,
 }
 
 /// A changeset for the bucket flags
@@ -73,6 +73,7 @@ pub struct BucketUserJoin {
     pub grant_permissions_permission: bool,
 }
 
+// TODO, remove this because it isn't distinct from the Bucket User Join
 /// Structure used to create new join relations between users and buckets.
 #[derive(Clone, Copy, Insertable, Debug, Serialize, Deserialize)]
 #[table_name = "bucket_user_join"]
@@ -199,6 +200,7 @@ pub struct FavoriteQuestionRelation {
     pub question_uuid: Uuid,
 }
 
+// TODO delete me
 /// Structure for creating a new favorite relation.
 #[derive(Clone, Copy, Insertable, Debug, Serialize, Deserialize)]
 #[table_name = "user_favorite_question_join"]
