@@ -1,6 +1,5 @@
 //! Fixture abstraction.
 
-// TODO consider moving back to the diesel_reset crate.
 /// The Fixture trait should be implemented for collections of data used in testing.
 /// Because it can be instantiated using just a connection to the database,
 /// it allows the creation of the type in question and allows data generated at row insertion time
@@ -13,6 +12,7 @@ pub trait Fixture {
     type Repository;
     fn generate(repository: &Self::Repository) -> Self;
 }
+
 
 /// Because some tests may not require any initial database state, but still utilize the connection,
 /// This Fixture is provided to meet that need.

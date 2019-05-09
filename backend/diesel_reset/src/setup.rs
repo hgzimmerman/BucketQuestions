@@ -12,8 +12,8 @@ use pool::{Pool, PoolConfig, PooledConn, init_pool};
 
 use std::sync::{Mutex, MutexGuard};
 use std::ops::Deref;
+use crate::fixture::Fixture;
 
-//pub const DATABASE_NAME: &'static str = "web_engineering_test";
 pub const DATABASE_NAME: &str = env!("TEST_DATABASE_NAME");
 
 /// Points to the database that tests will be performed on.
@@ -23,6 +23,7 @@ pub const DATABASE_NAME: &str = env!("TEST_DATABASE_NAME");
 pub const DATABASE_URL: &str = env!("TEST_DATABASE_URL");
 
 /// Should point to the base postgres account.
+/// One that has authority to create and destroy other databases.
 const DROP_DATABASE_URL: &str = env!("DROP_DATABASE_URL");
 
 // This creates a singleton of the base database connection.
@@ -68,25 +69,29 @@ lazy_static! {
 
 // TODO I don't think that this function can be in this crate.
 // I think it needs to be in the same crate as the Repository trait
-///// Resets the database and the given future and provides a pool that can be used to construct a state used in warp.
-//pub fn setup_warp<Fun, Fix>(mut test_function: Fun)
-//where
-//    Fun: FnMut(&Fix, Pool),
-//    Fix: Fixture,
-//{
-//    let admin_conn: MutexGuard<PgConnection> = match CONN.lock() {
-//        Ok(guard) => guard,
-//        Err(poisoned) => poisoned.into_inner(), // Don't care if the mutex is poisoned
-//    };
-//    reset_database(&admin_conn);
-//
-//    // Establish a pool, this will be passed in as part of the State object when simulating the api.
-//    let testing_pool = pool::init_pool(DATABASE_URL, PoolConfig::default());
-//    test_function(&fixture, testing_pool)
-//}
-
-pub fn setup_single_connection() -> PgConnection
+/// Resets the database and the given future and provides a pool that can be used to construct a state used in warp.
+pub fn setup_warp<Fun, Fix>(mut test_function: Fun)
+where
+    Fun: FnMut(&Fix, Pool),
+    Fix: Fixture<Repository=PgConnection>,
 {
+    let admin_conn: MutexGuard<PgConnection> = match CONN.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(), // Don't care if the mutex is poisoned
+    };
+    reset_database(&admin_conn);
+
+    // Establish a pool, this will be passed in as part of the State object when simulating the api.
+    let testing_pool = pool::init_pool(DATABASE_URL, PoolConfig::default());
+
+    let conn: PgConnection = PgConnection::establish(DATABASE_URL)
+        .expect("Database not available.");
+    let fixture = Fix::generate(&conn);
+    test_function(&fixture, testing_pool)
+}
+
+
+pub fn setup_pool() -> Pool {
     let admin_conn: MutexGuard<PgConnection> = match CONN.lock() {
         Ok(guard) => guard,
         Err(poisoned) => poisoned.into_inner(), // Don't care if the mutex is poisoned
@@ -100,13 +105,22 @@ pub fn setup_single_connection() -> PgConnection
         max_lifetime: None,
         connection_timeout: None
     };
+    init_pool(DATABASE_URL, pool_conf)
+}
+
+pub fn setup_single_connection() -> PgConnection
+{
+    let admin_conn: MutexGuard<PgConnection> = match CONN.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(), // Don't care if the mutex is poisoned
+    };
+    reset_database(&admin_conn);
 
     let conn: PgConnection = PgConnection::establish(DATABASE_URL)
         .expect("Database not available.");
 
     run_migrations(&conn);
     conn
-//    let fixture: Fix = Fix::generate(&Box::new(conn));
 }
 
 /// Drops the database and then recreates it.

@@ -12,6 +12,6 @@ extern crate diesel;
 extern crate migrations_internals;
 
 mod database_error;
-//pub mod fixture;
+pub mod fixture;
 mod query_helper;
 pub mod setup;
