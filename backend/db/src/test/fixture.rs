@@ -1,6 +1,6 @@
 //! Fixture abstraction.
-use diesel::pg::PgConnection;
 
+// TODO consider moving back to the diesel_reset crate.
 /// The Fixture trait should be implemented for collections of data used in testing.
 /// Because it can be instantiated using just a connection to the database,
 /// it allows the creation of the type in question and allows data generated at row insertion time
@@ -10,7 +10,8 @@ use diesel::pg::PgConnection;
 /// which a given implementor of fixture is responsible for populating to a defined state.
 /// The test is then executed, and the database is then tore down.
 pub trait Fixture {
-    fn generate(conn: &PgConnection) -> Self;
+    type Repository;
+    fn generate(repository: &Self::Repository) -> Self;
 }
 
 /// Because some tests may not require any initial database state, but still utilize the connection,
@@ -18,7 +19,9 @@ pub trait Fixture {
 pub struct EmptyFixture;
 
 impl Fixture for EmptyFixture {
-    fn generate(_conn: &PgConnection) -> Self {
+    type Repository = ();
+    fn generate(repository: &Self::Repository) -> Self {
         EmptyFixture
     }
 }
+
