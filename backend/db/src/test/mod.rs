@@ -5,13 +5,14 @@ pub mod bucket_fixture;
 pub mod bucket_user_relation_fixture;
 pub mod question_fixture;
 pub mod answer_fixture;
+pub mod mock;
 
 
 use crate::Repository;
 use diesel_reset::fixture::Fixture;
 use std::sync::Mutex;
 use diesel::PgConnection;
-use crate::mock::MockDatabase;
+use self::mock::MockDatabase;
 
 /// Sets up a fixture and repository to a state defined by the fixture's initialization function.
 /// The repository implementation is chosen by a feature flag.

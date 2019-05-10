@@ -14,13 +14,9 @@
 #[macro_use]
 extern crate diesel;
 
-//pub mod adaptive_health;
-//pub mod event;
 mod schema;
-//pub mod stock;
 pub mod bucket;
 pub mod user;
-pub mod mock;
 mod util;
 #[cfg(test)]
 mod test;

@@ -370,7 +370,7 @@ mod answer {
 mod favorites {
     use super::*;
     use crate::test::question_fixture::QuestionFixture;
-    use crate::bucket::db_types::{FavoriteQuestionRelation, NewFavoriteQuestionRelation};
+    use crate::bucket::db_types::{NewFavoriteQuestionRelation};
 
     #[test]
     fn favorite_question() {
