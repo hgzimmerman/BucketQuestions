@@ -2,6 +2,6 @@
 pub mod db_types;
 pub mod interface;
 pub mod pg_impl;
-pub mod wire_types;
 #[cfg(test)]
 mod tests;
+pub mod wire_types;

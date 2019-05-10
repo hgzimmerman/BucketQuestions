@@ -6,7 +6,7 @@ pub struct EmptyFixture;
 
 impl Fixture for EmptyFixture {
     type Repository = Box<dyn Repository>;
-    fn generate(_: &Box<Repository>) -> Self  {
+    fn generate(_: &Box<Repository>) -> Self {
         EmptyFixture
     }
 }

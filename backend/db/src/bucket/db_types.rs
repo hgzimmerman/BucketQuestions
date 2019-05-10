@@ -1,10 +1,12 @@
 //! Module for bucket related database interactions.
 
-use crate::schema::{answer, bucket_user_relation, bucket, question, user_question_favorite_relation};
+use crate::schema::{
+    answer, bucket, bucket_user_relation, question, user_question_favorite_relation,
+};
+use chrono::NaiveDateTime;
 use diesel::{Identifiable, Queryable};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use chrono::NaiveDateTime;
 
 /// A struct representing a bucket.
 /// A bucket is a session associated with questions.
@@ -28,7 +30,7 @@ pub struct Bucket {
     /// When the row was last updated.
     pub updated_at: NaiveDateTime,
     /// When the row was created.
-    pub created_at: NaiveDateTime
+    pub created_at: NaiveDateTime,
 }
 
 /// Structure used to create new users.
@@ -79,7 +81,7 @@ pub struct BucketUserRelation {
     /// When the row was last updated.
     pub updated_at: NaiveDateTime,
     /// When the row was created.
-    pub created_at: NaiveDateTime
+    pub created_at: NaiveDateTime,
 }
 
 /// Structure used to create new join relations between users and buckets.
@@ -153,7 +155,7 @@ pub struct Question {
     /// When the row was last updated.
     pub updated_at: NaiveDateTime,
     /// When the row was created.
-    pub created_at: NaiveDateTime
+    pub created_at: NaiveDateTime,
 }
 
 /// A struct for creating new questions.
@@ -186,7 +188,7 @@ pub struct Answer {
     /// When the row was last updated.
     pub updated_at: NaiveDateTime,
     /// When the row was created.
-    pub created_at: NaiveDateTime
+    pub created_at: NaiveDateTime,
 }
 
 /// A struct for creating new answers
@@ -217,7 +219,7 @@ pub struct FavoriteQuestionRelation {
     /// When the row was last updated.
     pub updated_at: NaiveDateTime,
     /// When the row was created.
-    pub created_at: NaiveDateTime
+    pub created_at: NaiveDateTime,
 }
 
 /// Structure for creating a new favorite relation.
@@ -228,5 +230,4 @@ pub struct NewFavoriteQuestionRelation {
     pub user_uuid: Uuid,
     /// Question
     pub question_uuid: Uuid,
-
 }

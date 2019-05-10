@@ -14,12 +14,12 @@
 #[macro_use]
 extern crate diesel;
 
-mod schema;
 pub mod bucket;
-pub mod user;
-mod util;
+mod schema;
 #[cfg(test)]
 mod test;
+pub mod user;
+mod util;
 
 use crate::{
     bucket::interface::{

@@ -5,8 +5,8 @@
 
 use crate::{
     bucket::db_types::{
-        Answer, Bucket, BucketFlagChangeset, BucketUserRelation, BucketUserPermissions,
-        BucketUserPermissionsChangeset, NewAnswer, NewBucket, NewBucketUserRelation,
+        Answer, Bucket, BucketFlagChangeset, BucketUserPermissions, BucketUserPermissionsChangeset,
+        BucketUserRelation, NewAnswer, NewBucket, NewBucketUserRelation,
         NewFavoriteQuestionRelation, NewQuestion, Question,
     },
     user::User,
@@ -33,7 +33,10 @@ pub trait BucketRepository {
 /// Functions for specifically working with bucket user relations.
 pub trait BucketUserRelationRepository {
     /// Adds a user to the bucket.
-    fn add_user_to_bucket(&self, relation: NewBucketUserRelation) -> QueryResult<BucketUserRelation>;
+    fn add_user_to_bucket(
+        &self,
+        relation: NewBucketUserRelation,
+    ) -> QueryResult<BucketUserRelation>;
     /// Removes the user from bucket.
     fn remove_user_from_bucket(
         &self,
@@ -44,7 +47,7 @@ pub trait BucketUserRelationRepository {
     fn get_user_bucket_relation(
         &self,
         user_uuid: Uuid,
-        bucket_uuid: Uuid
+        bucket_uuid: Uuid,
     ) -> QueryResult<BucketUserRelation>;
     /// Set permissions for the user-bucket relation.
     fn set_permissions(
@@ -96,7 +99,11 @@ pub trait AnswerRepository {
     fn delete_answer(&self, uuid: Uuid) -> QueryResult<Answer>;
     /// Gets answers for the question.
     /// This should only be the publicly visible answers.
-    fn get_answers_for_question(&self, question_uuid: Uuid, visibility_required: bool) -> QueryResult<Vec<Answer>>;
+    fn get_answers_for_question(
+        &self,
+        question_uuid: Uuid,
+        visibility_required: bool,
+    ) -> QueryResult<Vec<Answer>>;
 }
 
 /// Functions for specifically working with Favorites.

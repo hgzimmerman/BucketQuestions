@@ -3,9 +3,10 @@
 use crate::{
     bucket::{
         db_types::{
-            Answer, Bucket, BucketFlagChangeset, BucketUserRelation, BucketUserPermissions,
-            BucketUserPermissionsChangeset, FavoriteQuestionRelation, NewAnswer, NewBucket,
-            NewBucketUserRelation, NewFavoriteQuestionRelation, NewQuestion, Question,
+            Answer, Bucket, BucketFlagChangeset, BucketUserPermissions,
+            BucketUserPermissionsChangeset, BucketUserRelation, FavoriteQuestionRelation,
+            NewAnswer, NewBucket, NewBucketUserRelation, NewFavoriteQuestionRelation, NewQuestion,
+            Question,
         },
         interface::{
             AnswerRepository, BucketRepository, BucketUserRelationRepository,
@@ -13,7 +14,9 @@ use crate::{
         },
     },
     diesel::OptionalExtension,
-    schema::{answer, bucket_user_relation, bucket, question, user_question_favorite_relation, bq_user},
+    schema::{
+        answer, bq_user, bucket, bucket_user_relation, question, user_question_favorite_relation,
+    },
     user::User,
 };
 use diesel::{
@@ -51,22 +54,22 @@ impl BucketRepository for PgConnection {
     }
 
     fn change_bucket_flags(&self, changeset: BucketFlagChangeset) -> Result<Bucket, Error> {
-        changeset.save_changes(self)
-            .or_else(|error: Error| {
-                // The query will return an error if there are no changes,
-                // if that is the case, just fetch the whole bucket.
-                match error {
-                    Error::QueryBuilderError(_) => {
-                        self.get_bucket_by_uuid(changeset.uuid)
-                    }
-                    other => Err(other)
-                }
-            })
+        changeset.save_changes(self).or_else(|error: Error| {
+            // The query will return an error if there are no changes,
+            // if that is the case, just fetch the whole bucket.
+            match error {
+                Error::QueryBuilderError(_) => self.get_bucket_by_uuid(changeset.uuid),
+                other => Err(other),
+            }
+        })
     }
 }
 
 impl BucketUserRelationRepository for PgConnection {
-    fn add_user_to_bucket(&self, relation: NewBucketUserRelation) -> Result<BucketUserRelation, Error> {
+    fn add_user_to_bucket(
+        &self,
+        relation: NewBucketUserRelation,
+    ) -> Result<BucketUserRelation, Error> {
         crate::util::create_row(bucket_user_relation::table, relation, self)
     }
 
@@ -83,7 +86,11 @@ impl BucketUserRelationRepository for PgConnection {
         diesel::delete(target).get_result(self)
     }
 
-    fn get_user_bucket_relation(&self, user_uuid: Uuid, bucket_uuid: Uuid) -> Result<BucketUserRelation, Error> {
+    fn get_user_bucket_relation(
+        &self,
+        user_uuid: Uuid,
+        bucket_uuid: Uuid,
+    ) -> Result<BucketUserRelation, Error> {
         bucket_user_relation::table
             .filter(
                 bucket_user_relation::user_uuid
@@ -97,15 +104,17 @@ impl BucketUserRelationRepository for PgConnection {
         &self,
         permissions_changeset: BucketUserPermissionsChangeset,
     ) -> Result<BucketUserRelation, Error> {
-        permissions_changeset.save_changes(self)
+        permissions_changeset
+            .save_changes(self)
             .or_else(|error: Error| {
                 // The query will return an error if there are no changes,
                 // if that is the case, just fetch the whole bucket.
                 match error {
-                    Error::QueryBuilderError(_) => {
-                        self.get_user_bucket_relation(permissions_changeset.user_uuid, permissions_changeset.bucket_uuid)
-                    }
-                    other => Err(other)
+                    Error::QueryBuilderError(_) => self.get_user_bucket_relation(
+                        permissions_changeset.user_uuid,
+                        permissions_changeset.bucket_uuid,
+                    ),
+                    other => Err(other),
                 }
             })
     }
@@ -222,12 +231,17 @@ impl AnswerRepository for PgConnection {
         crate::util::delete_row(answer::table, uuid, self)
     }
 
-    fn get_answers_for_question(&self, question_uuid: Uuid, visibility_required: bool) -> Result<Vec<Answer>, Error> {
+    fn get_answers_for_question(
+        &self,
+        question_uuid: Uuid,
+        visibility_required: bool,
+    ) -> Result<Vec<Answer>, Error> {
         if visibility_required {
             answer::table
                 .filter(
-                    answer::question_uuid.eq(question_uuid)
-                        .and(answer::publicly_visible.eq(true))
+                    answer::question_uuid
+                        .eq(question_uuid)
+                        .and(answer::publicly_visible.eq(true)),
                 )
                 .get_results(self)
         } else {
@@ -236,7 +250,6 @@ impl AnswerRepository for PgConnection {
                 .filter(answer::question_uuid.eq(question_uuid))
                 .get_results(self)
         }
-
     }
 }
 
@@ -256,7 +269,7 @@ impl FavoriteQuestionRelationRepository for PgConnection {
     }
 
     fn get_favorite_questions(&self, user_uuid: Uuid) -> Result<Vec<Question>, Error> {
-        use user_question_favorite_relation  as favorite;
+        use user_question_favorite_relation as favorite;
         favorite::table
             .filter(favorite::user_uuid.eq(user_uuid))
             .select(favorite::question_uuid)
