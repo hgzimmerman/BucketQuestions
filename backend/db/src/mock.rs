@@ -307,8 +307,12 @@ impl QuestionRepository for Mutex<MockDatabase> {
     fn get_random_question(&self, bucket_uuid: Uuid) -> Result<Option<Question>, Error> {
         let db = self.lock().unwrap();
         let bucket_questions: Vec<&Question> = db.questions.iter().filter(|q| q.bucket_uuid == bucket_uuid).collect();
-        let index: usize = thread_rng().gen_range(0, bucket_questions.len());
-        Ok(bucket_questions.get(index).cloned().cloned())
+        if bucket_questions.len() > 0 {
+            let index: usize = thread_rng().gen_range(0, bucket_questions.len());
+            Ok(bucket_questions.get(index).cloned().cloned())
+        } else {
+            Ok(None)
+        }
     }
 
     fn get_number_of_active_questions_for_bucket(&self, bucket_uuid: Uuid) -> Result<i64, Error> {

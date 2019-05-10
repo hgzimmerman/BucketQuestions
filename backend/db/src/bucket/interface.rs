@@ -74,7 +74,7 @@ pub trait QuestionRepository {
     fn get_random_question(&self, bucket_uuid: Uuid) -> QueryResult<Option<Question>>;
     /// Gets the number of active questions.
     fn get_number_of_active_questions_for_bucket(&self, bucket_uuid: Uuid) -> QueryResult<i64>;
-    /// Gets all active questions
+    /// Gets all questions for a bucket of a specified archived state.
     fn get_all_questions_for_bucket_of_given_archived_status(
         &self,
         bucket_uuid: Uuid,

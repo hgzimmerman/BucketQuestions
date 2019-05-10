@@ -3,6 +3,7 @@ pub mod user_fixture;
 pub mod empty_fixture;
 pub mod bucket_fixture;
 pub mod bucket_user_relation_fixture;
+pub mod question_fixture;
 
 
 use crate::Repository;
