@@ -370,14 +370,25 @@ impl AnswerRepository for Mutex<MockDatabase> {
         Ok(db.answers.remove(index))
     }
 
-    fn get_answers_for_question(&self, question_uuid: Uuid) -> Result<Vec<Answer>, Error> {
+    fn get_answers_for_question(&self, question_uuid: Uuid, visibility_required: bool) -> Result<Vec<Answer>, Error> {
         let db = self.lock().unwrap();
-        let answers = db.answers
-            .iter()
-            .filter(|a| a.question_uuid == question_uuid && a.publicly_visible)
-            .cloned()
-            .collect();
-        Ok(answers)
+        if visibility_required {
+            let answers = db.answers
+                .iter()
+                .filter(|a| a.question_uuid == question_uuid && a.publicly_visible)
+                .cloned()
+                .collect();
+            Ok(answers)
+        } else {
+            // just get all answers
+            let answers = db.answers
+                .iter()
+                .filter(|a| a.question_uuid == question_uuid )
+                .cloned()
+                .collect();
+            Ok(answers)
+        }
+
     }
 }
 

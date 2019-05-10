@@ -222,10 +222,21 @@ impl AnswerRepository for PgConnection {
         crate::util::delete_row(answer::table, uuid, self)
     }
 
-    fn get_answers_for_question(&self, question_uuid: Uuid) -> Result<Vec<Answer>, Error> {
-        answer::table
-            .filter(answer::question_uuid.eq(question_uuid))
-            .get_results(self)
+    fn get_answers_for_question(&self, question_uuid: Uuid, visibility_required: bool) -> Result<Vec<Answer>, Error> {
+        if visibility_required {
+            answer::table
+                .filter(
+                    answer::question_uuid.eq(question_uuid)
+                        .and(answer::publicly_visible.eq(true))
+                )
+                .get_results(self)
+        } else {
+            // gets both private and public
+            answer::table
+                .filter(answer::question_uuid.eq(question_uuid))
+                .get_results(self)
+        }
+
     }
 }
 

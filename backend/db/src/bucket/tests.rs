@@ -222,7 +222,7 @@ mod question {
     fn create_question() {
         let (fixture, db) = setup::<QuestionFixture>();
 
-        let mut new_question = NewQuestion {
+        let new_question = NewQuestion {
             bucket_uuid: fixture.bucket.uuid,
             user_uuid: Some(fixture.user.uuid),
             question_text: "Another question! Cool?".to_string()
@@ -235,7 +235,7 @@ mod question {
     fn create_question_without_user() {
         let (fixture, db) = setup::<QuestionFixture>();
 
-        let mut new_question = NewQuestion {
+        let new_question = NewQuestion {
             bucket_uuid: fixture.bucket.uuid,
             user_uuid: None,
             question_text: "Another question! Cool?".to_string()
@@ -256,7 +256,7 @@ mod question {
     fn get_random_question_single() {
         let (fixture, db) = setup::<BucketFixture>();
 
-        let mut new_question = NewQuestion {
+        let new_question = NewQuestion {
             bucket_uuid: fixture.bucket.uuid,
             user_uuid: None,
             question_text: "Another question! Cool?".to_string()
@@ -292,7 +292,7 @@ mod question {
         let num_questions = db.get_number_of_active_questions_for_bucket(fixture.bucket.uuid).expect("Should get number of questions");
         assert_eq!(num_questions, 1);
 
-        let question = db.set_archive_status_for_question(fixture.question2.uuid, true).expect("Should set archived question");
+        let _question = db.set_archive_status_for_question(fixture.question2.uuid, true).expect("Should set archived question");
         let num_questions = db.get_number_of_active_questions_for_bucket(fixture.bucket.uuid).expect("Should get number of questions");
         assert_eq!(num_questions, 0);
     }
@@ -313,4 +313,110 @@ mod question {
         assert_eq!(active_questions[0].uuid, fixture.question2.uuid);
     }
 
+}
+
+mod answer {
+    use super::*;
+    use crate::test::answer_fixture::AnswerFixture;
+    use crate::bucket::db_types::{NewAnswer, Answer};
+
+    #[test]
+    fn create_duplicate_answer() {
+        // I guess you can create duplicate answers for now
+        let (fixture, db) = setup::<AnswerFixture>();
+
+        let new_answer = NewAnswer {
+            user_uuid: Some(fixture.user.uuid),
+            question_uuid: fixture.question.uuid,
+            publicly_visible: false,
+            answer_text: "I think this is an answer".to_string()
+        };
+        let _answer: Answer = db.create_answer(new_answer).expect("Should create new answer");
+    }
+
+    #[test]
+    fn create_answer_without_answer() {
+        let (fixture, db) = setup::<AnswerFixture>();
+
+        let new_answer = NewAnswer {
+            user_uuid: None,
+            question_uuid: fixture.question.uuid,
+            publicly_visible: false,
+            answer_text: "I think this is an answer".to_string()
+        };
+        let _answer: Answer = db.create_answer(new_answer).expect("Should create new answer");
+    }
+
+    #[test]
+    fn delete_answer() {
+        let (fixture, db) = setup::<AnswerFixture>();
+
+        let answer = db.delete_answer(fixture.answer.uuid).expect("Should be able to delete answer");
+        assert_eq!(answer, fixture.answer);
+    }
+
+    #[test]
+    fn get_answers_for_question() {
+        let (fixture, db) = setup::<AnswerFixture>();
+        let answers = db.get_answers_for_question(fixture.question.uuid, true).expect("Should get answers");
+        assert_eq!(answers.len(), 0);
+
+        let answers = db.get_answers_for_question(fixture.question.uuid, false).expect("Should get all answers");
+        assert_eq!(answers.len(), 1);
+        assert_eq!(answers[0], fixture.answer);
+    }
+}
+
+mod favorites {
+    use super::*;
+    use crate::test::question_fixture::QuestionFixture;
+    use crate::bucket::db_types::{FavoriteQuestionRelation, NewFavoriteQuestionRelation};
+
+    #[test]
+    fn favorite_question() {
+        let (fixture, db) = setup::<QuestionFixture>();
+
+        let new_relation = NewFavoriteQuestionRelation {
+            user_uuid: fixture.user.uuid,
+            question_uuid: fixture.question1.uuid
+        };
+        let _relation = db.favorite_question(new_relation).expect("Should be able to favorite question");
+    }
+
+    #[test]
+    fn unfavorite_question() {
+        let (fixture, db) = setup::<QuestionFixture>();
+
+        let new_relation = NewFavoriteQuestionRelation {
+            user_uuid: fixture.user.uuid,
+            question_uuid: fixture.question1.uuid
+        };
+        let relation = db.favorite_question(new_relation).expect("Should be able to favorite question");
+
+        let delete_relation = db.unfavorite_question(new_relation).expect("Should be able to unfavorite question");
+        assert_eq!(relation, delete_relation)
+    }
+
+    #[test]
+    fn get_favorite_questions() {
+        let (fixture, db) = setup::<QuestionFixture>();
+        let mut new_relation = NewFavoriteQuestionRelation {
+            user_uuid: fixture.user.uuid,
+            question_uuid: fixture.question1.uuid
+        };
+        let _relation = db.favorite_question(new_relation).expect("Should be able to favorite question");
+
+        let favorites = db.get_favorite_questions(fixture.user.uuid).expect("Sholud get favorite questions");
+        assert_eq!(favorites.len(), 1);
+        assert_eq!(favorites[0], fixture.question1);
+
+        new_relation.question_uuid = fixture.question2.uuid;
+        let _relation = db.favorite_question(new_relation).expect("Should be able to favorite question");
+
+        let favorites = db.get_favorite_questions(fixture.user.uuid).expect("Sholud get favorite questions");
+        assert_eq!(favorites.len(), 2);
+        assert_eq!(favorites[0], fixture.question1);
+        assert_eq!(favorites[1], fixture.question2); // is Ordering guaranteed
+        // TODO order favorite questions by date
+    }
 }
