@@ -30,15 +30,31 @@ where
     }
 }
 
+fn setup_mock_impl<Fix>() -> (Fix, Arc<Mutex<MockDatabase>>)
+where
+    Fix: Fixture<Repository = Box<Repository>>,
+{
+    let db = Arc::new(Mutex::new(MockDatabase::default()));
+    let db_clone: Box<dyn Repository> = Box::new(db.clone());
+    let fixture = Fix::generate(&db_clone);
+    (fixture, db)
+}
+
 /// Sets up a fixture and a mock repository
 pub fn setup_mock<Fix>() -> (Fix, Box<Repository>)
 where
     Fix: Fixture<Repository = Box<Repository>>,
 {
-    let db = Arc::new(Mutex::new(MockDatabase::default()));
-    let db: Box<dyn Repository> = Box::new(db);
-    let fixture = Fix::generate(&db);
-    (fixture, db)
+    let (fixture, db) = setup_mock_impl();
+    (fixture, Box::new(db))
+}
+
+pub fn setup_mock_provider<Fix>() -> (Fix, Box<RepoProvider>)
+where
+    Fix: Fixture<Repository = Box<Repository>>,
+{
+    let (fixture, db) = setup_mock_impl();
+    (fixture, Box::new(db))
 }
 
 /// Sets up a fixture and a database-backed repository
@@ -58,7 +74,7 @@ where
 Fix: Fixture<Repository = Box<Repository>>,
 {
     let db: Pool = diesel_reset::setup::setup_pool();
-    let con: PooledConn = db.get().unwrap();
+    let con: Box<Repository> = db.get().unwrap();
     let db: Box<dyn Repository> = Box::new(con);
     let fixture = Fix::generate(&db);
     (fixture, db)
@@ -70,7 +86,7 @@ where
 Fix: Fixture<Repository = Box<Repository>>,
 {
     let pool: Pool = diesel_reset::setup::setup_pool();
-    let con: PooledConn = pool.get().unwrap();
+    let con: Box<Repository> = pool.get().unwrap();
     let db: Box<dyn Repository> = Box::new(con);
     let fixture = Fix::generate(&db);
     (fixture, Box::new(pool))

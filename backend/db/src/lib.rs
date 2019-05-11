@@ -50,7 +50,7 @@ impl AsConnRef for PgConnection {
 
 /// Errors that can occur when trying to get a repository.
 #[derive(Clone, Copy, Debug)]
-pub enum RepoAquisitionError {
+pub enum RepoAcquisitionError {
     /// The repository could not be gotten.
     CouldNotGetRepo
 }
@@ -58,12 +58,12 @@ pub enum RepoAquisitionError {
 /// Trait for anything that can resolve an implementor of a `Repository`.
 pub trait RepoProvider {
     /// Gets the repo.
-    fn get_repo(&self) -> Result<Box<Repository>, RepoAquisitionError>;
+    fn get_repo(&self) -> Result<Box<Repository + Send>, RepoAcquisitionError>;
 }
 impl RepoProvider for Pool {
-    fn get_repo(&self) -> Result<Box<Repository>, RepoAquisitionError> {
-        let repo = self.get().map_err(|_| RepoAquisitionError::CouldNotGetRepo)?;
-        let repo: Box<Repository> = Box::new(repo);
+    fn get_repo(&self) -> Result<Box<Repository + Send>, RepoAcquisitionError> {
+        let repo = self.get().map_err(|_| RepoAcquisitionError::CouldNotGetRepo)?;
+        let repo: Box<dyn Repository + Send> = Box::new(repo);
         Ok(repo)
     }
 }

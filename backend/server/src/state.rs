@@ -18,6 +18,10 @@ use std::{
 };
 use url::Url;
 use warp::{Filter, Rejection};
+use db::Repository;
+use db::RepoProvider;
+#[cfg(test)]
+use db::test::{setup_pool, setup_mock, setup_mock_provider};
 
 /// Simplified type for representing a HttpClient.
 pub type HttpsClient = Client<HttpsConnector<HttpConnector<GaiResolver>>, Body>;
@@ -31,6 +35,7 @@ pub type HttpsClient = Client<HttpsConnector<HttpConnector<GaiResolver>>, Body>;
 pub struct State {
     /// A pool of database connections.
     database_connection_pool: Pool,
+    repository_provider: Box<dyn RepoProvider + Send + Sync>,
     /// The secret key.
     secret: Secret,
     /// Https client
@@ -100,6 +105,25 @@ impl RunningEnvironment {
     }
 }
 
+#[cfg(test)]
+enum RepositoryVariant {
+    Mocked,
+    TestDatabase
+}
+
+#[cfg(test)]
+fn setup_backing_repository(variant: RepositoryVariant) -> Box<RepoProvider> {
+    match variant {
+        RepositoryVariant::Mocked => {
+            setup_mock_provider()
+        },
+        RepositoryVariant::TestDatabase => {
+            setup_pool()
+        },
+    }
+
+}
+
 impl State {
     /// Creates a new state.
     pub fn new(conf: StateConfig) -> Self {
@@ -127,8 +151,11 @@ impl State {
 
         let root = conf.server_lib_root.unwrap_or_else(|| PathBuf::from("./"));
 
+        let repository_provider = Box::new(init_pool(DATABASE_URL, pool_conf));
+
         State {
             database_connection_pool: pool,
+            repository_provider,
             secret,
             https: client,
             google_oauth_client,
@@ -137,6 +164,7 @@ impl State {
         }
     }
 
+    #[deprecated]
     /// Gets a pooled connection to the database.
     pub fn db(&self) -> impl Filter<Extract = (PooledConn,), Error = Rejection> + Clone {
         /// Filter that exposes connections to the database to individual filter requests
@@ -157,6 +185,29 @@ impl State {
         }
 
         db_filter(self.database_connection_pool.clone())
+    }
+
+
+    /// Gets an abstract repository object.
+    /// This can be used to access a backing store for the application.
+    pub fn db2(&self) -> impl Filter<Extract = (Box<dyn Repository + Send>, ), Error = Rejection> + Clone {
+        /// Filter that exposes connections to the database to individual filter requests
+        fn db_filter(
+            repo_provider: &Box<RepoProvider + Send + Sync>,
+        ) -> impl Filter<Extract = (Box<dyn Repository + Send>,), Error = Rejection> + Clone {
+            fn get_conn_from_pool(repo_provider: &Box<dyn RepoProvider + Send + Sync>) -> Result<Box<Repository + Send>, Rejection> {
+                repo_provider.get_repo()
+                    .map_err(|_| {
+                        log::error!("Pool exhausted: could not get database connection.");
+                        Error::DatabaseUnavailable.reject()
+                    })
+            }
+
+            warp::any()
+                .and_then(move || -> Result<Box<Repository + Send>, Rejection> { get_conn_from_pool(&repo_provider) })
+        }
+
+        db_filter(&self.repository_provider)
     }
 
     /// Gets the secret used for authoring JWTs
@@ -215,8 +266,13 @@ impl State {
         let redirect_url = conf.environment.create_redirect_url();
         let google_oauth_client = create_google_oauth_client(redirect_url.clone());
 
+
+        let var = RepositoryVariant::Mocked;
+        let repository_provider = setup_backing_repository(var);
+
         State {
             database_connection_pool: pool,
+            repository_provider,
             secret,
             https: client,
             google_oauth_client,
