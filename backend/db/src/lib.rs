@@ -17,7 +17,7 @@ extern crate diesel;
 pub mod bucket;
 mod schema;
 #[cfg(test)]
-mod test;
+pub mod test;
 pub mod user;
 mod util;
 
@@ -28,6 +28,41 @@ use crate::{
     },
     user::UserRepository,
 };
+use diesel::PgConnection;
+use pool::{PooledConn, Pool};
+
+
+pub trait AsConnRef {
+    fn as_conn(&self) -> &PgConnection;
+}
+impl AsConnRef for PooledConn {
+    fn as_conn(&self) -> &PgConnection {
+        &self
+    }
+}
+impl AsConnRef for PgConnection {
+    fn as_conn(&self) -> &PgConnection {
+        self
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum RepoAquisitionError {
+    CouldNotGetRepo
+}
+
+pub trait RepoProvider {
+    fn get_repo(&self) -> Result<Box<Repository>, RepoAquisitionError>;
+}
+impl RepoProvider for Pool {
+    fn get_repo(&self) -> Result<Box<Repository>, RepoAquisitionError> {
+        let repo = self.get().map_err(|_| RepoAquisitionError::CouldNotGetRepo)?;
+        let repo: Box<Repository> = Box::new(repo);
+        Ok(repo)
+    }
+}
+
+
 
 /// A trait that encompasses all repository traits.
 ///

@@ -10,6 +10,7 @@ use diesel_reset::fixture::Fixture;
 
 /// Fixture that creates 2 users, 1 bucket, and one relation record in the repository.
 /// user1 is joined to the bucket.
+#[derive(Clone, Debug)]
 pub struct AnswerFixture {
     pub bucket: Bucket,
     pub user: User,

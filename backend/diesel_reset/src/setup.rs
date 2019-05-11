@@ -108,8 +108,7 @@ pub fn setup_pool() -> Pool {
     init_pool(DATABASE_URL, pool_conf)
 }
 
-pub fn setup_single_connection() -> PgConnection
-{
+pub fn setup_single_connection() -> PgConnection {
     let admin_conn: MutexGuard<PgConnection> = match CONN.lock() {
         Ok(guard) => guard,
         Err(poisoned) => poisoned.into_inner(), // Don't care if the mutex is poisoned

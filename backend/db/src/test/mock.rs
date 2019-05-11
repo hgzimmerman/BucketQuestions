@@ -1,31 +1,29 @@
 //! Module for the database mock object.
-use crate::{
-    bucket::{
-        db_types::{
-            Answer, Bucket, BucketFlagChangeset, BucketUserPermissions,
-            BucketUserPermissionsChangeset, BucketUserRelation, FavoriteQuestionRelation,
-            NewAnswer, NewBucket, NewBucketUserRelation, NewFavoriteQuestionRelation, NewQuestion,
-            Question,
-        },
-        interface::{
-            AnswerRepository, BucketRepository, BucketUserRelationRepository,
-            FavoriteQuestionRelationRepository, QuestionRepository,
-        },
+use crate::{bucket::{
+    db_types::{
+        Answer, Bucket, BucketFlagChangeset, BucketUserPermissions,
+        BucketUserPermissionsChangeset, BucketUserRelation, FavoriteQuestionRelation,
+        NewAnswer, NewBucket, NewBucketUserRelation, NewFavoriteQuestionRelation, NewQuestion,
+        Question,
     },
-    user::{NewUser, User, UserRepository},
-};
+    interface::{
+        AnswerRepository, BucketRepository, BucketUserRelationRepository,
+        FavoriteQuestionRelationRepository, QuestionRepository,
+    },
+}, user::{NewUser, User, UserRepository}, RepoProvider, Repository, RepoAquisitionError};
 use diesel::result::{DatabaseErrorInformation, DatabaseErrorKind, Error};
 use rand::{thread_rng, Rng};
-use std::sync::Mutex;
+use std::sync::{Mutex, Arc};
 use uuid::Uuid;
 
 /// This isn't expected to match on the info provided by the actual database.
+///
 #[derive(Clone, Copy, Debug)]
-pub struct DummyDbErrorInfo {}
+pub struct DummyDbErrorInfo;
 impl DummyDbErrorInfo {
     /// Creates a new DummyDbErrorInfo
     pub fn new() -> Self {
-        DummyDbErrorInfo {}
+        DummyDbErrorInfo
     }
 }
 
@@ -55,6 +53,12 @@ impl DatabaseErrorInformation for DummyDbErrorInfo {
     }
 }
 
+
+impl RepoProvider for Arc<Mutex<MockDatabase>> {
+    fn get_repo(&self) -> Result<Box<Repository>, RepoAquisitionError> {
+        Ok(Box::new(self.clone()))
+    }
+}
 /// A mock object that should have parity with database operations.
 #[derive(Debug, Clone, Default)]
 pub struct MockDatabase {
@@ -66,7 +70,7 @@ pub struct MockDatabase {
     favorite_question_relations: Vec<FavoriteQuestionRelation>,
 }
 
-impl UserRepository for Mutex<MockDatabase> {
+impl UserRepository for Arc<Mutex<MockDatabase>> {
     fn create_user(&self, user: NewUser) -> Result<User, Error> {
         let uuid = Uuid::new_v4();
         let user = User {
@@ -86,6 +90,7 @@ impl UserRepository for Mutex<MockDatabase> {
     }
 
     fn get_user(&self, uuid: Uuid) -> Result<User, Error> {
+//        let db = self.provide().deref_mut();
         let db = self.lock().unwrap();
         db.users
             .iter()
@@ -95,6 +100,7 @@ impl UserRepository for Mutex<MockDatabase> {
     }
 
     fn get_user_by_google_id(&self, id: String) -> Result<User, Error> {
+//        let db = self.provide().deref_mut();
         let db = self.lock().unwrap();
         db.users
             .iter()
@@ -104,7 +110,7 @@ impl UserRepository for Mutex<MockDatabase> {
     }
 }
 
-impl BucketRepository for Mutex<MockDatabase> {
+impl BucketRepository for Arc<Mutex<MockDatabase>> {
     fn create_bucket(&self, new_bucket: NewBucket) -> Result<Bucket, Error> {
         let mut db = self.lock().unwrap();
         let uuid = Uuid::new_v4();
@@ -190,7 +196,7 @@ impl BucketRepository for Mutex<MockDatabase> {
     }
 }
 
-impl BucketUserRelationRepository for Mutex<MockDatabase> {
+impl BucketUserRelationRepository for Arc<Mutex<MockDatabase>> {
     fn add_user_to_bucket(
         &self,
         relation: NewBucketUserRelation,
@@ -329,7 +335,7 @@ impl BucketUserRelationRepository for Mutex<MockDatabase> {
     }
 }
 
-impl QuestionRepository for Mutex<MockDatabase> {
+impl QuestionRepository for Arc<Mutex<MockDatabase>> {
     fn create_question(&self, question: NewQuestion) -> Result<Question, Error> {
         let uuid = Uuid::new_v4();
         let question = Question {
@@ -418,7 +424,7 @@ impl QuestionRepository for Mutex<MockDatabase> {
     }
 }
 
-impl AnswerRepository for Mutex<MockDatabase> {
+impl AnswerRepository for Arc<Mutex<MockDatabase>> {
     fn create_answer(&self, answer: NewAnswer) -> Result<Answer, Error> {
         let uuid = Uuid::new_v4();
         let answer = Answer {
@@ -478,7 +484,7 @@ impl AnswerRepository for Mutex<MockDatabase> {
     }
 }
 
-impl FavoriteQuestionRelationRepository for Mutex<MockDatabase> {
+impl FavoriteQuestionRelationRepository for Arc<Mutex<MockDatabase>> {
     fn favorite_question(&self, relation: NewFavoriteQuestionRelation) -> Result<(), Error> {
         let mut db = self.lock().unwrap();
         let relation = FavoriteQuestionRelation {

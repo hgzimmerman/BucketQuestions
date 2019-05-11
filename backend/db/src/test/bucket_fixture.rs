@@ -5,6 +5,7 @@ use crate::{
 use diesel_reset::fixture::Fixture;
 
 /// Fixture that creates one user record in the repository.
+#[derive(Clone, Debug)]
 pub struct BucketFixture {
     pub bucket: Bucket,
 }

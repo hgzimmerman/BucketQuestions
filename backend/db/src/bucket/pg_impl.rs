@@ -1,26 +1,20 @@
 //! Implementation of the specified interfaces for PgConnection.
 
-use crate::{
-    bucket::{
-        db_types::{
-            Answer, Bucket, BucketFlagChangeset, BucketUserPermissions,
-            BucketUserPermissionsChangeset, BucketUserRelation, FavoriteQuestionRelation,
-            NewAnswer, NewBucket, NewBucketUserRelation, NewFavoriteQuestionRelation, NewQuestion,
-            Question,
-        },
-        interface::{
-            AnswerRepository, BucketRepository, BucketUserRelationRepository,
-            FavoriteQuestionRelationRepository, QuestionRepository,
-        },
+use crate::{bucket::{
+    db_types::{
+        Answer, Bucket, BucketFlagChangeset, BucketUserPermissions,
+        BucketUserPermissionsChangeset, BucketUserRelation, FavoriteQuestionRelation,
+        NewAnswer, NewBucket, NewBucketUserRelation, NewFavoriteQuestionRelation, NewQuestion,
+        Question,
     },
-    diesel::OptionalExtension,
-    schema::{
-        answer, bq_user, bucket, bucket_user_relation, question, user_question_favorite_relation,
+    interface::{
+        AnswerRepository, BucketRepository, BucketUserRelationRepository,
+        FavoriteQuestionRelationRepository, QuestionRepository,
     },
-    user::User,
-};
+}, diesel::OptionalExtension, schema::{
+    answer, bq_user, bucket, bucket_user_relation, question, user_question_favorite_relation,
+}, user::User, AsConnRef};
 use diesel::{
-    pg::PgConnection,
     query_dsl::{QueryDsl, RunQueryDsl},
     result::Error,
     BoolExpressionMethods, ExpressionMethods, SaveChangesDsl,
@@ -28,33 +22,33 @@ use diesel::{
 use log::info;
 use uuid::Uuid;
 
-impl BucketRepository for PgConnection {
+impl <T> BucketRepository for T where T: AsConnRef {
     fn create_bucket(&self, new_bucket: NewBucket) -> Result<Bucket, Error> {
-        crate::util::create_row(bucket::table, new_bucket, self)
+        crate::util::create_row(bucket::table, new_bucket, self.as_conn())
     }
 
     fn delete_bucket(&self, bucket_uuid: Uuid) -> Result<Bucket, Error> {
-        crate::util::delete_row(bucket::table, bucket_uuid, self)
+        crate::util::delete_row(bucket::table, bucket_uuid, self.as_conn())
     }
 
     fn get_publicly_visible_buckets(&self) -> Result<Vec<Bucket>, Error> {
         bucket::table
             .filter(bucket::public_viewable.eq(true))
-            .get_results(self)
+            .get_results(self.as_conn())
     }
 
     fn get_bucket_by_slug(&self, slug: String) -> Result<Bucket, Error> {
         bucket::table
             .filter(&bucket::bucket_slug.eq(slug))
-            .first(self)
+            .first(self.as_conn())
     }
 
     fn get_bucket_by_uuid(&self, uuid: Uuid) -> Result<Bucket, Error> {
-        crate::util::get_row(bucket::table, uuid, self)
+        crate::util::get_row(bucket::table, uuid, self.as_conn())
     }
 
     fn change_bucket_flags(&self, changeset: BucketFlagChangeset) -> Result<Bucket, Error> {
-        changeset.save_changes(self).or_else(|error: Error| {
+        changeset.save_changes(self.as_conn()).or_else(|error: Error| {
             // The query will return an error if there are no changes,
             // if that is the case, just fetch the whole bucket.
             match error {
@@ -65,12 +59,12 @@ impl BucketRepository for PgConnection {
     }
 }
 
-impl BucketUserRelationRepository for PgConnection {
+impl <T> BucketUserRelationRepository for T where T: AsConnRef {
     fn add_user_to_bucket(
         &self,
         relation: NewBucketUserRelation,
     ) -> Result<BucketUserRelation, Error> {
-        crate::util::create_row(bucket_user_relation::table, relation, self)
+        crate::util::create_row(bucket_user_relation::table, relation, self.as_conn())
     }
 
     fn remove_user_from_bucket(
@@ -83,7 +77,7 @@ impl BucketUserRelationRepository for PgConnection {
                 .eq(user_uuid)
                 .and(bucket_user_relation::bucket_uuid.eq(bucket_uuid)),
         );
-        diesel::delete(target).get_result(self)
+        diesel::delete(target).get_result(self.as_conn())
     }
 
     fn get_user_bucket_relation(
@@ -97,7 +91,7 @@ impl BucketUserRelationRepository for PgConnection {
                     .eq(user_uuid)
                     .and(bucket_user_relation::bucket_uuid.eq(bucket_uuid)),
             )
-            .get_result(self)
+            .get_result(self.as_conn())
     }
 
     fn set_permissions(
@@ -105,7 +99,7 @@ impl BucketUserRelationRepository for PgConnection {
         permissions_changeset: BucketUserPermissionsChangeset,
     ) -> Result<BucketUserRelation, Error> {
         permissions_changeset
-            .save_changes(self)
+            .save_changes(self.as_conn())
             .or_else(|error: Error| {
                 // The query will return an error if there are no changes,
                 // if that is the case, just fetch the whole bucket.
@@ -136,7 +130,7 @@ impl BucketUserRelationRepository for PgConnection {
                 bucket_user_relation::set_exclusive_permission,
                 bucket_user_relation::grant_permissions_permission,
             ))
-            .get_result::<BucketUserPermissions>(self)
+            .get_result::<BucketUserPermissions>(self.as_conn())
     }
 
     fn get_buckets_user_is_a_part_of(&self, user_uuid: Uuid) -> Result<Vec<Bucket>, Error> {
@@ -146,7 +140,7 @@ impl BucketUserRelationRepository for PgConnection {
             .select(bucket_user_relation::bucket_uuid)
             .inner_join(bucket::table)
             .select(bucket::all_columns)
-            .get_results(self)
+            .get_results(self.as_conn())
     }
 
     fn get_users_in_bucket(&self, bucket_uuid: Uuid) -> Result<Vec<User>, Error> {
@@ -156,17 +150,17 @@ impl BucketUserRelationRepository for PgConnection {
             .select(bucket_user_relation::user_uuid)
             .inner_join(bq_user::table)
             .select(bq_user::all_columns)
-            .get_results(self)
+            .get_results(self.as_conn())
     }
 }
 
-impl QuestionRepository for PgConnection {
+impl <T> QuestionRepository for T where T: AsConnRef {
     fn create_question(&self, question: NewQuestion) -> Result<Question, Error> {
-        crate::util::create_row(question::table, question, self)
+        crate::util::create_row(question::table, question, self.as_conn())
     }
 
     fn delete_question(&self, uuid: Uuid) -> Result<Question, Error> {
-        crate::util::delete_row(question::table, uuid, self)
+        crate::util::delete_row(question::table, uuid, self.as_conn())
     }
 
     fn get_random_question(&self, bucket_uuid: Uuid) -> Result<Option<Question>, Error> {
@@ -180,7 +174,7 @@ impl QuestionRepository for PgConnection {
         question::table
             .filter(condition)
             .order(RANDOM)
-            .first(self)
+            .first(self.as_conn())
             .optional()
     }
 
@@ -192,7 +186,7 @@ impl QuestionRepository for PgConnection {
                     .and(question::archived.eq(false)),
             )
             .count()
-            .get_result(self)
+            .get_result(self.as_conn())
     }
 
     fn get_all_questions_for_bucket_of_given_archived_status(
@@ -206,7 +200,7 @@ impl QuestionRepository for PgConnection {
                     .eq(bucket_uuid)
                     .and(question::archived.eq(archived)),
             )
-            .get_results(self)
+            .get_results(self.as_conn())
     }
 
     fn set_archive_status_for_question(
@@ -218,17 +212,17 @@ impl QuestionRepository for PgConnection {
 
         diesel::update(target)
             .set(question::archived.eq(archived))
-            .get_result(self)
+            .get_result(self.as_conn())
     }
 }
 
-impl AnswerRepository for PgConnection {
+impl <T> AnswerRepository for T where T: AsConnRef {
     fn create_answer(&self, answer: NewAnswer) -> Result<Answer, Error> {
-        crate::util::create_row(answer::table, answer, self)
+        crate::util::create_row(answer::table, answer, self.as_conn())
     }
 
     fn delete_answer(&self, uuid: Uuid) -> Result<Answer, Error> {
-        crate::util::delete_row(answer::table, uuid, self)
+        crate::util::delete_row(answer::table, uuid, self.as_conn())
     }
 
     fn get_answers_for_question(
@@ -243,19 +237,19 @@ impl AnswerRepository for PgConnection {
                         .eq(question_uuid)
                         .and(answer::publicly_visible.eq(true)),
                 )
-                .get_results(self)
+                .get_results(self.as_conn())
         } else {
             // gets both private and public
             answer::table
                 .filter(answer::question_uuid.eq(question_uuid))
-                .get_results(self)
+                .get_results(self.as_conn())
         }
     }
 }
 
-impl FavoriteQuestionRelationRepository for PgConnection {
+impl <T> FavoriteQuestionRelationRepository for T where T: AsConnRef {
     fn favorite_question(&self, relation: NewFavoriteQuestionRelation) -> Result<(), Error> {
-        crate::util::create_row(user_question_favorite_relation::table, relation, self)
+        crate::util::create_row(user_question_favorite_relation::table, relation, self.as_conn())
             .map(|_: FavoriteQuestionRelation| ())
     }
 
@@ -265,7 +259,7 @@ impl FavoriteQuestionRelationRepository for PgConnection {
                 .eq(relation.user_uuid)
                 .and(user_question_favorite_relation::question_uuid.eq(relation.question_uuid)),
         );
-        diesel::delete(target).execute(self).map(|_| ())
+        diesel::delete(target).execute(self.as_conn()).map(|_| ())
     }
 
     fn get_favorite_questions(&self, user_uuid: Uuid) -> Result<Vec<Question>, Error> {
@@ -275,6 +269,6 @@ impl FavoriteQuestionRelationRepository for PgConnection {
             .select(favorite::question_uuid)
             .inner_join(question::table)
             .select(question::all_columns)
-            .get_results(self)
+            .get_results(self.as_conn())
     }
 }
