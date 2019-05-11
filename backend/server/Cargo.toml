@@ -37,6 +37,7 @@ askama = "0.8.0"
 oauth2 = "2.0.0-beta.2"
 url = "1.7.2"
 base64 = "0.10.1"
+slug = "0.1.4"
 
 [dev-dependencies]
 diesel_reset = {path="../diesel_reset"}

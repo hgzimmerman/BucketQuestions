@@ -32,7 +32,9 @@ use diesel::PgConnection;
 use pool::{PooledConn, Pool};
 
 
+/// Trait for anything that can resolve a reference to a Postgres Connection
 pub trait AsConnRef {
+    /// Get the postgres connection.
     fn as_conn(&self) -> &PgConnection;
 }
 impl AsConnRef for PooledConn {
@@ -46,12 +48,16 @@ impl AsConnRef for PgConnection {
     }
 }
 
+/// Errors that can occur when trying to get a repository.
 #[derive(Clone, Copy, Debug)]
 pub enum RepoAquisitionError {
+    /// The repository could not be gotten.
     CouldNotGetRepo
 }
 
+/// Trait for anything that can resolve an implementor of a `Repository`.
 pub trait RepoProvider {
+    /// Gets the repo.
     fn get_repo(&self) -> Result<Box<Repository>, RepoAquisitionError>;
 }
 impl RepoProvider for Pool {
