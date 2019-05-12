@@ -3,16 +3,18 @@ pub mod answer_fixture;
 pub mod bucket_fixture;
 pub mod bucket_user_relation_fixture;
 pub mod empty_fixture;
-pub mod mock;
+//pub mod mock;
 pub mod question_fixture;
 pub mod user_fixture;
 
-use self::mock::MockDatabase;
-use crate::{Repository, RepoProvider};
+//use self::mock::MockDatabase;
+
+use crate::{Repository, RepoProvider, RepositoryProvider};
 use diesel::PgConnection;
 use diesel_reset::fixture::Fixture;
 use std::sync::{Mutex, Arc};
 use pool::{Pool, PooledConn};
+use crate::mock::MockDatabase;
 
 /// Sets up a fixture and repository to a state defined by the fixture's initialization function.
 /// The repository implementation is chosen by a feature flag.
@@ -81,7 +83,7 @@ Fix: Fixture<Repository = Box<Repository>>,
 }
 
 
-pub fn setup_pool<Fix>() -> (Fix, Box<RepoProvider>)
+pub fn setup_pool<Fix>() -> (Fix, RepositoryProvider)
 where
 Fix: Fixture<Repository = Box<Repository>>,
 {
@@ -89,6 +91,6 @@ Fix: Fixture<Repository = Box<Repository>>,
     let con: Box<Repository> = pool.get().unwrap();
     let db: Box<dyn Repository> = Box::new(con);
     let fixture = Fix::generate(&db);
-    (fixture, Box::new(pool))
+    (fixture, RepositoryProvider::Pool(pool))
 }
 

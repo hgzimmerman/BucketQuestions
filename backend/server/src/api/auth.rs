@@ -8,17 +8,17 @@ use crate::{
 };
 use askama::Template;
 use authorization::{JwtPayload, Secret};
-use db::user::{NewUser, User, UserRepository};
+use db::user::{NewUser, User};
 use futures::{future::Future, stream::Stream};
 use hyper::{body::Body, Chunk, Request, Response};
 use log::{error, info, warn};
 use oauth2::{
     basic::{BasicClient},
 };
-use pool::PooledConn;
 use serde::{Deserialize, Serialize};
 use url::Url;
 use warp::{filters::BoxedFilter, path, query::query, Filter, Reply};
+use db::AbstractRepository;
 
 /// The path segment for the auth api.
 pub const AUTH_PATH: &str = "auth";
@@ -98,7 +98,7 @@ pub fn auth_api(state: &State) -> BoxedFilter<(impl Reply,)> {
             },
         )
         .and_then(crate::util::reject)
-        .and(state.db())
+        .and(state.db2())
         .map(get_or_create_user)
         .and_then(crate::util::reject)
         .and(state.secret())
@@ -213,7 +213,7 @@ fn extract_payload_from_google_jwt(jwt: &str) -> Result<GoogleJWTPayload, Error>
 /// Gets or creates a user.
 fn get_or_create_user(
     google_jwt_payload: GoogleJWTPayload,
-    conn: PooledConn,
+    conn: AbstractRepository,
 ) -> Result<User, Error> {
     use diesel::result::Error as DieselError;
     conn.get_user_by_google_id(google_jwt_payload.sub.clone())

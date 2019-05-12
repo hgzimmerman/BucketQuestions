@@ -20,6 +20,7 @@ mod schema;
 pub mod test;
 pub mod user;
 mod util;
+pub mod mock;
 
 use crate::{
     bucket::interface::{
@@ -30,6 +31,9 @@ use crate::{
 };
 use diesel::PgConnection;
 use pool::{PooledConn, Pool};
+use std::sync::{Mutex, Arc};
+use crate::mock::MockDatabase;
+use std::fmt::{Debug, Formatter, Error};
 
 
 /// Trait for anything that can resolve a reference to a Postgres Connection
@@ -55,16 +59,41 @@ pub enum RepoAcquisitionError {
     CouldNotGetRepo
 }
 
-/// Trait for anything that can resolve an implementor of a `Repository`.
-pub trait RepoProvider {
-    /// Gets the repo.
-    fn get_repo(&self) -> Result<Box<Repository + Send>, RepoAcquisitionError>;
+
+/// Provides repositories
+#[derive(Clone)]
+pub enum RepositoryProvider {
+    /// Pool repository provider
+    Pool(Pool),
+    /// Mock repository provider
+    Mock(Arc<Mutex<MockDatabase>>)
 }
-impl RepoProvider for Pool {
-    fn get_repo(&self) -> Result<Box<Repository + Send>, RepoAcquisitionError> {
-        let repo = self.get().map_err(|_| RepoAcquisitionError::CouldNotGetRepo)?;
-        let repo: Box<dyn Repository + Send> = Box::new(repo);
-        Ok(repo)
+
+impl Debug for RepositoryProvider {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
+        match self {
+            RepositoryProvider::Pool(_) => write!(f, "RepositoryProvider::Pool"),
+            RepositoryProvider::Mock(mock) => mock.fmt(f) // TODO this is inconsistent
+        }
+    }
+}
+
+/// An abstract repository that is sendable across threads
+pub type AbstractRepository = Box<Repository + Send>;
+
+impl RepositoryProvider {
+    /// Gets the repo.
+    pub fn get_repo(&self) -> Result<AbstractRepository, RepoAcquisitionError> {
+        match self {
+            RepositoryProvider::Pool(pool) => {
+                let repo = pool.get().map_err(|_| RepoAcquisitionError::CouldNotGetRepo)?;
+                Ok(Box::new(repo))
+            }
+            RepositoryProvider::Mock(mock) => {
+                let repo = mock.clone();
+                Ok(Box::new(repo))
+            }
+        }
     }
 }
 

@@ -4,18 +4,13 @@ use crate::{
     state::State,
     util::{json_body_filter, json_or_reject},
 };
-use db::{
-    bucket::{
-        db_types::{
-            Bucket, BucketFlagChangeset, BucketUserRelation, BucketUserPermissions,
-            BucketUserPermissionsChangeset, NewBucket, NewBucketUserRelation,
-        },
-        interface::{BucketRepository, BucketUserRelationRepository},
+use db::{bucket::{
+    db_types::{
+        Bucket, BucketFlagChangeset, BucketUserRelation, BucketUserPermissions,
+        BucketUserPermissionsChangeset, NewBucket, NewBucketUserRelation,
     },
-    user::User,
-};
+}, user::User, AbstractRepository};
 use log::info;
-use pool::PooledConn;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use warp::{filters::BoxedFilter, path, Filter, Reply};
@@ -64,9 +59,9 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .and(warp::path::end())
         .and(json_body_filter(2))
         .and(user_filter(state))
-        .and(state.db())
+        .and(state.db2())
         .map(
-            |request: NewBucket, user_uuid: Uuid, conn: PooledConn| -> Result<Bucket, Error> {
+            |request: NewBucket, user_uuid: Uuid, conn: AbstractRepository| -> Result<Bucket, Error> {
                 let bucket = conn.create_bucket(request)?;
                 let new_relation = NewBucketUserRelation {
                     user_uuid,
@@ -85,8 +80,8 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
     let get_bucket = path!("slug" / String)
         .and(warp::path::end())
         .and(warp::get2())
-        .and(state.db())
-        .map(|slug: String, conn: PooledConn| -> Result<Bucket, Error> {
+        .and(state.db2())
+        .map(|slug: String, conn: AbstractRepository| -> Result<Bucket, Error> {
             info!("get_bucket");
             conn.get_bucket_by_slug(slug).map_err(Error::from)
         })
@@ -95,7 +90,7 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
     let get_bucket_by_uuid = path!(Uuid)
         .and(warp::path::end())
         .and(warp::get2())
-        .and(state.db())
+        .and(state.db2())
         .map(get_bucket_by_uuid_handler)
         .and_then(json_or_reject);
 
@@ -103,14 +98,14 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .and(warp::path::end())
         .and(warp::get2())
         .and(user_filter(state))
-        .and(state.db())
+        .and(state.db2())
         .map(get_buckets_user_is_in_handler)
         .and_then(json_or_reject);
 
     let get_public_buckets = path!("public")
         .and(warp::path::end())
         .and(warp::get2())
-        .and(state.db())
+        .and(state.db2())
         .map(get_public_buckets_handler)
         .and_then(json_or_reject);
 
@@ -119,7 +114,7 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .and(warp::path::end())
         .and(warp::post2())
         .and(user_filter(state))
-        .and(state.db())
+        .and(state.db2())
         .map(add_self_to_bucket_handler)
         .and_then(json_or_reject);
 
@@ -128,7 +123,7 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .and(warp::path::end())
         .and(warp::get2())
         .and(user_filter(state))
-        .and(state.db())
+        .and(state.db2())
         .map(get_permissions_for_self_handler)
         .and_then(json_or_reject);
 
@@ -137,7 +132,7 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .and(warp::put2())
         .and(json_body_filter(2))
         .and(user_filter(state))
-        .and(state.db())
+        .and(state.db2())
         .map(set_permissions_handler)
         .and_then(json_or_reject);
 
@@ -146,14 +141,14 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .and(warp::put2())
         .and(json_body_filter(1))
         .and(user_filter(state))
-        .and(state.db())
+        .and(state.db2())
         .map(set_bucket_flags_handler)
         .and_then(json_or_reject);
 
     let get_users_in_bucket = path!(Uuid / "users")
         .and(warp::path::end())
         .and(warp::get2())
-        .and(state.db())
+        .and(state.db2())
         .map(get_users_in_bucket_handler)
         .and_then(json_or_reject);
 
@@ -178,7 +173,7 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
 fn add_self_to_bucket_handler(
     bucket_uuid: Uuid,
     user_uuid: Uuid,
-    conn: PooledConn,
+    conn: AbstractRepository,
 ) -> Result<BucketUserRelation, Error> {
     info!("add_self_to_bucket_handler");
     let new_relation = NewBucketUserRelation {
@@ -197,7 +192,7 @@ fn set_bucket_flags_handler(
     bucket_uuid: Uuid,
     request: ChangeBucketFlagsRequest,
     user_uuid: Uuid,
-    conn: PooledConn,
+    conn: AbstractRepository,
 ) -> Result<Bucket, Error> {
     info!("set_bucket_flags_handler");
     let permissions_for_acting_user = conn
@@ -228,7 +223,7 @@ fn set_bucket_flags_handler(
     conn.change_bucket_flags(changeset).map_err(Error::from)
 }
 
-fn get_users_in_bucket_handler(bucket_uuid: Uuid, conn: PooledConn) -> Result<Vec<User>, Error> {
+fn get_users_in_bucket_handler(bucket_uuid: Uuid, conn: AbstractRepository) -> Result<Vec<User>, Error> {
     info!("get_users_in_bucket_handler");
     conn.get_users_in_bucket(bucket_uuid).map_err(Error::from)
 }
@@ -237,7 +232,7 @@ fn set_permissions_handler(
     bucket_uuid: Uuid,
     permissions_request: SetPermissionsRequest,
     user_uuid: Uuid,
-    conn: PooledConn,
+    conn: AbstractRepository,
 ) -> Result<BucketUserRelation, Error> {
     info!("set_permissions_handler");
     let permissions_for_acting_user = conn
@@ -264,25 +259,25 @@ fn set_permissions_handler(
 fn get_permissions_for_self_handler(
     bucket_uuid: Uuid,
     user_uuid: Uuid,
-    conn: PooledConn,
+    conn: AbstractRepository,
 ) -> Result<BucketUserPermissions, Error> {
     info!("get_permissions_for_self_handler");
     conn.get_permissions(user_uuid, bucket_uuid)
         .map_err(Error::from)
 }
 
-fn get_public_buckets_handler(conn: PooledConn) -> Result<Vec<Bucket>, Error> {
+fn get_public_buckets_handler(conn: AbstractRepository) -> Result<Vec<Bucket>, Error> {
     info!("get_public_buckets_handler");
     conn.get_publicly_visible_buckets().map_err(Error::from)
 }
 
-fn get_buckets_user_is_in_handler(user_uuid: Uuid, conn: PooledConn) -> Result<Vec<Bucket>, Error> {
+fn get_buckets_user_is_in_handler(user_uuid: Uuid, conn: AbstractRepository) -> Result<Vec<Bucket>, Error> {
     info!("get_buckets_user_is_in_handler");
     conn.get_buckets_user_is_a_part_of(user_uuid)
         .map_err(Error::from)
 }
 
-fn get_bucket_by_uuid_handler(uuid: Uuid, conn: PooledConn) -> Result<Bucket, Error> {
+fn get_bucket_by_uuid_handler(uuid: Uuid, conn: AbstractRepository) -> Result<Bucket, Error> {
     info!("get_bucket_by_uuid_handler");
     conn.get_bucket_by_uuid(uuid).map_err(Error::from)
 }

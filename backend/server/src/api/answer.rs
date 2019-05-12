@@ -6,12 +6,11 @@ use crate::{
 };
 use db::bucket::{
     db_types::{Answer, NewAnswer},
-    interface::AnswerRepository,
 };
-use pool::PooledConn;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use warp::{filters::BoxedFilter, path, Filter, Reply};
+use db::{AbstractRepository};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NewAnswerRequest {
@@ -30,11 +29,11 @@ pub fn answer_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .and(warp::post2())
         .and(json_body_filter(30))
         .and(optional_user_filter(state))
-        .and(state.db())
+        .and(state.db2())
         .map(
             |request: NewAnswerRequest,
              user_uuid: Option<Uuid>,
-             conn: PooledConn|
+             conn: AbstractRepository|
              -> Result<Answer, Error> {
                 let new_answer = NewAnswer {
                     user_uuid,

@@ -10,7 +10,7 @@ use crate::{bucket::{
         AnswerRepository, BucketRepository, BucketUserRelationRepository,
         FavoriteQuestionRelationRepository, QuestionRepository,
     },
-}, user::{NewUser, User, UserRepository}, RepoProvider, Repository, RepoAcquisitionError};
+}, user::{NewUser, User, UserRepository}, Repository, RepoAcquisitionError};
 use diesel::result::{DatabaseErrorInformation, DatabaseErrorKind, Error};
 use rand::{thread_rng, Rng};
 use std::sync::{Mutex, Arc};
@@ -53,12 +53,6 @@ impl DatabaseErrorInformation for DummyDbErrorInfo {
     }
 }
 
-
-impl RepoProvider for Arc<Mutex<MockDatabase>> {
-    fn get_repo(&self) -> Result<Box<Repository>, RepoAcquisitionError> {
-        Ok(Box::new(self.clone()))
-    }
-}
 /// A mock object that should have parity with database operations.
 #[derive(Debug, Clone, Default)]
 pub struct MockDatabase {
