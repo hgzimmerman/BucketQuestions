@@ -16,7 +16,6 @@ extern crate diesel;
 
 pub mod bucket;
 mod schema;
-#[cfg(test)]
 pub mod test;
 pub mod user;
 mod util;
@@ -79,7 +78,7 @@ impl Debug for RepositoryProvider {
 }
 
 /// An abstract repository that is sendable across threads
-pub type AbstractRepository = Box<Repository + Send>;
+pub type AbstractRepository = Box<dyn Repository + Send>;
 
 impl RepositoryProvider {
     /// Gets the repo.

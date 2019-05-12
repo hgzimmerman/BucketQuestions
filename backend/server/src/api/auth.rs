@@ -102,11 +102,7 @@ pub fn auth_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .map(get_or_create_user)
         .and_then(crate::util::reject)
         .and(state.secret())
-        .map(|user: User, secret: Secret| -> Result<String, Error> {
-            let lifetime = chrono::Duration::weeks(30);
-            let payload = JwtPayload::new(user, lifetime);
-            payload.encode_jwt_string(&secret).map_err(Error::from)
-        })
+        .map(create_jwt)
         .and_then(crate::util::reject)
         .map(|jwt: String| login_template_render(&jwt, "/"))
         .with(warp::reply::with::header("content-type", "text/html"));
@@ -227,10 +223,17 @@ fn get_or_create_user(
                     .map_err(|_| Error::DatabaseError("Could not create user".to_string()))
             } else {
                 Err(Error::DatabaseError(
-                    "Could not get User. User may exist, but something else went wrong".to_owned(),
+                    "Could not get User. User may exist, but something else went wrong in the database".to_owned(),
                 ))
             }
         })
+}
+
+/// Creates the jwt from a User record.
+fn create_jwt(user: User, secret: Secret) -> Result<String, Error> {
+    let lifetime = chrono::Duration::weeks(30);
+    let payload: JwtPayload<User> = JwtPayload::new(user, lifetime);
+    payload.encode_jwt_string(&secret).map_err(Error::from)
 }
 
 /// Login by sending a small html page that inserts the JWT into localstorage
@@ -247,4 +250,20 @@ fn login_template_render(jwt: &str, target_url: &str) -> String {
     }
     let login = LoginTemplate { jwt, target_url };
     login.render().unwrap_or_else(|e| e.to_string())
+}
+
+/// Gets a basic JWT from the state for use in testing.
+///
+#[cfg(test)]
+pub fn get_jwt(state: &State) -> String {
+    use std::borrow::Cow;
+    let secret: Secret = warp::test::request().filter(&state.secret()).unwrap();
+    let conn: AbstractRepository = warp::test::request().filter(&state.db2()).unwrap();
+
+    let google_jwt_payload = GoogleJWTPayload {
+        sub: "1234".to_string(),
+        name: Some("User".yeet)
+    };
+    let user = get_or_create_user( google_jwt_payload, conn).expect("Should get or create user.");
+    create_jwt(user, secret).expect("Should create JWT.")
 }

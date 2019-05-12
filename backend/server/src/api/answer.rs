@@ -30,24 +30,21 @@ pub fn answer_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .and(json_body_filter(30))
         .and(optional_user_filter(state))
         .and(state.db2())
-        .map(
-            |request: NewAnswerRequest,
-             user_uuid: Option<Uuid>,
-             conn: AbstractRepository|
-             -> Result<Answer, Error> {
-                let new_answer = NewAnswer {
-                    user_uuid,
-                    question_uuid: request.question_uuid,
-                    publicly_visible: request.publicly_visible,
-                    answer_text: request.answer_text,
-                };
-                conn.create_answer(new_answer).map_err(Error::from)
-            },
-        )
+        .map(answer_question_handler)
         .and_then(json_or_reject);
 
     // TODO need a get answers?
     // Put that under this subpath or questions?
 
     path(ANSWER_PATH).and(answer_question).boxed()
+}
+
+fn answer_question_handler(request: NewAnswerRequest, user_uuid: Option<Uuid>, conn: AbstractRepository) -> Result<Answer, Error> {
+    let new_answer = NewAnswer {
+        user_uuid,
+        question_uuid: request.question_uuid,
+        publicly_visible: request.publicly_visible,
+        answer_text: request.answer_text,
+    };
+    conn.create_answer(new_answer).map_err(Error::from)
 }

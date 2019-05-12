@@ -14,10 +14,10 @@ uuid = {version="0.6.*", features=["serde", "v4"]}
 chrono = {version = "0.4.*", features=["serde"]}
 serde = {version="1.0.85", features=["derive"]}
 #itertools = "0.8.0"
+diesel_reset = {path="../diesel_reset"}
 
 pool = {path="../pool"}
 log = "0.4.6"
 rand = "0.6.5"
 
 [dev-dependencies]
-diesel_reset = {path="../diesel_reset"}

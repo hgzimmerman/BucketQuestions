@@ -18,9 +18,10 @@ use std::{
 };
 use url::Url;
 use warp::{Filter, Rejection};
-use db::{Repository, RepositoryProvider};
+use db::{Repository, RepositoryProvider, AbstractRepository};
 #[cfg(test)]
 use db::test::{setup_pool, setup_mock, setup_mock_provider};
+use diesel_reset::fixture::Fixture;
 
 /// Simplified type for representing a HttpClient.
 pub type HttpsClient = Client<HttpsConnector<HttpConnector<GaiResolver>>, Body>;
@@ -32,7 +33,6 @@ pub type HttpsClient = Client<HttpsConnector<HttpConnector<GaiResolver>>, Body>;
 /// These entities are acquired by running a filter function that brings them
 /// into the scope of the relevant api.
 pub struct State {
-//    database_connection_pool: Pool,
     repository_provider: RepositoryProvider,
     /// The secret key.
     secret: Secret,
@@ -50,8 +50,8 @@ pub struct State {
 impl Debug for State {
     fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
         f.debug_struct("State")
-            .field("database_connection_pool", &"pool".to_owned())
-            .field("secret", &"[REDACTED]".to_owned())
+            .field("repository_provider", &self.repository_provider)
+            .field("secret", &self.secret)
             .field("https", &"https client".to_owned())
             .field("google_oauth_client", &"Google Oauth Client".to_owned())
             .field("server_lib_root", &self.server_lib_root)
@@ -106,7 +106,10 @@ impl RunningEnvironment {
 
 
 #[cfg(test)]
-fn setup_backing_repository() -> Box<RepoProvider> {
+pub fn setup_backing_repository<Fix>() -> (Fix, RepositoryProvider)
+where
+    Fix: Fixture<Repository = AbstractRepository>,
+{
     if cfg!(feature = "integration") {
         setup_pool()
     } else {
@@ -210,20 +213,15 @@ impl State {
     /// Creates a new state object from an existing object pool.
     /// This is useful if using fixtures.
     #[cfg(test)]
-    pub fn testing_init(pool: Pool, secret: Secret) -> Self {
+    pub fn testing_init(repository_provider: RepositoryProvider, secret: Secret) -> Self {
         use std::time::Duration;
         let https = HttpsConnector::new(1).unwrap();
         let client = Client::builder()
             .keep_alive_timeout(Some(Duration::new(12, 0)))
             .build::<_, Body>(https);
-
-        let twitter_con_token = get_twitter_con_token();
-
-        let redirect_url = conf.environment.create_redirect_url();
+        let redirect_url = RunningEnvironment::Staging { port: 8080 }.create_redirect_url();
         let google_oauth_client = create_google_oauth_client(redirect_url.clone());
 
-
-        let repository_provider = setup_backing_repository();
 
         State {
             repository_provider,

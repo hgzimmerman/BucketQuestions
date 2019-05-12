@@ -1,27 +1,29 @@
-use crate::{
-    bucket::db_types::{
-        Bucket, BucketUserRelation, NewBucket, NewBucketUserRelation, NewQuestion, Question,
-    },
-    user::{NewUser, User},
-    Repository,
-};
+//! A fixture for testing against configurations related to questions.
+use crate::{bucket::db_types::{
+    Bucket, BucketUserRelation, NewBucket, NewBucketUserRelation, NewQuestion, Question,
+}, user::{NewUser, User}, Repository, AbstractRepository};
 use diesel_reset::fixture::Fixture;
 
 /// Fixture that creates 2 users, 1 bucket, and one relation record in the repository.
 /// user1 is joined to the bucket.
 #[derive(Clone, Debug)]
 pub struct QuestionFixture {
+    /// Bucket
     pub bucket: Bucket,
+    /// User
     pub user: User,
+    /// Bucket user realiton
     pub relation: BucketUserRelation,
+    /// First question
     pub question1: Question,
+    /// Second question
     pub question2: Question,
 }
 
 impl Fixture for QuestionFixture {
-    type Repository = Box<dyn Repository>;
+    type Repository = AbstractRepository;
 
-    fn generate(conn: &Box<Repository>) -> Self {
+    fn generate(conn: &AbstractRepository) -> Self {
         let new_user = NewUser {
             google_user_id: "123456789".to_string(),
             google_name: Some("Yeet".to_owned()),

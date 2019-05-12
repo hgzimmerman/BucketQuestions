@@ -1,4 +1,5 @@
-use crate::Repository;
+//! A fixture for testing against empty repository configurations.
+use crate::{Repository, AbstractRepository};
 use diesel_reset::fixture::Fixture;
 
 /// Empty fixture that makes no changes to the repository.
@@ -6,8 +7,8 @@ use diesel_reset::fixture::Fixture;
 pub struct EmptyFixture;
 
 impl Fixture for EmptyFixture {
-    type Repository = Box<dyn Repository>;
-    fn generate(_: &Box<Repository>) -> Self {
+    type Repository = AbstractRepository;
+    fn generate(_: &AbstractRepository) -> Self {
         EmptyFixture
     }
 }

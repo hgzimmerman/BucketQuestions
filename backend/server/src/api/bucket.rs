@@ -60,21 +60,7 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .and(json_body_filter(2))
         .and(user_filter(state))
         .and(state.db2())
-        .map(
-            |request: NewBucket, user_uuid: Uuid, conn: AbstractRepository| -> Result<Bucket, Error> {
-                let bucket = conn.create_bucket(request)?;
-                let new_relation = NewBucketUserRelation {
-                    user_uuid,
-                    bucket_uuid: bucket.uuid,
-                    set_public_permission: true,
-                    set_drawing_permission: true,
-                    set_exclusive_permission: true,
-                    grant_permissions_permission: true,
-                };
-                conn.add_user_to_bucket(new_relation)?;
-                Ok(bucket)
-            },
-        )
+        .map(create_bucket_handler)
         .and_then(json_or_reject);
 
     let get_bucket = path!("slug" / String)
@@ -166,6 +152,22 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
                 .or(get_bucket),
         )
         .boxed()
+}
+
+
+fn create_bucket_handler(request: NewBucket, user_uuid: Uuid, conn: AbstractRepository) -> Result<Bucket, Error> {
+    info!("add_self_to_bucket_handler");
+    let bucket = conn.create_bucket(request)?;
+    let new_relation = NewBucketUserRelation {
+        user_uuid,
+        bucket_uuid: bucket.uuid,
+        set_public_permission: true,
+        set_drawing_permission: true,
+        set_exclusive_permission: true,
+        grant_permissions_permission: true,
+    };
+    conn.add_user_to_bucket(new_relation)?;
+    Ok(bucket)
 }
 
 /// Adds a user to the bucket.
@@ -280,4 +282,64 @@ fn get_buckets_user_is_in_handler(user_uuid: Uuid, conn: AbstractRepository) -> 
 fn get_bucket_by_uuid_handler(uuid: Uuid, conn: AbstractRepository) -> Result<Bucket, Error> {
     info!("get_bucket_by_uuid_handler");
     conn.get_bucket_by_uuid(uuid).map_err(Error::from)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use db::test::setup;
+    use diesel_reset::fixture::EmptyFixture;
+    use db::test::bucket_fixture::BucketFixture;
+    use db::user::NewUser;
+    use db::test::user_fixture::UserFixture;
+    use db::test::bucket_user_relation_fixture::UserBucketRelationFixture;
+
+
+    #[test]
+    fn add_self_to_bucket() {
+        let (fixture, db) = setup::<BucketFixture>();
+
+        let new_user = NewUser {
+            google_user_id: "12".to_string(),
+            google_name: None
+        };
+        let user = db.create_user(new_user).expect("Should create new user");
+
+        let relation = add_self_to_bucket_handler(fixture.bucket.uuid, user.uuid, db)
+            .expect("Should add user to bucket");
+        assert!(!relation.grant_permissions_permission);
+        assert!(!relation.set_public_permission);
+        assert!(!relation.set_exclusive_permission);
+        assert!(!relation.set_drawing_permission);
+    }
+
+    #[test]
+    fn set_bucket_flags() {
+        let (fixture, db) = setup::<UserBucketRelationFixture>();
+
+        let request = ChangeBucketFlagsRequest {
+            visible: None,
+            drawing_enabled: None,
+            private: None
+        };
+
+        let bucket = set_bucket_flags_handler(fixture.bucket.uuid, request, fixture.user1.uuid, db)
+            .expect("Bucket should be returned after changing flags.");
+        assert_eq!(fixture.bucket, bucket);
+    }
+
+    #[test]
+    fn create_bucket() {
+        let (fixture, db) = setup::<UserFixture>();
+        let bucket_name = "Bucket".to_string();
+        let bucket_slug = "bucket".to_string();
+        let new_bucket = NewBucket {
+            bucket_name: bucket_name.clone(),
+            bucket_slug: bucket_slug.clone()
+        };
+        let bucket = create_bucket_handler(new_bucket, fixture.user.uuid, db).expect("Should create bucket");
+        assert_eq!(bucket.bucket_name, bucket_name);
+        assert_eq!(bucket.bucket_slug, bucket_slug);
+    }
+
 }

@@ -16,7 +16,7 @@ use chrono::{Duration, NaiveDateTime};
 use frank_jwt::{decode, encode, Algorithm};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::fmt::{self, Display};
+use std::fmt::{self, Display, Debug, Formatter, Error};
 use warp::{filters::BoxedFilter, Filter};
 
 /// Enumeration of all errors that can occur while authenticating.
@@ -41,7 +41,7 @@ pub enum AuthError {
 }
 
 impl Display for AuthError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         let description = match self {
             AuthError::DeserializeError => "Something could not be deserialized".to_string(),
             AuthError::SerializeError => "Something could not be serialized".to_string(),
@@ -159,8 +159,19 @@ where
 }
 
 /// A string that acts like a key to validate JWT signatures.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Secret(String);
+
+impl Debug for Secret {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
+        let first_five_letters = self.0.chars().take(5).collect::<String>();
+        let length = self.0.len();
+        f.debug_struct("Secret")
+            .field("secret", &format!("{}[redacted]", first_five_letters))
+            .field("(secret_length)", &format!("{}", length))
+            .finish()
+    }
+}
 
 impl Secret {
     /// Creates a new secret.

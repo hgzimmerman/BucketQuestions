@@ -1,19 +1,18 @@
-use crate::{
-    bucket::db_types::{Bucket, NewBucket},
-    Repository,
-};
+//! A fixture for testing against configurations related to buckets.
+use crate::{bucket::db_types::{Bucket, NewBucket}, Repository, AbstractRepository};
 use diesel_reset::fixture::Fixture;
 
 /// Fixture that creates one user record in the repository.
 #[derive(Clone, Debug)]
 pub struct BucketFixture {
+    /// Becket
     pub bucket: Bucket,
 }
 
 impl Fixture for BucketFixture {
-    type Repository = Box<dyn Repository>;
+    type Repository = AbstractRepository;
 
-    fn generate(conn: &Box<Repository>) -> Self {
+    fn generate(conn: &AbstractRepository) -> Self {
         let new_bucket = NewBucket {
             bucket_name: "bucket".to_string(),
             bucket_slug: "slug".to_string(),
