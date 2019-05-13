@@ -1,6 +1,6 @@
 //! A fixture for testing aganist an existing user.
 use crate::{user::{NewUser, User}, Repository, AbstractRepository};
-use diesel_reset::fixture::Fixture;
+use crate::test::fixture::Fixture;
 
 /// Fixture that creates one user record in the repository.
 #[derive(Clone, Debug)]
@@ -15,8 +15,6 @@ pub const TEST_GOOGLE_USER_ID: &str = "123456789";
 pub const TEST_GOOGLE_NAME: &str = "User";
 
 impl Fixture for UserFixture {
-    type Repository = AbstractRepository;
-
     fn generate(conn: &AbstractRepository) -> Self {
         let new_user = NewUser {
             google_user_id: TEST_GOOGLE_USER_ID.to_string(),

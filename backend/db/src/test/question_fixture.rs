@@ -2,8 +2,8 @@
 use crate::{bucket::db_types::{
     Bucket, BucketUserRelation, NewBucket, NewBucketUserRelation, NewQuestion, Question,
 }, user::{NewUser, User}, Repository, AbstractRepository};
-use diesel_reset::fixture::Fixture;
 use crate::test::user_fixture::UserFixture;
+use crate::test::fixture::Fixture;
 
 /// Fixture that creates 2 users, 1 bucket, and one relation record in the repository.
 /// user1 is joined to the bucket.
@@ -22,8 +22,6 @@ pub struct QuestionFixture {
 }
 
 impl Fixture for QuestionFixture {
-    type Repository = AbstractRepository;
-
     fn generate(conn: &AbstractRepository) -> Self {
         let user = UserFixture::generate(conn).user;
 

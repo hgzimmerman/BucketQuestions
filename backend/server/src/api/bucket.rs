@@ -288,7 +288,6 @@ fn get_bucket_by_uuid_handler(uuid: Uuid, conn: AbstractRepository) -> Result<Bu
 mod tests {
     use super::*;
     use db::test::setup;
-    use db::test::empty_fixture::EmptyFixture;
     use db::test::bucket_fixture::BucketFixture;
     use db::user::NewUser;
     use db::test::user_fixture::UserFixture;

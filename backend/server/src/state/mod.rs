@@ -20,9 +20,9 @@ use std::{
 };
 use url::Url;
 use warp::{Filter, Rejection};
-use db::{Repository, RepositoryProvider, AbstractRepository};
+use db::{Repository, RepositoryProvider};
 #[cfg(test)]
-use db::test::{setup_pool, setup_mock, setup_mock_provider};
+use db::test::{setup_mock_provider};
 use crate::state::state_config::StateConfig;
 
 /// Simplified type for representing a HttpClient.
@@ -165,11 +165,9 @@ impl State {
 #[cfg(test)]
 pub mod test_util {
     use super::*;
-    use diesel_reset::fixture::Fixture;
+    use db::test::fixture::Fixture;
     use crate::state::state_config::RunningEnvironment;
-    use pool::Pool;
-    use diesel::PgConnection;
-    use diesel_reset::setup::setup_pool2;
+    use db::test::execute_pool_test;
 
     impl State {
         /// Creates a new state object from an existing object pool.
@@ -197,31 +195,16 @@ pub mod test_util {
     }
 
     #[cfg(test)]
-    pub fn setup_backing_repository<Fix>() -> (Fix, RepositoryProvider)
+    pub fn setup_backing_repository2<Fix, Fun>(f: Fun)
     where
-        Fix: Fixture<Repository = AbstractRepository>,
+        Fix: Fixture,
+        Fun: Fn(&Fix, RepositoryProvider),
     {
         if cfg!(feature = "integration") {
-            setup_pool()
+            execute_pool_test(f)
         } else {
-            setup_mock_provider()
-        }
-    }
-
-    #[cfg(test)]
-    pub fn setup_backing_repository2<Fix, Fun>(mut f: Fun)
-    where
-        Fix: Fixture<Repository = AbstractRepository>,
-        Fun: FnMut(&Fix, RepositoryProvider),
-    {
-        if cfg!(feature = "integration") {
-            let new_f: FnMut(&Fix, Pool) = |fixture: &Fixture<Repository=Pool>, pool: Pool| {
-                let fixture: &Fix = fixture;
-                f(fixture, RepositoryProvider::Pool(pool))
-            };
-            setup_pool2(new_f);
-        } else {
-//            setup_mock_provider()
+            let (fixture, mock): (Fix, RepositoryProvider) = setup_mock_provider();
+            f(&fixture, mock)
         }
     }
 }
