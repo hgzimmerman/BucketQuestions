@@ -18,7 +18,7 @@ use oauth2::{
 use serde::{Deserialize, Serialize};
 use url::Url;
 use warp::{filters::BoxedFilter, path, query::query, Filter, Reply};
-use db::AbstractRepository;
+use db::BoxedRepository;
 
 /// The path segment for the auth api.
 pub const AUTH_PATH: &str = "auth";
@@ -209,7 +209,7 @@ fn extract_payload_from_google_jwt(jwt: &str) -> Result<GoogleJWTPayload, Error>
 /// Gets or creates a user.
 fn get_or_create_user(
     google_jwt_payload: GoogleJWTPayload,
-    conn: AbstractRepository,
+    conn: BoxedRepository,
 ) -> Result<User, Error> {
     use diesel::result::Error as DieselError;
     conn.get_user_by_google_id(google_jwt_payload.sub.clone())
@@ -252,18 +252,63 @@ fn login_template_render(jwt: &str, target_url: &str) -> String {
     login.render().unwrap_or_else(|e| e.to_string())
 }
 
-/// Gets a basic JWT from the state for use in testing.
-///
-#[cfg(test)]
-pub fn get_jwt(state: &State) -> String {
-    use std::borrow::Cow;
-    let secret: Secret = warp::test::request().filter(&state.secret()).unwrap();
-    let conn: AbstractRepository = warp::test::request().filter(&state.db2()).unwrap();
 
-    let google_jwt_payload = GoogleJWTPayload {
-        sub: "1234".to_string(),
-        name: Some("User".yeet)
-    };
-    let user = get_or_create_user( google_jwt_payload, conn).expect("Should get or create user.");
-    create_jwt(user, secret).expect("Should create JWT.")
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::state::test_util::execute_test_on_repository;
+    use db::test::empty_fixture::EmptyFixture;
+    use db::test::user_fixture::UserFixture;
+    use db::RepositoryProvider;
+    use db::test::user_fixture::{TEST_GOOGLE_NAME, TEST_GOOGLE_USER_ID};
+
+    /// Gets a basic JWT from the state for use in testing.
+    ///
+    /// It uses the same "credentials" as used by the fixtures created in the `db` library.
+    ///
+    /// # Panics
+    /// Panics if the database call to create a user fails.
+    /// Or if the JWT can't be encoded.
+    ///
+    #[cfg(test)]
+    pub fn get_jwt(state: &State) -> String {
+        let secret: Secret = warp::test::request().filter(&state.secret()).unwrap();
+        let conn: BoxedRepository = warp::test::request().filter(&state.db2()).unwrap();
+
+        let google_jwt_payload = GoogleJWTPayload {
+            sub: TEST_GOOGLE_USER_ID.to_string(),
+            name: Some(TEST_GOOGLE_NAME.to_string())
+        };
+        let user = get_or_create_user( google_jwt_payload, conn).expect("Should get or create user.");
+        create_jwt(user, secret).expect("Should create JWT.")
+    }
+
+    /// Test for testing infrastructure
+    #[test]
+    fn get_jwt_util_creates_user() {
+        execute_test_on_repository(|_fix: &EmptyFixture, provider: RepositoryProvider| {
+            let state = State::testing_init(provider.clone(), Secret::new("hello"));
+
+            let repo = provider.get_repo().expect("Should get repo.");
+            repo.get_user_by_google_id(TEST_GOOGLE_USER_ID.to_string()).expect_err("User should not exist");
+
+            let _jwt = get_jwt(&state);
+
+            repo.get_user_by_google_id(TEST_GOOGLE_USER_ID.to_string()).expect("User should now exist");
+        });
+    }
+
+    /// Test for testing infrastructure
+    #[test]
+    fn get_jwt_util_gets_user() {
+        execute_test_on_repository(|_fix: &UserFixture, provider: RepositoryProvider| {
+            let state = State::testing_init(provider.clone(), Secret::new("hello"));
+
+            let repo = provider.get_repo().expect("Should get repo.");
+            repo.get_user_by_google_id(TEST_GOOGLE_USER_ID.to_string()).expect("User should already exist");
+
+            let _jwt = get_jwt(&state);
+        });
+    }
 }

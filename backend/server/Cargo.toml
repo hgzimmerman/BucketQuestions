@@ -10,6 +10,9 @@ name = "server_bin"
 path = "src/main.rs"
 
 
+[features]
+integration = ["db/integration"] # use integration tests instead of unit tests
+
 [dependencies]
 warp = {version="0.1.15", features=["tls"]}
 apply = "0.2.2"
@@ -18,7 +21,7 @@ log = "0.4.6"
 env_logger = "0.6.0"
 serde = {version="1.0.85", features=["derive"]}
 db = {path="../db"}
-testing_common = {path="../testing_common"}
+#testing_common = {path="../testing_common"}
 uuid = {version = "0.6.*", features=["v4"]}
 serde_json = "1.0.37"
 chrono = "0.4.6"

@@ -1,4 +1,6 @@
 //! Represents the shared server resources that all requests may utilize.
+pub mod state_config;
+
 use crate::{error::Error, server_auth::secret_filter};
 
 use crate::server_auth::create_google_oauth_client;
@@ -18,10 +20,10 @@ use std::{
 };
 use url::Url;
 use warp::{Filter, Rejection};
-use db::{Repository, RepositoryProvider, AbstractRepository};
+use db::{Repository, RepositoryProvider};
 #[cfg(test)]
-use db::test::{setup_pool, setup_mock, setup_mock_provider};
-use diesel_reset::fixture::Fixture;
+use db::test::{setup_mock_provider};
+use crate::state::state_config::StateConfig;
 
 /// Simplified type for representing a HttpClient.
 pub type HttpsClient = Client<HttpsConnector<HttpConnector<GaiResolver>>, Body>;
@@ -60,62 +62,9 @@ impl Debug for State {
     }
 }
 
-/// Configuration object for creating the state.
-///
-/// If unspecified, it will default to a sane default.
-#[derive(Debug, Default)]
-pub struct StateConfig {
-    pub secret: Option<Secret>,
-    pub max_pool_size: Option<u32>,
-    pub server_lib_root: Option<PathBuf>,
-    pub environment: RunningEnvironment,
-}
-
-/// Where is the program running
-#[derive(Debug)]
-pub enum RunningEnvironment {
-    /// Frontend is running off of `npm start`
-    Node { port: u16 },
-    /// Frontend is built, and served by the app, but accessible via 0.0.0.0:port
-    Staging { port: u16 },
-    /// Frontend is built and served by the app, and hidden behind a nginx reverse-proxy.
-    /// This means that, the scheme may be https instead of http,
-    /// and that the host will be an actual domain,
-    /// and that it will implicitly be running on port 443.
-    Production { origin: String },
-}
-
-impl Default for RunningEnvironment {
-    fn default() -> Self {
-        RunningEnvironment::Node { port: 3030 }
-    }
-}
-
-impl RunningEnvironment {
-    fn create_redirect_url(&self) -> Url {
-        const PATH: &str = "api/auth/redirect";
-        let url = match self {
-            RunningEnvironment::Node { port } => format!("http://localhost:{}/{}", port, PATH),
-            RunningEnvironment::Staging { port } => format!("http://localhost:{}/{}", port, PATH),
-            RunningEnvironment::Production { origin } => format!("{}/{}", origin, PATH),
-        };
-        Url::parse(&url).expect("Could not parse url for redirect")
-    }
-}
 
 
 
-#[cfg(test)]
-pub fn setup_backing_repository<Fix>() -> (Fix, RepositoryProvider)
-where
-    Fix: Fixture<Repository = AbstractRepository>,
-{
-    if cfg!(feature = "integration") {
-        setup_pool()
-    } else {
-        setup_mock_provider()
-    }
-}
 
 impl State {
     /// Creates a new state.
@@ -210,26 +159,53 @@ impl State {
         self.redirect_url.clone()
     }
 
-    /// Creates a new state object from an existing object pool.
-    /// This is useful if using fixtures.
+
+}
+
+#[cfg(test)]
+pub mod test_util {
+    use super::*;
+    use db::test::fixture::Fixture;
+    use crate::state::state_config::RunningEnvironment;
+    use db::test::execute_pool_test;
+
+    impl State {
+        /// Creates a new state object from an existing object pool.
+        /// This is useful if using fixtures.
+        #[cfg(test)]
+        pub fn testing_init(repository_provider: RepositoryProvider, secret: Secret) -> Self {
+            use std::time::Duration;
+            let https = HttpsConnector::new(1).unwrap();
+            let client = Client::builder()
+                .keep_alive_timeout(Some(Duration::new(12, 0)))
+                .build::<_, Body>(https);
+            let redirect_url = RunningEnvironment::Staging { port: 8080 }.create_redirect_url();
+            let google_oauth_client = create_google_oauth_client(redirect_url.clone());
+
+
+            State {
+                repository_provider,
+                secret,
+                https: client,
+                google_oauth_client,
+                server_lib_root: PathBuf::from("./"), // THIS makes the assumption that the tests are run from the backend/server dir.
+                redirect_url,
+            }
+        }
+    }
+
     #[cfg(test)]
-    pub fn testing_init(repository_provider: RepositoryProvider, secret: Secret) -> Self {
-        use std::time::Duration;
-        let https = HttpsConnector::new(1).unwrap();
-        let client = Client::builder()
-            .keep_alive_timeout(Some(Duration::new(12, 0)))
-            .build::<_, Body>(https);
-        let redirect_url = RunningEnvironment::Staging { port: 8080 }.create_redirect_url();
-        let google_oauth_client = create_google_oauth_client(redirect_url.clone());
-
-
-        State {
-            repository_provider,
-            secret,
-            https: client,
-            google_oauth_client,
-            server_lib_root: PathBuf::from("./"), // THIS makes the assumption that the tests are run from the backend/server dir.
-            redirect_url,
+    pub fn execute_test_on_repository<Fix, Fun>(f: Fun)
+    where
+        Fix: Fixture,
+        Fun: Fn(&Fix, RepositoryProvider),
+    {
+        // TODO, remove the feature flag and just use a cfg value.
+        if cfg!(feature = "integration") {
+            execute_pool_test(f)
+        } else {
+            let (fixture, mock): (Fix, RepositoryProvider) = setup_mock_provider();
+            f(&fixture, mock)
         }
     }
 }

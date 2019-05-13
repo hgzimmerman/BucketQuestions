@@ -25,7 +25,7 @@ pub use config::Config;
 use crate::{
     api::routes,
     server_auth::get_google_login_link,
-    state::{State, StateConfig},
+    state::{State, state_config::StateConfig},
 };
 use log::info;
 

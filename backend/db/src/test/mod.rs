@@ -6,25 +6,27 @@ pub mod empty_fixture;
 //pub mod mock;
 pub mod question_fixture;
 pub mod user_fixture;
+pub mod fixture;
 
 //use self::mock::MockDatabase;
 
-use crate::{Repository, RepositoryProvider, AbstractRepository};
+use self::fixture::Fixture;
+use crate::{RepositoryProvider, BoxedRepository};
 use diesel::PgConnection;
-use diesel_reset::fixture::Fixture;
 use std::sync::{Mutex, Arc};
-use pool::{Pool, PooledConn};
 use crate::mock::MockDatabase;
+use diesel_reset::setup::{setup_pool_sequential};
 
 /// Sets up a fixture and repository to a state defined by the fixture's initialization function.
 /// The repository implementation is chosen by a feature flag.
 ///
 /// If the binary is compiled with the `integration` flag enabled, it will use the database.
 /// Otherwise, it will use the mock object more suitable for unit testing.
-pub fn setup<Fix>() -> (Fix, AbstractRepository)
+pub fn setup<Fix>() -> (Fix, BoxedRepository)
 where
-    Fix: Fixture<Repository = AbstractRepository>,
+    Fix: Fixture,
 {
+    // TODO, remove the feature flag and just use a cfg value.
     if !cfg!(feature = "integration") {
         setup_mock()
     } else {
@@ -34,18 +36,18 @@ where
 
 fn setup_mock_impl<Fix>() -> (Fix, Arc<Mutex<MockDatabase>>)
 where
-    Fix: Fixture<Repository = AbstractRepository>,
+    Fix: Fixture,
 {
     let db = Arc::new(Mutex::new(MockDatabase::default()));
-    let db_clone: AbstractRepository = Box::new(db.clone());
+    let db_clone: BoxedRepository = Box::new(db.clone());
     let fixture = Fix::generate(&db_clone);
     (fixture, db)
 }
 
 /// Sets up a fixture and a mock repository
-pub fn setup_mock<Fix>() -> (Fix, AbstractRepository)
+pub fn setup_mock<Fix>() -> (Fix, BoxedRepository)
 where
-    Fix: Fixture<Repository = AbstractRepository>,
+    Fix: Fixture,
 {
     let (fixture, db) = setup_mock_impl();
     (fixture, Box::new(db))
@@ -54,45 +56,35 @@ where
 /// Sets up a provider of mocks
 pub fn setup_mock_provider<Fix>() -> (Fix, RepositoryProvider)
 where
-    Fix: Fixture<Repository = AbstractRepository>,
+    Fix: Fixture,
 {
     let (fixture, db) = setup_mock_impl();
     (fixture, RepositoryProvider::Mock(db))
 }
 
+
 /// Sets up a fixture and a database-backed repository
-pub fn setup_database<Fix>() -> (Fix, AbstractRepository)
+pub fn setup_database<Fix>() -> (Fix, BoxedRepository)
 where
-    Fix: Fixture<Repository = AbstractRepository>,
+    Fix: Fixture,
 {
     let db: PgConnection = diesel_reset::setup::setup_single_connection();
-    let db: AbstractRepository = Box::new(db);
+    let db: BoxedRepository = Box::new(db);
     let fixture = Fix::generate(&db);
     (fixture, db)
 }
 
-
-/// Sets up a single pooled connection default state.
-pub fn setup_pooled_conn<Fix>() -> (Fix, AbstractRepository)
+/// sets up a pool and executes a provided test that utilizes the pool
+pub fn execute_pool_test<Fun, Fix>(mut test_function: Fun)
 where
-Fix: Fixture<Repository = AbstractRepository>,
+    Fun: FnMut(&Fix, RepositoryProvider),
+    Fix: Fixture,
 {
-    let db: Pool = diesel_reset::setup::setup_pool();
-    let con = db.get().unwrap();
-    let db: AbstractRepository = Box::new(con);
-    let fixture = Fix::generate(&db);
-    (fixture, db)
-}
+    // The lock is dropped at the end of this scope, preventing other tests from running until then.
+    let (pool, _lock) = setup_pool_sequential();
+    let conn = pool.get().unwrap();
+    let conn: BoxedRepository = Box::new(conn);
+    let fixture = Fix::generate(&conn);
 
-/// Sets up a repository provider in a default state.
-pub fn setup_pool<Fix>() -> (Fix, RepositoryProvider)
-where
-Fix: Fixture<Repository = AbstractRepository>,
-{
-    let pool: Pool = diesel_reset::setup::setup_pool();
-    let con= pool.get().unwrap();
-    let db: AbstractRepository = Box::new(con);
-    let fixture = Fix::generate(&db);
-    (fixture, RepositoryProvider::Pool(pool))
+    test_function(&fixture, RepositoryProvider::Pool(pool));
 }
-

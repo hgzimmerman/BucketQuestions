@@ -9,7 +9,7 @@ use db::{bucket::{
         Bucket, BucketFlagChangeset, BucketUserRelation, BucketUserPermissions,
         BucketUserPermissionsChangeset, NewBucket, NewBucketUserRelation,
     },
-}, user::User, AbstractRepository};
+}, user::User, BoxedRepository};
 use log::info;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -67,7 +67,7 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .and(warp::path::end())
         .and(warp::get2())
         .and(state.db2())
-        .map(|slug: String, conn: AbstractRepository| -> Result<Bucket, Error> {
+        .map(|slug: String, conn: BoxedRepository| -> Result<Bucket, Error> {
             info!("get_bucket");
             conn.get_bucket_by_slug(slug).map_err(Error::from)
         })
@@ -155,7 +155,7 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
 }
 
 
-fn create_bucket_handler(request: NewBucket, user_uuid: Uuid, conn: AbstractRepository) -> Result<Bucket, Error> {
+fn create_bucket_handler(request: NewBucket, user_uuid: Uuid, conn: BoxedRepository) -> Result<Bucket, Error> {
     info!("add_self_to_bucket_handler");
     let bucket = conn.create_bucket(request)?;
     let new_relation = NewBucketUserRelation {
@@ -175,7 +175,7 @@ fn create_bucket_handler(request: NewBucket, user_uuid: Uuid, conn: AbstractRepo
 fn add_self_to_bucket_handler(
     bucket_uuid: Uuid,
     user_uuid: Uuid,
-    conn: AbstractRepository,
+    conn: BoxedRepository,
 ) -> Result<BucketUserRelation, Error> {
     info!("add_self_to_bucket_handler");
     let new_relation = NewBucketUserRelation {
@@ -194,7 +194,7 @@ fn set_bucket_flags_handler(
     bucket_uuid: Uuid,
     request: ChangeBucketFlagsRequest,
     user_uuid: Uuid,
-    conn: AbstractRepository,
+    conn: BoxedRepository,
 ) -> Result<Bucket, Error> {
     info!("set_bucket_flags_handler");
     let permissions_for_acting_user = conn
@@ -225,7 +225,7 @@ fn set_bucket_flags_handler(
     conn.change_bucket_flags(changeset).map_err(Error::from)
 }
 
-fn get_users_in_bucket_handler(bucket_uuid: Uuid, conn: AbstractRepository) -> Result<Vec<User>, Error> {
+fn get_users_in_bucket_handler(bucket_uuid: Uuid, conn: BoxedRepository) -> Result<Vec<User>, Error> {
     info!("get_users_in_bucket_handler");
     conn.get_users_in_bucket(bucket_uuid).map_err(Error::from)
 }
@@ -234,7 +234,7 @@ fn set_permissions_handler(
     bucket_uuid: Uuid,
     permissions_request: SetPermissionsRequest,
     user_uuid: Uuid,
-    conn: AbstractRepository,
+    conn: BoxedRepository,
 ) -> Result<BucketUserRelation, Error> {
     info!("set_permissions_handler");
     let permissions_for_acting_user = conn
@@ -261,25 +261,25 @@ fn set_permissions_handler(
 fn get_permissions_for_self_handler(
     bucket_uuid: Uuid,
     user_uuid: Uuid,
-    conn: AbstractRepository,
+    conn: BoxedRepository,
 ) -> Result<BucketUserPermissions, Error> {
     info!("get_permissions_for_self_handler");
     conn.get_permissions(user_uuid, bucket_uuid)
         .map_err(Error::from)
 }
 
-fn get_public_buckets_handler(conn: AbstractRepository) -> Result<Vec<Bucket>, Error> {
+fn get_public_buckets_handler(conn: BoxedRepository) -> Result<Vec<Bucket>, Error> {
     info!("get_public_buckets_handler");
     conn.get_publicly_visible_buckets().map_err(Error::from)
 }
 
-fn get_buckets_user_is_in_handler(user_uuid: Uuid, conn: AbstractRepository) -> Result<Vec<Bucket>, Error> {
+fn get_buckets_user_is_in_handler(user_uuid: Uuid, conn: BoxedRepository) -> Result<Vec<Bucket>, Error> {
     info!("get_buckets_user_is_in_handler");
     conn.get_buckets_user_is_a_part_of(user_uuid)
         .map_err(Error::from)
 }
 
-fn get_bucket_by_uuid_handler(uuid: Uuid, conn: AbstractRepository) -> Result<Bucket, Error> {
+fn get_bucket_by_uuid_handler(uuid: Uuid, conn: BoxedRepository) -> Result<Bucket, Error> {
     info!("get_bucket_by_uuid_handler");
     conn.get_bucket_by_uuid(uuid).map_err(Error::from)
 }
@@ -288,7 +288,6 @@ fn get_bucket_by_uuid_handler(uuid: Uuid, conn: AbstractRepository) -> Result<Bu
 mod tests {
     use super::*;
     use db::test::setup;
-    use diesel_reset::fixture::EmptyFixture;
     use db::test::bucket_fixture::BucketFixture;
     use db::user::NewUser;
     use db::test::user_fixture::UserFixture;

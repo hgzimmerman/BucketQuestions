@@ -10,7 +10,7 @@ use db::bucket::{
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use warp::{filters::BoxedFilter, path, Filter, Reply};
-use db::{AbstractRepository};
+use db::{BoxedRepository};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NewAnswerRequest {
@@ -39,7 +39,7 @@ pub fn answer_api(state: &State) -> BoxedFilter<(impl Reply,)> {
     path(ANSWER_PATH).and(answer_question).boxed()
 }
 
-fn answer_question_handler(request: NewAnswerRequest, user_uuid: Option<Uuid>, conn: AbstractRepository) -> Result<Answer, Error> {
+fn answer_question_handler(request: NewAnswerRequest, user_uuid: Option<Uuid>, conn: BoxedRepository) -> Result<Answer, Error> {
     let new_answer = NewAnswer {
         user_uuid,
         question_uuid: request.question_uuid,

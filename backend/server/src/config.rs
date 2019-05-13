@@ -2,7 +2,7 @@
 use apply::Apply;
 use clap::{App, Arg};
 
-use crate::state::RunningEnvironment;
+use crate::state::state_config::RunningEnvironment;
 use authorization::Secret;
 use log::{error, warn};
 use std::path::PathBuf;

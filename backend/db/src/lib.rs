@@ -78,11 +78,11 @@ impl Debug for RepositoryProvider {
 }
 
 /// An abstract repository that is sendable across threads
-pub type AbstractRepository = Box<dyn Repository + Send>;
+pub type BoxedRepository = Box<dyn Repository + Send>;
 
 impl RepositoryProvider {
     /// Gets the repo.
-    pub fn get_repo(&self) -> Result<AbstractRepository, RepoAcquisitionError> {
+    pub fn get_repo(&self) -> Result<BoxedRepository, RepoAcquisitionError> {
         match self {
             RepositoryProvider::Pool(pool) => {
                 let repo = pool.get().map_err(|_| RepoAcquisitionError::CouldNotGetRepo)?;
