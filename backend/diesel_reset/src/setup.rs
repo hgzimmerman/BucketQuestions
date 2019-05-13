@@ -108,6 +108,7 @@ pub fn setup_pool_sequential<'a>() -> (Pool, AdminLock<'a>) {
 
 
 // TODO, this seems unsound. I would imagine for some tests, the database could be reset mid-test due to the lack of locks.
+// This doesn't seem to happen.
 #[deprecated]
 pub fn setup_single_connection() -> PgConnection {
     let admin_conn: MutexGuard<PgConnection> = match CONN.lock() {

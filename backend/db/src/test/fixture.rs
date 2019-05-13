@@ -1,6 +1,6 @@
 //! Fixture abstraction.
 
-use crate::AbstractRepository;
+use crate::BoxedRepository;
 
 /// The Fixture trait should be implemented for collections of data used in testing.
 /// Because it can be instantiated using just a connection to the database,
@@ -12,6 +12,6 @@ use crate::AbstractRepository;
 /// The test is then executed, and the database is then tore down.
 pub trait Fixture {
     /// Takes the abstract repository and sets it up and stored details about the setup in the returned fixture.
-    fn generate(repository: &AbstractRepository) -> Self;
+    fn generate(repository: &BoxedRepository) -> Self;
 }
 

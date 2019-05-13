@@ -1,5 +1,5 @@
 //! A fixture for testing against configurations related to bucket user relations.
-use crate::{bucket::db_types::{Bucket, BucketUserRelation, NewBucket, NewBucketUserRelation}, user::{NewUser, User}, Repository, AbstractRepository};
+use crate::{bucket::db_types::{Bucket, BucketUserRelation, NewBucket, NewBucketUserRelation}, user::{NewUser, User}, BoxedRepository};
 use crate::test::user_fixture::UserFixture;
 use crate::test::fixture::Fixture;
 
@@ -18,7 +18,7 @@ pub struct UserBucketRelationFixture {
 }
 
 impl Fixture for UserBucketRelationFixture {
-    fn generate(conn: &AbstractRepository) -> Self {
+    fn generate(conn: &BoxedRepository) -> Self {
         let user1 = UserFixture::generate(conn).user;
 
         let new_user_2 = NewUser {

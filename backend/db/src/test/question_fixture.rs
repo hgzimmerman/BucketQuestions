@@ -1,7 +1,7 @@
 //! A fixture for testing against configurations related to questions.
 use crate::{bucket::db_types::{
     Bucket, BucketUserRelation, NewBucket, NewBucketUserRelation, NewQuestion, Question,
-}, user::{NewUser, User}, Repository, AbstractRepository};
+}, user::{User}, BoxedRepository};
 use crate::test::user_fixture::UserFixture;
 use crate::test::fixture::Fixture;
 
@@ -22,7 +22,7 @@ pub struct QuestionFixture {
 }
 
 impl Fixture for QuestionFixture {
-    fn generate(conn: &AbstractRepository) -> Self {
+    fn generate(conn: &BoxedRepository) -> Self {
         let user = UserFixture::generate(conn).user;
 
         let new_bucket = NewBucket {

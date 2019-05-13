@@ -195,7 +195,7 @@ pub mod test_util {
     }
 
     #[cfg(test)]
-    pub fn setup_backing_repository2<Fix, Fun>(f: Fun)
+    pub fn execute_test_on_repository<Fix, Fun>(f: Fun)
     where
         Fix: Fixture,
         Fun: Fn(&Fix, RepositoryProvider),

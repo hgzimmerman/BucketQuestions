@@ -10,7 +10,7 @@ use crate::{bucket::{
         AnswerRepository, BucketRepository, BucketUserRelationRepository,
         FavoriteQuestionRelationRepository, QuestionRepository,
     },
-}, user::{NewUser, User, UserRepository}, Repository, RepoAcquisitionError};
+}, user::{NewUser, User, UserRepository}};
 use diesel::result::{DatabaseErrorInformation, DatabaseErrorKind, Error};
 use rand::{thread_rng, Rng};
 use std::sync::{Mutex, Arc};

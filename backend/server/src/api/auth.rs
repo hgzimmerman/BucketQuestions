@@ -18,7 +18,7 @@ use oauth2::{
 use serde::{Deserialize, Serialize};
 use url::Url;
 use warp::{filters::BoxedFilter, path, query::query, Filter, Reply};
-use db::AbstractRepository;
+use db::BoxedRepository;
 
 /// The path segment for the auth api.
 pub const AUTH_PATH: &str = "auth";
@@ -209,7 +209,7 @@ fn extract_payload_from_google_jwt(jwt: &str) -> Result<GoogleJWTPayload, Error>
 /// Gets or creates a user.
 fn get_or_create_user(
     google_jwt_payload: GoogleJWTPayload,
-    conn: AbstractRepository,
+    conn: BoxedRepository,
 ) -> Result<User, Error> {
     use diesel::result::Error as DieselError;
     conn.get_user_by_google_id(google_jwt_payload.sub.clone())
@@ -257,7 +257,7 @@ fn login_template_render(jwt: &str, target_url: &str) -> String {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::state::test_util::setup_backing_repository2;
+    use crate::state::test_util::execute_test_on_repository;
     use db::test::empty_fixture::EmptyFixture;
     use db::test::user_fixture::UserFixture;
     use db::RepositoryProvider;
@@ -274,7 +274,7 @@ mod test {
     #[cfg(test)]
     pub fn get_jwt(state: &State) -> String {
         let secret: Secret = warp::test::request().filter(&state.secret()).unwrap();
-        let conn: AbstractRepository = warp::test::request().filter(&state.db2()).unwrap();
+        let conn: BoxedRepository = warp::test::request().filter(&state.db2()).unwrap();
 
         let google_jwt_payload = GoogleJWTPayload {
             sub: TEST_GOOGLE_USER_ID.to_string(),
@@ -287,7 +287,7 @@ mod test {
     /// Test for testing infrastructure
     #[test]
     fn get_jwt_util_creates_user() {
-        setup_backing_repository2(|_fix: &EmptyFixture, provider: RepositoryProvider| {
+        execute_test_on_repository(|_fix: &EmptyFixture, provider: RepositoryProvider| {
             let state = State::testing_init(provider.clone(), Secret::new("hello"));
 
             let repo = provider.get_repo().expect("Should get repo.");
@@ -302,7 +302,7 @@ mod test {
     /// Test for testing infrastructure
     #[test]
     fn get_jwt_util_gets_user() {
-        setup_backing_repository2(|_fix: &UserFixture, provider: RepositoryProvider| {
+        execute_test_on_repository(|_fix: &UserFixture, provider: RepositoryProvider| {
             let state = State::testing_init(provider.clone(), Secret::new("hello"));
 
             let repo = provider.get_repo().expect("Should get repo.");

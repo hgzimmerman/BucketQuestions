@@ -1,5 +1,5 @@
 //! A fixture for testing against empty repository configurations.
-use crate::{Repository, AbstractRepository};
+use crate::{BoxedRepository};
 use crate::test::fixture::Fixture;
 
 /// Empty fixture that makes no changes to the repository.
@@ -7,7 +7,7 @@ use crate::test::fixture::Fixture;
 pub struct EmptyFixture;
 
 impl Fixture for EmptyFixture {
-    fn generate(_: &AbstractRepository) -> Self {
+    fn generate(_: &BoxedRepository) -> Self {
         EmptyFixture
     }
 }

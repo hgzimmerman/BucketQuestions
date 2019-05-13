@@ -72,7 +72,7 @@ mod test {
     use crate::{state::State};
     use db::test::empty_fixture::EmptyFixture;
     use authorization::Secret;
-    use crate::state::test_util::setup_backing_repository2;
+    use crate::state::test_util::execute_test_on_repository;
     use warp::test::request;
     use crate::util::test_util::deserialize;
     use crate::api::auth::LinkResponse;
@@ -80,7 +80,7 @@ mod test {
 
     #[test]
     fn get_auth_link() {
-        setup_backing_repository2(|_fix: &EmptyFixture, provider: RepositoryProvider| {
+        execute_test_on_repository(|_fix: &EmptyFixture, provider: RepositoryProvider| {
             let state = State::testing_init(provider, Secret::new("hello"));
             let filter = routes(&state);
 
