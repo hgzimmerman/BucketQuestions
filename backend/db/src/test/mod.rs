@@ -26,6 +26,7 @@ pub fn setup<Fix>() -> (Fix, BoxedRepository)
 where
     Fix: Fixture,
 {
+    // TODO, remove the feature flag and just use a cfg value.
     if !cfg!(feature = "integration") {
         setup_mock()
     } else {
@@ -72,33 +73,6 @@ where
     let fixture = Fix::generate(&db);
     (fixture, db)
 }
-
-
-/// Sets up a single pooled connection default state.
-//pub fn setup_pooled_conn<Fix>() -> (Fix, AbstractRepository)
-//where
-//Fix: Fixture,
-//{
-//    let db: Pool = diesel_reset::setup::setup_pool();
-//    let con = db.get().unwrap();
-//    let db: AbstractRepository = Box::new(con);
-//    let fixture = Fix::generate(&db);
-//    (fixture, db)
-//}
-
-////#[warn(reason =  "Does not hold lock to db mutex")]
-///// Sets up a repository provider in a default state.
-//pub fn setup_pool<Fix>() -> (Fix, RepositoryProvider)
-//where
-//Fix: Fixture,
-//{
-//    let pool: Pool = diesel_reset::setup::setup_pool();
-//    let con= pool.get().unwrap();
-//    let db: AbstractRepository = Box::new(con);
-//    let fixture = Fix::generate(&db);
-//    (fixture, RepositoryProvider::Pool(pool))
-//}
-
 
 /// sets up a pool and executes a provided test that utilizes the pool
 pub fn execute_pool_test<Fun, Fix>(mut test_function: Fun)

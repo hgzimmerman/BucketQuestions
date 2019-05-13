@@ -200,6 +200,7 @@ pub mod test_util {
         Fix: Fixture,
         Fun: Fn(&Fix, RepositoryProvider),
     {
+        // TODO, remove the feature flag and just use a cfg value.
         if cfg!(feature = "integration") {
             execute_pool_test(f)
         } else {
