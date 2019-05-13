@@ -41,31 +41,7 @@ lazy_static! {
         Mutex::new(PgConnection::establish(DROP_DATABASE_URL).expect("Database not available"));
 }
 
-///// Sets up the database and runs the provided closure where the test code should be present.
-///// By running your tests using this method, you guarantee that the database only contains the rows
-///// created in the fixture's `generate()` function, and the thread will block if another test using
-///// this function is currently running, preventing side effects from breaking other tests.
-/////
-///// This is the general case that provides a PgConnection for consumption by single-threaded db contexts.
-//pub fn setup<Fun, Fix>(mut test_function: Fun)
-//where
-//    Fun: FnMut(&Fix, &PgConnection), // The FnMut adds support for benchers, as they are required to mutate on each iteration.
-//    Fix: Fixture,
-//{
-//    // Sleep-wait for the one connection to the administration account database connection to become available.
-//    let admin_conn: MutexGuard<PgConnection> = match CONN.lock() {
-//        Ok(guard) => guard,
-//        Err(poisoned) => poisoned.into_inner(), // Don't care if the mutex is poisoned
-//    };
-//    reset_database(&admin_conn);
-//
-//    // Create a connection to the test database.
-//    let conn: PgConnection =
-//        PgConnection::establish(DATABASE_URL).expect("Database not available.");
-//    run_migrations(&conn);
-//    let fixture: Fix = Fix::generate(&conn);
-//    test_function(&fixture, &conn);
-//}
+
 
 // TODO I don't think that this function can be in this crate.
 // I think it needs to be in the same crate as the Repository trait
@@ -91,6 +67,7 @@ where
 }
 
 
+#[deprecated]
 pub fn setup_pool() -> Pool {
     let admin_conn: MutexGuard<PgConnection> = match CONN.lock() {
         Ok(guard) => guard,
@@ -108,6 +85,53 @@ pub fn setup_pool() -> Pool {
     init_pool(DATABASE_URL, pool_conf)
 }
 
+/// Sole purpose is opaquely containing a lock on the admin connection.
+pub struct AdminLock<'a>(MutexGuard<'a, PgConnection>);
+
+pub fn setup_pool_sequential<'a>() -> (Pool, AdminLock<'a>) {
+    let admin_conn: MutexGuard<PgConnection> = match CONN.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(), // Don't care if the mutex is poisoned
+    };
+    reset_database(&admin_conn);
+
+    // Establish a pool, this will be passed in as part of the State object when simulating the api.
+    let pool_conf = PoolConfig {
+        max_connections: Some(2),
+        min_connections: Some(1),
+        max_lifetime: None,
+        connection_timeout: None
+    };
+    (init_pool(DATABASE_URL, pool_conf), AdminLock(admin_conn) )
+}
+
+// TODO move this to the db crate along with Fixture. simplify Fixture
+pub fn setup_pool2<Fun, Fix>(mut test_function: Fun)
+where
+    Fun: FnMut(&Fix, Pool),
+    Fix: Fixture<Repository=Pool>, // TODO, may not be correct (Hint, get rid of the associated type)
+{
+    let admin_conn: MutexGuard<PgConnection> = match CONN.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(), // Don't care if the mutex is poisoned
+    };
+    reset_database(&admin_conn);
+
+    // Establish a pool, this will be passed in as part of the State object when simulating the api.
+    let pool_conf = PoolConfig {
+        max_connections: Some(2),
+        min_connections: Some(1),
+        max_lifetime: None,
+        connection_timeout: None
+    };
+    let pool = init_pool(DATABASE_URL, pool_conf);
+    let fixture = Fix::generate(&pool);
+    test_function(&fixture, pool);
+    // Not required, but its nice to explicitly drop the mutex preventing concurrent access to the database.
+    std::mem::drop(admin_conn)
+}
+
+// TODO, this seems unsound. I would imagine for some tests, the database could be reset mid-test due to the lack of locks.
 pub fn setup_single_connection() -> PgConnection {
     let admin_conn: MutexGuard<PgConnection> = match CONN.lock() {
         Ok(guard) => guard,

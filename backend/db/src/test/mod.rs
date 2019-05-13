@@ -84,6 +84,7 @@ Fix: Fixture<Repository = AbstractRepository>,
     (fixture, db)
 }
 
+//#[warn(reason =  "Does not hold lock to db mutex")]
 /// Sets up a repository provider in a default state.
 pub fn setup_pool<Fix>() -> (Fix, RepositoryProvider)
 where
@@ -95,4 +96,12 @@ Fix: Fixture<Repository = AbstractRepository>,
     let fixture = Fix::generate(&db);
     (fixture, RepositoryProvider::Pool(pool))
 }
+
+//pub fn setup_pool_2<Fun, Fix>(mut test_function: Fun)
+//where
+//    Fun: FnMut(&Fix, AbstractRepository),
+//    Fix: Fixture<Repository=AbstractRepository>,
+//{
+//    diesel_reset::setup::setup_pool2(test_function)
+//}
 

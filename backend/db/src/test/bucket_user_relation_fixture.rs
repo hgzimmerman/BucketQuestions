@@ -1,6 +1,7 @@
 //! A fixture for testing against configurations related to bucket user relations.
 use crate::{bucket::db_types::{Bucket, BucketUserRelation, NewBucket, NewBucketUserRelation}, user::{NewUser, User}, Repository, AbstractRepository};
 use diesel_reset::fixture::Fixture;
+use crate::test::user_fixture::UserFixture;
 
 /// Fixture that creates 2 users, 1 bucket, and one relation record in the repository.
 /// user1 is joined to the bucket.
@@ -20,12 +21,7 @@ impl Fixture for UserBucketRelationFixture {
     type Repository = AbstractRepository;
 
     fn generate(conn: &AbstractRepository) -> Self {
-        let new_user_1 = NewUser {
-            google_user_id: "123456789".to_string(),
-            google_name: Some("Yeet".to_owned()),
-        };
-
-        let user1 = conn.create_user(new_user_1).unwrap();
+        let user1 = UserFixture::generate(conn).user;
 
         let new_user_2 = NewUser {
             google_user_id: "987654321".to_string(),

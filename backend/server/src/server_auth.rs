@@ -119,7 +119,7 @@ pub fn optional_user_filter(s: &State) -> BoxedFilter<(Option<Uuid>,)> {
 #[cfg(test)]
 mod unit_test {
     use super::*;
-    use crate::state::{StateConfig, RunningEnvironment};
+    use crate::state::state_config::{StateConfig, RunningEnvironment};
     use authorization::BEARER;
     use chrono::Duration;
 

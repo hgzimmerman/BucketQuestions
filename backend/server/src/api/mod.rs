@@ -72,7 +72,7 @@ mod test {
     use crate::{state::State};
     use db::test::empty_fixture::EmptyFixture;
     use authorization::Secret;
-    use crate::state::setup_backing_repository;
+    use crate::state::test_util::setup_backing_repository;
     use warp::test::request;
     use crate::util::test_util::deserialize;
     use crate::api::auth::LinkResponse;

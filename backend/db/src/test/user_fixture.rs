@@ -9,13 +9,18 @@ pub struct UserFixture {
     pub user: User,
 }
 
+/// ID used for testing.
+pub const TEST_GOOGLE_USER_ID: &str = "123456789";
+/// Name used for testing.
+pub const TEST_GOOGLE_NAME: &str = "User";
+
 impl Fixture for UserFixture {
     type Repository = AbstractRepository;
 
     fn generate(conn: &AbstractRepository) -> Self {
         let new_user = NewUser {
-            google_user_id: "123456789".to_string(),
-            google_name: Some("Yeet".to_owned()),
+            google_user_id: TEST_GOOGLE_USER_ID.to_string(),
+            google_name: Some(TEST_GOOGLE_NAME.to_owned()),
         };
 
         let user = conn.create_user(new_user).unwrap();
