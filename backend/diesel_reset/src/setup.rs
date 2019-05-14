@@ -1,17 +1,13 @@
+
 use crate::{
-    database_error::{DatabaseError, DatabaseResult},
-//    fixture::Fixture,
-    query_helper,
+    reset::{run_migrations, reset_database}
 };
-use diesel::{
-    Connection, ExpressionMethods, OptionalExtension, PgConnection, QueryDsl, QueryResult,
-    RunQueryDsl,
-};
-use migrations_internals as migrations;
+use diesel::{Connection, PgConnection};
 use pool::{Pool, PoolConfig, init_pool};
 
 use std::sync::{Mutex, MutexGuard};
-//use std::ops::Deref;
+
+
 
 pub const DATABASE_NAME: &str = env!("TEST_DATABASE_NAME");
 
@@ -37,9 +33,10 @@ const DROP_DATABASE_URL: &str = env!("DROP_DATABASE_URL");
 // so there is no indeterminate state to contend with if a prior test has panicked.
 lazy_static! {
     static ref CONN: Mutex<PgConnection> =
-        Mutex::new(PgConnection::establish(DROP_DATABASE_URL).expect("Database not available"));
+        Mutex::new(PgConnection::establish(DROP_DATABASE_URL).expect("Administration database not available"));
 }
 
+const MIGRATIONS_DIRECTORY: &str = "../db/migrations";
 
 #[deprecated]
 pub fn setup_pool() -> Pool {
@@ -47,7 +44,7 @@ pub fn setup_pool() -> Pool {
         Ok(guard) => guard,
         Err(poisoned) => poisoned.into_inner(), // Don't care if the mutex is poisoned
     };
-    reset_database(&admin_conn);
+    reset_database(&admin_conn, DATABASE_NAME);
 
     // Establish a pool, this will be passed in as part of the State object when simulating the api.
     let pool_conf = PoolConfig {
@@ -67,18 +64,44 @@ pub fn setup_pool_sequential<'a>() -> (Pool, AdminLock<'a>) {
         Ok(guard) => guard,
         Err(poisoned) => poisoned.into_inner(), // Don't care if the mutex is poisoned
     };
-    reset_database(&admin_conn);
+    reset_database(&admin_conn, DATABASE_NAME);
     // Establish a pool, this will be passed in as part of the State object when simulating the api.
     let pool_conf = PoolConfig {
-        max_connections: Some(10),
+        max_connections: Some(2),
         min_connections: Some(1),
         max_lifetime: None,
         connection_timeout: None
     };
     let pool = init_pool(DATABASE_URL, pool_conf);
-    run_migrations(&pool.get().unwrap());
+    run_migrations(&pool.get().unwrap(), MIGRATIONS_DIRECTORY);
     (pool, AdminLock(admin_conn) )
 }
+
+//use diesel::r2d2::ConnectionManager;
+//use diesel::connection::TransactionManager;
+//pub fn setup_pool_no_internal_dependencies<'a, C>() -> (r2d2::Pool<ConnectionManager<C>>, AdminLock<'a>)
+//where
+//    C: Connection<TransactionManager=diesel::connection::AnsiTransactionManager> + 'static,
+//    C::Backend: diesel::backend::UsesAnsiSavepointSyntax
+//        + diesel::connection::TransactionManager<C>
+//        + diesel::backend::SupportsDefaultKeyword,
+//{
+//    let admin_conn: MutexGuard<PgConnection> = match CONN.lock() {
+//        Ok(guard) => guard,
+//        Err(poisoned) => poisoned.into_inner(), // Don't care if the mutex is poisoned
+//    };
+//    reset_database(&admin_conn, DATABASE_NAME);
+//    // Establish a pool, this will be passed in as part of the State object when simulating the api.
+//
+//
+//    let manager = ConnectionManager::<C>::new(DATABASE_URL);
+//
+//    let mut builder = r2d2::Pool::builder();
+//    let builder = builder.max_size(2);
+//    let pool = builder.build(manager).expect("Could not build pool");
+//    run_migrations(&pool.get().unwrap(), MIGRATIONS_DIRECTORY);
+//    (pool, AdminLock(admin_conn) )
+//}
 
 
 
@@ -90,75 +113,12 @@ pub fn setup_single_connection() -> PgConnection {
         Ok(guard) => guard,
         Err(poisoned) => poisoned.into_inner(), // Don't care if the mutex is poisoned
     };
-    reset_database(&admin_conn);
+    reset_database(&admin_conn, DATABASE_NAME);
 
     let conn: PgConnection = PgConnection::establish(DATABASE_URL)
         .expect("Database not available.");
 
-    run_migrations(&conn);
+    run_migrations(&conn, MIGRATIONS_DIRECTORY);
     conn
 }
 
-/// Drops the database and then recreates it.
-/// The guarantee that this function provides is that the test database will be in a default
-/// state, without any run migrations after this ran.
-fn reset_database(conn: &PgConnection) {
-    drop_database(&conn).expect("Could not drop db");
-    create_database(&conn).expect("Could not create Database");
-}
-
-/// Drops the database, completely removing every table (and therefore every row) in the database.
-fn drop_database(conn: &PgConnection) -> DatabaseResult<()> {
-    if pg_database_exists(&conn, DATABASE_NAME)? {
-        println!("Dropping database: {}", DATABASE_NAME);
-        query_helper::drop_database(DATABASE_NAME)
-            .if_exists()
-            .execute(conn)
-            .map_err(DatabaseError::from)
-            .map(|_| ())
-    } else {
-        Ok(())
-    }
-}
-
-/// Recreates the database.
-fn create_database(conn: &PgConnection) -> DatabaseResult<()> {
-    let db_result = query_helper::create_database(DATABASE_NAME)
-        .execute(conn)
-        .map_err(DatabaseError::from)
-        .map(|_| ());
-    println!("Created database:  {}", DATABASE_NAME);
-    db_result
-}
-
-/// Creates tables in the database.
-fn run_migrations(conn: &PgConnection) {
-    use std::path::Path;
-    // This directory traversal allows this library to be used by any crate in the `backend` crate.
-    const MIGRATIONS_DIRECTORY: &str = "../db/migrations";
-
-    let migrations_dir: &Path = Path::new(MIGRATIONS_DIRECTORY);
-    migrations::run_pending_migrations_in_directory(conn, migrations_dir, &mut ::std::io::sink())
-        .expect("Could not run migrations.");
-    println!("Ran migrations:    {}", DATABASE_NAME);
-}
-
-table! {
-    pg_database (datname) {
-        datname -> Text,
-        datistemplate -> Bool,
-    }
-}
-
-/// Convenience function used when dropping the database.
-fn pg_database_exists(conn: &PgConnection, database_name: &str) -> QueryResult<bool> {
-    use self::pg_database::dsl::*;
-
-    pg_database
-        .select(datname)
-        .filter(datname.eq(database_name))
-        .filter(datistemplate.eq(false))
-        .get_result::<String>(conn)
-        .optional()
-        .map(|x| x.is_some())
-}

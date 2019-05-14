@@ -13,4 +13,5 @@ extern crate migrations_internals;
 
 mod database_error;
 mod query_helper;
+mod reset;
 pub mod setup;
