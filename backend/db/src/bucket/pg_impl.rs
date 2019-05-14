@@ -3,10 +3,8 @@
 use crate::{
     answer::db_types::{Answer, NewAnswer},
     bucket::{
-        db_types::{
-            Bucket, BucketFlagChangeset, NewBucket,
-        },
-        interface::{BucketRepository},
+        db_types::{Bucket, BucketFlagChangeset, NewBucket},
+        interface::BucketRepository,
     },
     diesel::OptionalExtension,
     question::db_types::Question,

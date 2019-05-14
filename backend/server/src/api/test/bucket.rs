@@ -12,7 +12,7 @@ use crate::{
 use authorization::{Secret, AUTHORIZATION_HEADER_KEY, BEARER};
 use db::{
     bucket::db_types::{Bucket, NewBucket},
-    bucket_user_relation::db_types::{BucketUserPermissions},
+    bucket_user_relation::db_types::{BucketUserPermissions, BucketUserRelation},
     test::{
         bucket_and_user_fixture::BucketAndUserFixture,
         bucket_user_relation_fixture::UserBucketRelationFixture,
@@ -21,7 +21,6 @@ use db::{
     RepositoryProvider,
 };
 use warp::{http::status::StatusCode, test::request};
-use db::bucket_user_relation::db_types::BucketUserRelation;
 
 #[test]
 fn create_bucket() {

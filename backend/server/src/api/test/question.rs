@@ -1,6 +1,6 @@
 use crate::{
     api::{
-        auth::{test::get_jwt},
+        auth::test::get_jwt,
         question::{NewQuestionRequest, SetArchivedRequest},
         routes,
     },
@@ -9,11 +9,8 @@ use crate::{
 };
 use authorization::{Secret, AUTHORIZATION_HEADER_KEY, BEARER};
 use db::{
-    question::db_types::{Question},
-    test::{
-        bucket_fixture::BucketFixture,
-        question_fixture::QuestionFixture,
-    },
+    question::db_types::Question,
+    test::{bucket_fixture::BucketFixture, question_fixture::QuestionFixture},
     RepositoryProvider,
 };
 use warp::{http::StatusCode, test::request};

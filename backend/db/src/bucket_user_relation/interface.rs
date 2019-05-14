@@ -1,10 +1,15 @@
 //! Specification of functions.
 
-use crate::bucket_user_relation::db_types::{NewBucketUserRelation, BucketUserRelation, BucketUserPermissionsChangeset, BucketUserPermissions};
+use crate::{
+    bucket::db_types::Bucket,
+    bucket_user_relation::db_types::{
+        BucketUserPermissions, BucketUserPermissionsChangeset, BucketUserRelation,
+        NewBucketUserRelation,
+    },
+    user::db_types::User,
+};
 use diesel::QueryResult;
 use uuid::Uuid;
-use crate::bucket::db_types::Bucket;
-use crate::user::db_types::User;
 
 /// Functions for specifically working with bucket user relations.
 pub trait BucketUserRelationRepository {

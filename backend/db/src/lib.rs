@@ -16,8 +16,8 @@ extern crate diesel;
 
 pub mod answer;
 pub mod bucket;
-pub mod favorite_question;
 pub mod bucket_user_relation;
+pub mod favorite_question;
 pub mod mock;
 pub mod question;
 mod schema;
@@ -26,13 +26,10 @@ pub mod user;
 mod util;
 
 use crate::{
-    answer::interface::AnswerRepository,
-    bucket::interface::BucketRepository,
+    answer::interface::AnswerRepository, bucket::interface::BucketRepository,
     bucket_user_relation::interface::BucketUserRelationRepository,
-    favorite_question::interface::FavoriteQuestionRelationRepository,
-    mock::MockDatabase,
-    question::interface::QuestionRepository,
-    user::interface::UserRepository,
+    favorite_question::interface::FavoriteQuestionRelationRepository, mock::MockDatabase,
+    question::interface::QuestionRepository, user::interface::UserRepository,
 };
 use diesel::PgConnection;
 use pool::{Pool, PooledConn};

@@ -4,10 +4,7 @@
 //! It should try to deal with only the types specified in db_types, and avoid wire types.
 
 use crate::{
-    bucket::db_types::{
-        Bucket, BucketFlagChangeset,
-        NewBucket,
-    },
+    bucket::db_types::{Bucket, BucketFlagChangeset, NewBucket},
     question::db_types::Question,
     user::db_types::User,
 };
@@ -29,5 +26,3 @@ pub trait BucketRepository {
     /// Change the blags that govern the buckets behavior
     fn change_bucket_flags(&self, changeset: BucketFlagChangeset) -> QueryResult<Bucket>;
 }
-
-

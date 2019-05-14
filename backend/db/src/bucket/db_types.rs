@@ -57,5 +57,3 @@ pub struct BucketFlagChangeset {
     /// Can an unjoined user join the bucket.
     pub exclusive: Option<bool>,
 }
-
-

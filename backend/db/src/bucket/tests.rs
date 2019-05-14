@@ -118,5 +118,3 @@ mod bucket {
         assert!(visible_buckets.contains(&fixture.bucket))
     }
 }
-
-

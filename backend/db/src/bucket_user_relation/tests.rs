@@ -1,8 +1,7 @@
 use crate::{
     bucket_user_relation::db_types::{BucketUserPermissionsChangeset, NewBucketUserRelation},
-    test::bucket_user_relation_fixture::UserBucketRelationFixture,
+    test::{bucket_user_relation_fixture::UserBucketRelationFixture, setup},
 };
-use crate::test::setup;
 
 #[test]
 fn create_relation() {

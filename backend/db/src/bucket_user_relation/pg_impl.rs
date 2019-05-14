@@ -1,18 +1,25 @@
 //! Implementation of the specified interfaces for PgConnection.
 
-use crate::bucket_user_relation::interface::BucketUserRelationRepository;
-use crate::AsConnRef;
-use crate::bucket_user_relation::db_types::{NewBucketUserRelation, BucketUserRelation, BucketUserPermissionsChangeset, BucketUserPermissions};
-use diesel::result::Error;
-use uuid::Uuid;
-use crate::bucket::db_types::Bucket;
-use crate::user::db_types::User;
-use crate::schema::{bq_user, bucket_user_relation, bucket};
+use crate::{
+    bucket::db_types::Bucket,
+    bucket_user_relation::{
+        db_types::{
+            BucketUserPermissions, BucketUserPermissionsChangeset, BucketUserRelation,
+            NewBucketUserRelation,
+        },
+        interface::BucketUserRelationRepository,
+    },
+    schema::{bq_user, bucket, bucket_user_relation},
+    user::db_types::User,
+    AsConnRef,
+};
+use diesel::{
+    query_dsl::{QueryDsl, RunQueryDsl},
+    result::Error,
+    BoolExpressionMethods, ExpressionMethods, SaveChangesDsl,
+};
 use log::info;
-use diesel::query_dsl::{QueryDsl, RunQueryDsl};
-use diesel::ExpressionMethods;
-use diesel::BoolExpressionMethods;
-use diesel::SaveChangesDsl;
+use uuid::Uuid;
 
 impl<T> BucketUserRelationRepository for T
 where

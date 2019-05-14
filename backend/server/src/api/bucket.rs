@@ -5,13 +5,10 @@ use crate::{
     util::{json_body_filter, json_or_reject},
 };
 use db::{
-    bucket::db_types::{
-        Bucket, BucketFlagChangeset,
-         NewBucket,
-    },
+    bucket::db_types::{Bucket, BucketFlagChangeset, NewBucket},
     bucket_user_relation::db_types::{
-        BucketUserPermissions, BucketUserPermissionsChangeset,
-        BucketUserRelation,NewBucketUserRelation,
+        BucketUserPermissions, BucketUserPermissionsChangeset, BucketUserRelation,
+        NewBucketUserRelation,
     },
     user::db_types::User,
     BoxedRepository,

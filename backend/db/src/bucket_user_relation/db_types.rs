@@ -1,9 +1,9 @@
 //! Database types for relations between buckets and users.
-use uuid::Uuid;
-use diesel::{Identifiable, Queryable};
-use chrono::NaiveDateTime;
 use crate::schema::bucket_user_relation;
+use chrono::NaiveDateTime;
+use diesel::{Identifiable, Queryable};
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 /// A relation between users and buckets.
 /// It also contains permissions for what users can do to the bucket.

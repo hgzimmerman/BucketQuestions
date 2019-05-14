@@ -5,16 +5,15 @@ use crate::{
         interface::AnswerRepository,
     },
     bucket::{
-        db_types::{
-            Bucket, BucketFlagChangeset, NewBucket,
-        },
+        db_types::{Bucket, BucketFlagChangeset, NewBucket},
         interface::BucketRepository,
     },
     bucket_user_relation::{
         db_types::{
-            BucketUserPermissions, BucketUserPermissionsChangeset, NewBucketUserRelation, BucketUserRelation
+            BucketUserPermissions, BucketUserPermissionsChangeset, BucketUserRelation,
+            NewBucketUserRelation,
         },
-        interface::BucketUserRelationRepository
+        interface::BucketUserRelationRepository,
     },
     favorite_question::{
         db_types::{FavoriteQuestionRelation, NewFavoriteQuestionRelation},
