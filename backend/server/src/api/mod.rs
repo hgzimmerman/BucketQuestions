@@ -4,6 +4,8 @@ mod auth;
 mod bucket;
 mod question;
 mod user;
+#[cfg(test)]
+mod test;
 
 use warp::Reply;
 
@@ -66,31 +68,4 @@ pub fn routes(state: &State) -> impl Filter<Extract = (impl Reply,), Error = Rej
         .recover(crate::error::customize_error)
 }
 
-#[cfg(test)]
-mod test {
-    use super::*;
-    use crate::{state::State};
-    use db::test::empty_fixture::EmptyFixture;
-    use authorization::Secret;
-    use crate::state::test_util::execute_test_on_repository;
-    use warp::test::request;
-    use crate::util::test_util::deserialize;
-    use crate::api::auth::LinkResponse;
-    use db::RepositoryProvider;
 
-    #[test]
-    fn get_auth_link() {
-        execute_test_on_repository(|_fix: &EmptyFixture, provider: RepositoryProvider| {
-            let state = State::testing_init(provider, Secret::new("hello"));
-            let filter = routes(&state);
-
-            let resp = request()
-                .method("GET")
-                .path("/api/auth/link")
-                .reply(&filter);
-
-            let _ = deserialize::<LinkResponse>(resp);
-        });
-
-   }
-}

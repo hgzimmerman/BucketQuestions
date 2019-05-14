@@ -14,6 +14,7 @@ use log::info;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use warp::{filters::BoxedFilter, path, Filter, Reply};
+use diesel::result::DatabaseErrorKind;
 
 pub const BUCKET_PATH: &str = "bucket";
 
@@ -21,11 +22,11 @@ pub const BUCKET_PATH: &str = "bucket";
 pub struct SetPermissionsRequest {
     pub target_user_uuid: Uuid,
     /// Can the user set the visibility of the bucket.
-    pub set_visibility_permission: Option<bool>,
+    pub set_public_permission: Option<bool>,
     /// Can the user enable drawing from the bucket.
     pub set_drawing_permission: Option<bool>,
     /// Can the user set the bucket to private.
-    pub set_private_permission: Option<bool>,
+    pub set_exclusive_permission: Option<bool>,
     /// Can the user grant permissions to other users.
     pub grant_permissions_permission: Option<bool>,
 }
@@ -43,11 +44,11 @@ pub struct ChangeVisibilityRequest {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ChangeBucketFlagsRequest {
     /// Is the bucket visible
-    pub visible: Option<bool>,
+    pub publicly_visible: Option<bool>,
     /// Is the bucket session currently active.
     pub drawing_enabled: Option<bool>,
     /// Can an unjoined user join the bucket.
-    pub private: Option<bool>,
+    pub exclusive: Option<bool>,
 }
 
 pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
@@ -186,7 +187,13 @@ fn add_self_to_bucket_handler(
         set_exclusive_permission: false,
         grant_permissions_permission: false,
     };
-    conn.add_user_to_bucket(new_relation).map_err(Error::from)
+    conn.add_user_to_bucket(new_relation).map_err(|e| {
+        if let diesel::result::Error::DatabaseError(DatabaseErrorKind::UniqueViolation, _) = e {
+           Error::PreConditionNotMet("There is already a relation between this user and the bucket".to_string())
+        } else {
+            Error::from(e)
+        }
+    })
 }
 
 /// Won't reject a request, but will just drop requests to change settings that the user isn't authorized to do.
@@ -211,7 +218,7 @@ fn set_bucket_flags_handler(
         uuid: bucket_uuid,
         public_viewable: verify_permission(
             permissions_for_acting_user.set_public_permission,
-            request.visible,
+            request.publicly_visible,
         ),
         drawing_enabled: verify_permission(
             permissions_for_acting_user.set_drawing_permission,
@@ -219,7 +226,7 @@ fn set_bucket_flags_handler(
         ),
         exclusive: verify_permission(
             permissions_for_acting_user.set_exclusive_permission,
-            request.drawing_enabled,
+            request.exclusive,
         ),
     };
     conn.change_bucket_flags(changeset).map_err(Error::from)
@@ -244,9 +251,9 @@ fn set_permissions_handler(
         let permissions_changeset = BucketUserPermissionsChangeset {
             user_uuid,
             bucket_uuid,
-            set_public_permission: permissions_request.set_visibility_permission,
+            set_public_permission: permissions_request.set_public_permission,
             set_drawing_permission: permissions_request.set_drawing_permission,
-            set_exclusive_permission: permissions_request.set_private_permission,
+            set_exclusive_permission: permissions_request.set_exclusive_permission,
             grant_permissions_permission: permissions_request.grant_permissions_permission,
         };
         conn.set_permissions(permissions_changeset)
@@ -317,9 +324,9 @@ mod tests {
         let (fixture, db) = setup::<UserBucketRelationFixture>();
 
         let request = ChangeBucketFlagsRequest {
-            visible: None,
+            publicly_visible: None,
             drawing_enabled: None,
-            private: None
+            exclusive: None
         };
 
         let bucket = set_bucket_flags_handler(fixture.bucket.uuid, request, fixture.user1.uuid, db)

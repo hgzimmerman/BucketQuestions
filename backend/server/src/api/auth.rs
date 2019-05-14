@@ -255,7 +255,7 @@ fn login_template_render(jwt: &str, target_url: &str) -> String {
 
 
 #[cfg(test)]
-mod test {
+pub mod test {
     use super::*;
     use crate::state::test_util::execute_test_on_repository;
     use db::test::empty_fixture::EmptyFixture;
@@ -271,7 +271,6 @@ mod test {
     /// Panics if the database call to create a user fails.
     /// Or if the JWT can't be encoded.
     ///
-    #[cfg(test)]
     pub fn get_jwt(state: &State) -> String {
         let secret: Secret = warp::test::request().filter(&state.secret()).unwrap();
         let conn: BoxedRepository = warp::test::request().filter(&state.db2()).unwrap();

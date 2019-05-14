@@ -67,7 +67,9 @@ pub fn setup_pool_sequential<'a>() -> (Pool, AdminLock<'a>) {
     reset_database(&admin_conn, DATABASE_NAME);
     // Establish a pool, this will be passed in as part of the State object when simulating the api.
     let pool_conf = PoolConfig {
-        max_connections: Some(2),
+        // Apparently, if the pool size is too small, then the tests might time out.
+        // 2 is too small, 5 works reliably under normal circumstances
+        max_connections: Some(5),
         min_connections: Some(1),
         max_lifetime: None,
         connection_timeout: None

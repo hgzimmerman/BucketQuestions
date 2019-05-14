@@ -2,6 +2,7 @@
 pub mod answer_fixture;
 pub mod bucket_fixture;
 pub mod bucket_user_relation_fixture;
+pub mod bucket_and_user_fixture;
 pub mod empty_fixture;
 pub mod question_fixture;
 pub mod user_fixture;

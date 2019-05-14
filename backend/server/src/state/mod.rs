@@ -64,8 +64,6 @@ impl Debug for State {
 
 
 
-
-
 impl State {
     /// Creates a new state.
     pub fn new(conf: StateConfig) -> Self {
@@ -194,6 +192,8 @@ pub mod test_util {
         }
     }
 
+    /// This executes a test function on a repository that has been created in a manner
+    /// that it is guaranteed not to interfere with other tests.
     #[cfg(test)]
     pub fn execute_test_on_repository<Fix, Fun>(f: Fun)
     where

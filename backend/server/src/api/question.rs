@@ -29,8 +29,8 @@ pub struct NewQuestionRequest {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SetArchivedRequest {
-    question_uuid: Uuid,
-    archived: bool,
+    pub question_uuid: Uuid,
+    pub archived: bool,
 }
 
 pub fn question_api(state: &State) -> BoxedFilter<(impl Reply,)> {

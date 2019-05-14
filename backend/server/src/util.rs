@@ -74,7 +74,6 @@ where
 
 #[cfg(test)]
 pub mod test_util {
-//    use warp::reply::Response;
     use hyper::Response;
     use bytes::Bytes;
     use serde::Deserialize;
@@ -83,8 +82,8 @@ pub mod test_util {
 
     /// Used in testing, this function will try to deserialize a response generated from a typical
         /// warp::testing::request() invocation.
-    pub fn deserialize<T: for<'de> Deserialize<'de>>(response: Response<Bytes>) -> T {
-        let body = response.into_body();
+    pub fn deserialize<'de, T: Deserialize<'de>>(response: &'de Response<Bytes>) -> T {
+        let body = response.body();
         let bytes: &[u8] = body.deref();
         let body_string = std::str::from_utf8(bytes).expect("valid utf8 string");
         eprintln!("Body string: {}", body_string);

@@ -8,7 +8,7 @@ use apply::Apply;
 use authorization::AuthError;
 use diesel::result::DatabaseErrorKind;
 use log::error;
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 use std::{
     error::Error as StdError,
     fmt::{self, Display},
@@ -23,6 +23,8 @@ pub enum Error {
     DatabaseUnavailable,
     /// The database encountered an error while running a query.
     DatabaseError(String),
+    /// The client expected the server to be in a given state, but it was not, so the request was rejected.
+    PreConditionNotMet(String),
     /// If the server needs to talk to an external API to properly serve a request,
     /// and that server experiences an error, this is the error to represent that.
     DependentConnectionFailed(DependentConnectionError),
@@ -54,6 +56,7 @@ impl Display for Error {
                 "Could not acquire a connection to the database, the connection pool may be occupied".to_string()
             }
             Error::DatabaseError(e) => e.to_string(),
+            Error::PreConditionNotMet(e) => e.to_string(),
             Error::BadRequest(s)=> s.to_string(),
             Error::InternalServerError(s) => {
                 if let Some(e) = s {
@@ -146,6 +149,7 @@ impl Error {
         match *self {
             Error::DatabaseUnavailable => StatusCode::INTERNAL_SERVER_ERROR,
             Error::DatabaseError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::PreConditionNotMet(_) => StatusCode::PRECONDITION_FAILED,
             Error::BadRequest(_) => StatusCode::BAD_REQUEST,
             Error::NotFound { .. } => StatusCode::NOT_FOUND,
             Error::InternalServerError(_) => StatusCode::INTERNAL_SERVER_ERROR,
@@ -292,9 +296,9 @@ impl From<diesel::result::Error> for Error {
 
 
 /// Error response template for when the errors are rewritten.
-#[derive(Serialize)]
-struct ErrorResponse {
-    message: String,
-    canonical_reason: &'static str,
-    error_code: u16,
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ErrorResponse<'a> {
+    pub message: String,
+    pub canonical_reason: &'a str,
+    pub error_code: u16,
 }
