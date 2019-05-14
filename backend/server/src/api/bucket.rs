@@ -9,7 +9,7 @@ use db::{bucket::{
         Bucket, BucketFlagChangeset, BucketUserRelation, BucketUserPermissions,
         BucketUserPermissionsChangeset, NewBucket, NewBucketUserRelation,
     },
-}, user::User, BoxedRepository};
+}, user::db_types::User, BoxedRepository};
 use log::info;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -289,7 +289,7 @@ mod tests {
     use super::*;
     use db::test::setup;
     use db::test::bucket_fixture::BucketFixture;
-    use db::user::NewUser;
+    use db::user::db_types::NewUser;
     use db::test::user_fixture::UserFixture;
     use db::test::bucket_user_relation_fixture::UserBucketRelationFixture;
 

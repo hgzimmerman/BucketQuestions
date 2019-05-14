@@ -3,12 +3,9 @@ pub mod answer_fixture;
 pub mod bucket_fixture;
 pub mod bucket_user_relation_fixture;
 pub mod empty_fixture;
-//pub mod mock;
 pub mod question_fixture;
 pub mod user_fixture;
 pub mod fixture;
-
-//use self::mock::MockDatabase;
 
 use self::fixture::Fixture;
 use crate::{RepositoryProvider, BoxedRepository};

@@ -1,7 +1,7 @@
 //! A fixture for testing against configurations related to questions.
 use crate::{bucket::db_types::{
     Bucket, BucketUserRelation, NewBucket, NewBucketUserRelation, NewQuestion, Question,
-}, user::{User}, BoxedRepository};
+}, user::db_types::{User}, BoxedRepository};
 use crate::test::user_fixture::UserFixture;
 use crate::test::fixture::Fixture;
 

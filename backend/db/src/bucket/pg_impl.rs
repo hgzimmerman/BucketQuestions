@@ -13,7 +13,7 @@ use crate::{bucket::{
     },
 }, diesel::OptionalExtension, schema::{
     answer, bq_user, bucket, bucket_user_relation, question, user_question_favorite_relation,
-}, user::User, AsConnRef};
+}, user::db_types::User, AsConnRef};
 use diesel::{
     query_dsl::{QueryDsl, RunQueryDsl},
     result::Error,

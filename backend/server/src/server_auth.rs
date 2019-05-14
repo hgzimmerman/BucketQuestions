@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use std::env;
 use uuid::Uuid;
 use warp::{filters::BoxedFilter, Filter, Rejection};
-use db::user::User;
+use db::user::db_types::User;
 use oauth2::{
     basic::BasicClient, prelude::*, AuthUrl, ClientId, ClientSecret, CsrfToken,
     RedirectUrl, Scope, TokenUrl,

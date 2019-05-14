@@ -26,7 +26,7 @@ use crate::{
         AnswerRepository, BucketRepository, BucketUserRelationRepository,
         FavoriteQuestionRelationRepository, QuestionRepository,
     },
-    user::UserRepository,
+    user::interface::UserRepository,
 };
 use diesel::PgConnection;
 use pool::{PooledConn, Pool};

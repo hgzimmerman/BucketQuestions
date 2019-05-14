@@ -8,7 +8,7 @@ use crate::{
 };
 use askama::Template;
 use authorization::{JwtPayload, Secret};
-use db::user::{NewUser, User};
+use db::user::db_types::{NewUser, User};
 use futures::{future::Future, stream::Stream};
 use hyper::{body::Body, Chunk, Request, Response};
 use log::{error, info, warn};

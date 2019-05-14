@@ -1,5 +1,5 @@
 //! A fixture for testing against configurations related to bucket user relations.
-use crate::{bucket::db_types::{Bucket, BucketUserRelation, NewBucket, NewBucketUserRelation}, user::{NewUser, User}, BoxedRepository};
+use crate::{bucket::db_types::{Bucket, BucketUserRelation, NewBucket, NewBucketUserRelation}, user::db_types::{NewUser, User}, BoxedRepository};
 use crate::test::user_fixture::UserFixture;
 use crate::test::fixture::Fixture;
 

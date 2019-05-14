@@ -10,7 +10,7 @@ use crate::{bucket::{
         AnswerRepository, BucketRepository, BucketUserRelationRepository,
         FavoriteQuestionRelationRepository, QuestionRepository,
     },
-}, user::{NewUser, User, UserRepository}};
+}, user::{db_types::{NewUser, User}, interface::UserRepository}};
 use diesel::result::{DatabaseErrorInformation, DatabaseErrorKind, Error};
 use rand::{thread_rng, Rng};
 use std::sync::{Mutex, Arc};
@@ -84,7 +84,6 @@ impl UserRepository for Arc<Mutex<MockDatabase>> {
     }
 
     fn get_user(&self, uuid: Uuid) -> Result<User, Error> {
-//        let db = self.provide().deref_mut();
         let db = self.lock().unwrap();
         db.users
             .iter()
@@ -94,7 +93,6 @@ impl UserRepository for Arc<Mutex<MockDatabase>> {
     }
 
     fn get_user_by_google_id(&self, id: String) -> Result<User, Error> {
-//        let db = self.provide().deref_mut();
         let db = self.lock().unwrap();
         db.users
             .iter()

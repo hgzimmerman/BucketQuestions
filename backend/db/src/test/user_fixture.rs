@@ -1,5 +1,5 @@
 //! A fixture for testing aganist an existing user.
-use crate::{user::{NewUser, User}, BoxedRepository};
+use crate::{user::db_types::{NewUser, User}, BoxedRepository};
 use crate::test::fixture::Fixture;
 
 /// Fixture that creates one user record in the repository.

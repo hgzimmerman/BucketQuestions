@@ -9,7 +9,7 @@ use crate::{
         BucketUserRelation, NewAnswer, NewBucket, NewBucketUserRelation,
         NewFavoriteQuestionRelation, NewQuestion, Question,
     },
-    user::User,
+    user::db_types::User,
 };
 use diesel::QueryResult;
 use uuid::Uuid;

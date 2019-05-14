@@ -2,7 +2,7 @@
 use crate::{bucket::db_types::{
     Answer, Bucket, BucketUserRelation, NewAnswer, NewBucket, NewBucketUserRelation,
     NewQuestion, Question,
-}, user::{User}, BoxedRepository};
+}, user::db_types::{User}, BoxedRepository};
 use crate::test::user_fixture::UserFixture;
 use crate::test::fixture::Fixture;
 
