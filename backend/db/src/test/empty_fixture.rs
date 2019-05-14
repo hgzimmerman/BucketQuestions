@@ -1,6 +1,5 @@
 //! A fixture for testing against empty repository configurations.
-use crate::{BoxedRepository};
-use crate::test::fixture::Fixture;
+use crate::{test::fixture::Fixture, BoxedRepository};
 
 /// Empty fixture that makes no changes to the repository.
 #[derive(Clone, Copy, Debug)]

@@ -3,9 +3,9 @@ mod answer;
 mod auth;
 mod bucket;
 mod question;
-mod user;
 #[cfg(test)]
 mod test;
+mod user;
 
 use warp::Reply;
 
@@ -67,5 +67,3 @@ pub fn routes(state: &State) -> impl Filter<Extract = (impl Reply,), Error = Rej
         .with(cors)
         .recover(crate::error::customize_error)
 }
-
-

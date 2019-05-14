@@ -16,7 +16,7 @@ use chrono::{Duration, NaiveDateTime};
 use frank_jwt::{decode, encode, Algorithm};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::fmt::{self, Display, Debug, Formatter, Error};
+use std::fmt::{self, Debug, Display, Error, Formatter};
 use warp::{filters::BoxedFilter, Filter};
 
 /// Enumeration of all errors that can occur while authenticating.

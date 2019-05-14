@@ -1,13 +1,14 @@
 //! Functions for resetting the database and running migrations on it.
 
-use diesel::{PgConnection, QueryResult};
-use crate::setup::DATABASE_NAME;
-use crate::query_helper;
-use diesel::query_dsl::RunQueryDsl;
-use diesel::ExpressionMethods;
-use diesel::QueryDsl;
-use diesel::OptionalExtension;
-use crate::database_error::{DatabaseError, DatabaseResult};
+use crate::{
+    database_error::{DatabaseError, DatabaseResult},
+    query_helper,
+    setup::DATABASE_NAME,
+};
+use diesel::{
+    query_dsl::RunQueryDsl, ExpressionMethods, OptionalExtension, PgConnection, QueryDsl,
+    QueryResult,
+};
 use migrations_internals as migrations;
 
 /// Drops the database and then recreates it.

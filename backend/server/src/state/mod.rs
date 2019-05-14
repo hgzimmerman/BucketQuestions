@@ -3,9 +3,12 @@ pub mod state_config;
 
 use crate::{error::Error, server_auth::secret_filter};
 
-use crate::server_auth::create_google_oauth_client;
+use crate::{server_auth::create_google_oauth_client, state::state_config::StateConfig};
 use apply::Apply;
 use authorization::Secret;
+#[cfg(test)]
+use db::test::setup_mock_provider;
+use db::{Repository, RepositoryProvider};
 use hyper::{
     client::{connect::dns::GaiResolver, HttpConnector},
     Body, Client,
@@ -20,10 +23,6 @@ use std::{
 };
 use url::Url;
 use warp::{Filter, Rejection};
-use db::{Repository, RepositoryProvider};
-#[cfg(test)]
-use db::test::{setup_mock_provider};
-use crate::state::state_config::StateConfig;
 
 /// Simplified type for representing a HttpClient.
 pub type HttpsClient = Client<HttpsConnector<HttpConnector<GaiResolver>>, Body>;
@@ -61,8 +60,6 @@ impl Debug for State {
             .finish()
     }
 }
-
-
 
 impl State {
     /// Creates a new state.
@@ -104,16 +101,19 @@ impl State {
 
     /// Gets an abstract repository object.
     /// This can be used to access a backing store for the application.
-    pub fn db2(&self) -> impl Filter<Extract = (Box<dyn Repository + Send + 'static>, ), Error = Rejection> + Clone{
+    pub fn db2(
+        &self,
+    ) -> impl Filter<Extract = (Box<dyn Repository + Send + 'static>,), Error = Rejection> + Clone
+    {
         let r = self.repository_provider.clone();
-        warp::any()
-            .and_then(move || -> Result<Box<Repository + Send + 'static>, Rejection> {
-                r.get_repo()
-                    .map_err(|_| {
-                        log::error!("Pool exhausted: could not get database connection.");
-                        Error::DatabaseUnavailable.reject()
-                    })
-            })
+        warp::any().and_then(
+            move || -> Result<Box<Repository + Send + 'static>, Rejection> {
+                r.get_repo().map_err(|_| {
+                    log::error!("Pool exhausted: could not get database connection.");
+                    Error::DatabaseUnavailable.reject()
+                })
+            },
+        )
     }
 
     /// Gets the secret used for authoring JWTs
@@ -156,16 +156,13 @@ impl State {
     pub fn redirect_url(&self) -> Url {
         self.redirect_url.clone()
     }
-
-
 }
 
 #[cfg(test)]
 pub mod test_util {
     use super::*;
-    use db::test::fixture::Fixture;
     use crate::state::state_config::RunningEnvironment;
-    use db::test::execute_pool_test;
+    use db::test::{execute_pool_test, fixture::Fixture};
 
     impl State {
         /// Creates a new state object from an existing object pool.
@@ -179,7 +176,6 @@ pub mod test_util {
                 .build::<_, Body>(https);
             let redirect_url = RunningEnvironment::Staging { port: 8080 }.create_redirect_url();
             let google_oauth_client = create_google_oauth_client(redirect_url.clone());
-
 
             State {
                 repository_provider,

@@ -4,13 +4,13 @@ use crate::{
     state::State,
     util::{json_body_filter, json_or_reject},
 };
-use db::bucket::{
-    db_types::{Answer, NewAnswer},
+use db::{
+    answer::db_types::{Answer, NewAnswer},
+    BoxedRepository,
 };
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use warp::{filters::BoxedFilter, path, Filter, Reply};
-use db::{BoxedRepository};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NewAnswerRequest {
@@ -24,7 +24,6 @@ pub struct NewAnswerRequest {
 
 pub const ANSWER_PATH: &str = "answer";
 pub fn answer_api(state: &State) -> BoxedFilter<(impl Reply,)> {
-
     let answer_question = warp::path::end()
         .and(warp::post2())
         .and(json_body_filter(30))
@@ -39,7 +38,11 @@ pub fn answer_api(state: &State) -> BoxedFilter<(impl Reply,)> {
     path(ANSWER_PATH).and(answer_question).boxed()
 }
 
-fn answer_question_handler(request: NewAnswerRequest, user_uuid: Option<Uuid>, conn: BoxedRepository) -> Result<Answer, Error> {
+fn answer_question_handler(
+    request: NewAnswerRequest,
+    user_uuid: Option<Uuid>,
+    conn: BoxedRepository,
+) -> Result<Answer, Error> {
     let new_answer = NewAnswer {
         user_uuid,
         question_uuid: request.question_uuid,

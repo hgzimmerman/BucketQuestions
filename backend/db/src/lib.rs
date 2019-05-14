@@ -14,26 +14,32 @@
 #[macro_use]
 extern crate diesel;
 
+pub mod answer;
 pub mod bucket;
+pub mod favorite_question;
+pub mod bucket_user_relation;
+pub mod mock;
+pub mod question;
 mod schema;
 pub mod test;
 pub mod user;
 mod util;
-pub mod mock;
 
 use crate::{
-    bucket::interface::{
-        AnswerRepository, BucketRepository, BucketUserRelationRepository,
-        FavoriteQuestionRelationRepository, QuestionRepository,
-    },
+    answer::interface::AnswerRepository,
+    bucket::interface::BucketRepository,
+    bucket_user_relation::interface::BucketUserRelationRepository,
+    favorite_question::interface::FavoriteQuestionRelationRepository,
+    mock::MockDatabase,
+    question::interface::QuestionRepository,
     user::interface::UserRepository,
 };
 use diesel::PgConnection;
-use pool::{PooledConn, Pool};
-use std::sync::{Mutex, Arc};
-use crate::mock::MockDatabase;
-use std::fmt::{Debug, Formatter, Error};
-
+use pool::{Pool, PooledConn};
+use std::{
+    fmt::{Debug, Error, Formatter},
+    sync::{Arc, Mutex},
+};
 
 /// Trait for anything that can resolve a reference to a Postgres Connection
 pub trait AsConnRef {
@@ -55,9 +61,8 @@ impl AsConnRef for PgConnection {
 #[derive(Clone, Copy, Debug)]
 pub enum RepoAcquisitionError {
     /// The repository could not be gotten.
-    CouldNotGetRepo
+    CouldNotGetRepo,
 }
-
 
 /// Provides repositories
 #[derive(Clone)]
@@ -65,14 +70,14 @@ pub enum RepositoryProvider {
     /// Pool repository provider
     Pool(Pool),
     /// Mock repository provider
-    Mock(Arc<Mutex<MockDatabase>>)
+    Mock(Arc<Mutex<MockDatabase>>),
 }
 
 impl Debug for RepositoryProvider {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
         match self {
             RepositoryProvider::Pool(_) => write!(f, "RepositoryProvider::Pool"),
-            RepositoryProvider::Mock(mock) => mock.fmt(f) // TODO this is inconsistent
+            RepositoryProvider::Mock(mock) => mock.fmt(f), // TODO this is inconsistent
         }
     }
 }
@@ -85,7 +90,9 @@ impl RepositoryProvider {
     pub fn get_repo(&self) -> Result<BoxedRepository, RepoAcquisitionError> {
         match self {
             RepositoryProvider::Pool(pool) => {
-                let repo = pool.get().map_err(|_| RepoAcquisitionError::CouldNotGetRepo)?;
+                let repo = pool
+                    .get()
+                    .map_err(|_| RepoAcquisitionError::CouldNotGetRepo)?;
                 Ok(Box::new(repo))
             }
             RepositoryProvider::Mock(mock) => {
@@ -95,8 +102,6 @@ impl RepositoryProvider {
         }
     }
 }
-
-
 
 /// A trait that encompasses all repository traits.
 ///

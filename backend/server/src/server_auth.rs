@@ -10,16 +10,16 @@
 
 use crate::{error::Error, state::State};
 use authorization::{JwtPayload, Secret, AUTHORIZATION_HEADER_KEY};
-use serde::{Deserialize, Serialize};
-use std::env;
-use uuid::Uuid;
-use warp::{filters::BoxedFilter, Filter, Rejection};
 use db::user::db_types::User;
 use oauth2::{
-    basic::BasicClient, prelude::*, AuthUrl, ClientId, ClientSecret, CsrfToken,
-    RedirectUrl, Scope, TokenUrl,
+    basic::BasicClient, prelude::*, AuthUrl, ClientId, ClientSecret, CsrfToken, RedirectUrl, Scope,
+    TokenUrl,
 };
+use serde::{Deserialize, Serialize};
+use std::env;
 use url::Url;
+use uuid::Uuid;
+use warp::{filters::BoxedFilter, Filter, Rejection};
 
 pub fn create_google_oauth_client(redirect_url: Url) -> BasicClient {
     let google_client_id = ClientId::new(
@@ -119,7 +119,7 @@ pub fn optional_user_filter(s: &State) -> BoxedFilter<(Option<Uuid>,)> {
 #[cfg(test)]
 mod unit_test {
     use super::*;
-    use crate::state::state_config::{StateConfig, RunningEnvironment};
+    use crate::state::state_config::{RunningEnvironment, StateConfig};
     use authorization::BEARER;
     use chrono::Duration;
 
@@ -130,7 +130,7 @@ mod unit_test {
             secret: Some(secret.clone()),
             max_pool_size: None,
             server_lib_root: None,
-            environment: RunningEnvironment::default()
+            environment: RunningEnvironment::default(),
         };
         let state = State::new(conf);
         let uuid = Uuid::new_v4();
@@ -151,7 +151,7 @@ mod unit_test {
             secret: Some(secret.clone()),
             max_pool_size: None,
             server_lib_root: None,
-            environment: RunningEnvironment::default()
+            environment: RunningEnvironment::default(),
         };
 
         let state = State::new(conf);

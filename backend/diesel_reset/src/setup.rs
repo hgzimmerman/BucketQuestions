@@ -1,13 +1,8 @@
-
-use crate::{
-    reset::{run_migrations, reset_database}
-};
+use crate::reset::{reset_database, run_migrations};
 use diesel::{Connection, PgConnection};
-use pool::{Pool, PoolConfig, init_pool};
+use pool::{init_pool, Pool, PoolConfig};
 
 use std::sync::{Mutex, MutexGuard};
-
-
 
 pub const DATABASE_NAME: &str = env!("TEST_DATABASE_NAME");
 
@@ -32,8 +27,9 @@ const DROP_DATABASE_URL: &str = env!("DROP_DATABASE_URL");
 // Disregarding the poison is fine because code using the mutex-ed value never modifies the value,
 // so there is no indeterminate state to contend with if a prior test has panicked.
 lazy_static! {
-    static ref CONN: Mutex<PgConnection> =
-        Mutex::new(PgConnection::establish(DROP_DATABASE_URL).expect("Administration database not available"));
+    static ref CONN: Mutex<PgConnection> = Mutex::new(
+        PgConnection::establish(DROP_DATABASE_URL).expect("Administration database not available")
+    );
 }
 
 const MIGRATIONS_DIRECTORY: &str = "../db/migrations";
@@ -51,7 +47,7 @@ pub fn setup_pool() -> Pool {
         max_connections: Some(2),
         min_connections: Some(1),
         max_lifetime: None,
-        connection_timeout: None
+        connection_timeout: None,
     };
     init_pool(DATABASE_URL, pool_conf)
 }
@@ -72,11 +68,11 @@ pub fn setup_pool_sequential<'a>() -> (Pool, AdminLock<'a>) {
         max_connections: Some(5),
         min_connections: Some(1),
         max_lifetime: None,
-        connection_timeout: None
+        connection_timeout: None,
     };
     let pool = init_pool(DATABASE_URL, pool_conf);
     run_migrations(&pool.get().unwrap(), MIGRATIONS_DIRECTORY);
-    (pool, AdminLock(admin_conn) )
+    (pool, AdminLock(admin_conn))
 }
 
 //use diesel::r2d2::ConnectionManager;
@@ -105,8 +101,6 @@ pub fn setup_pool_sequential<'a>() -> (Pool, AdminLock<'a>) {
 //    (pool, AdminLock(admin_conn) )
 //}
 
-
-
 // TODO, this seems unsound. I would imagine for some tests, the database could be reset mid-test due to the lack of locks.
 // This doesn't seem to happen.
 #[deprecated]
@@ -117,10 +111,9 @@ pub fn setup_single_connection() -> PgConnection {
     };
     reset_database(&admin_conn, DATABASE_NAME);
 
-    let conn: PgConnection = PgConnection::establish(DATABASE_URL)
-        .expect("Database not available.");
+    let conn: PgConnection =
+        PgConnection::establish(DATABASE_URL).expect("Database not available.");
 
     run_migrations(&conn, MIGRATIONS_DIRECTORY);
     conn
 }
-

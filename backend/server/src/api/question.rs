@@ -4,13 +4,14 @@ use crate::{
     state::State,
     util::{json_body_filter, json_or_reject},
 };
-use db::bucket::{
-    db_types::{NewFavoriteQuestionRelation, NewQuestion, Question},
+use db::{
+    favorite_question::db_types::NewFavoriteQuestionRelation,
+    question::db_types::{NewQuestion, Question},
+    BoxedRepository,
 };
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use warp::{filters::BoxedFilter, path, query, Filter, Reply};
-use db::BoxedRepository;
 
 pub const QUESTION_PATH: &str = "question";
 
@@ -59,6 +60,9 @@ pub fn question_api(state: &State) -> BoxedFilter<(impl Reply,)> {
     // TODO need a modify question endpoint
 
     // TODO Not sure of the value of this endpoint
+    // At the very least, you should be able to only delete questions that you either
+    // * created yourself
+    // * or have a permission to delete.
     let delete_question = path!(Uuid)
         .and(warp::path::end())
         .and(warp::delete2())
@@ -76,7 +80,9 @@ pub fn question_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .and(query())
         .and(state.db2())
         .map(
-            |query: BucketUuidQueryParam, conn: BoxedRepository| -> Result<Option<Question>, Error> {
+            |query: BucketUuidQueryParam,
+             conn: BoxedRepository|
+             -> Result<Option<Question>, Error> {
                 conn.get_random_question(query.bucket_uuid)
                     .map_err(Error::from)
             },
@@ -141,13 +147,15 @@ pub fn question_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .and(warp::post2())
         .and(user_filter(state))
         .and(state.db2())
-        .map(|question_uuid: Uuid, user_uuid: Uuid, conn: BoxedRepository| {
-            let relation = NewFavoriteQuestionRelation {
-                user_uuid,
-                question_uuid,
-            };
-            conn.favorite_question(relation).map_err(Error::from)
-        })
+        .map(
+            |question_uuid: Uuid, user_uuid: Uuid, conn: BoxedRepository| {
+                let relation = NewFavoriteQuestionRelation {
+                    user_uuid,
+                    question_uuid,
+                };
+                conn.favorite_question(relation).map_err(Error::from)
+            },
+        )
         .and_then(json_or_reject);
 
     let unfavorite_question = path!(Uuid / "favorite")
@@ -155,13 +163,15 @@ pub fn question_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .and(warp::delete2())
         .and(user_filter(state))
         .and(state.db2())
-        .map(|question_uuid: Uuid, user_uuid: Uuid, conn: BoxedRepository| {
-            let relation = NewFavoriteQuestionRelation {
-                user_uuid,
-                question_uuid,
-            };
-            conn.unfavorite_question(relation).map_err(Error::from)
-        })
+        .map(
+            |question_uuid: Uuid, user_uuid: Uuid, conn: BoxedRepository| {
+                let relation = NewFavoriteQuestionRelation {
+                    user_uuid,
+                    question_uuid,
+                };
+                conn.unfavorite_question(relation).map_err(Error::from)
+            },
+        )
         .and_then(json_or_reject);
 
     let get_favorite_questions = path!("favorites")

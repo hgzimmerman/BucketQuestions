@@ -1,19 +1,37 @@
 //! Module for the database mock object.
-use crate::{bucket::{
-    db_types::{
-        Answer, Bucket, BucketFlagChangeset, BucketUserPermissions,
-        BucketUserPermissionsChangeset, BucketUserRelation, FavoriteQuestionRelation,
-        NewAnswer, NewBucket, NewBucketUserRelation, NewFavoriteQuestionRelation, NewQuestion,
-        Question,
+use crate::{
+    answer::{
+        db_types::{Answer, NewAnswer},
+        interface::AnswerRepository,
     },
-    interface::{
-        AnswerRepository, BucketRepository, BucketUserRelationRepository,
-        FavoriteQuestionRelationRepository, QuestionRepository,
+    bucket::{
+        db_types::{
+            Bucket, BucketFlagChangeset, NewBucket,
+        },
+        interface::BucketRepository,
     },
-}, user::{db_types::{NewUser, User}, interface::UserRepository}};
+    bucket_user_relation::{
+        db_types::{
+            BucketUserPermissions, BucketUserPermissionsChangeset, NewBucketUserRelation, BucketUserRelation
+        },
+        interface::BucketUserRelationRepository
+    },
+    favorite_question::{
+        db_types::{FavoriteQuestionRelation, NewFavoriteQuestionRelation},
+        interface::FavoriteQuestionRelationRepository,
+    },
+    question::{
+        db_types::{NewQuestion, Question},
+        interface::QuestionRepository,
+    },
+    user::{
+        db_types::{NewUser, User},
+        interface::UserRepository,
+    },
+};
 use diesel::result::{DatabaseErrorInformation, DatabaseErrorKind, Error};
 use rand::{thread_rng, Rng};
-use std::sync::{Mutex, Arc};
+use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
 /// This isn't expected to match on the info provided by the actual database.

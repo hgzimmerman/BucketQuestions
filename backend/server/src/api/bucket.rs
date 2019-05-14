@@ -4,17 +4,23 @@ use crate::{
     state::State,
     util::{json_body_filter, json_or_reject},
 };
-use db::{bucket::{
-    db_types::{
-        Bucket, BucketFlagChangeset, BucketUserRelation, BucketUserPermissions,
-        BucketUserPermissionsChangeset, NewBucket, NewBucketUserRelation,
+use db::{
+    bucket::db_types::{
+        Bucket, BucketFlagChangeset,
+         NewBucket,
     },
-}, user::db_types::User, BoxedRepository};
+    bucket_user_relation::db_types::{
+        BucketUserPermissions, BucketUserPermissionsChangeset,
+        BucketUserRelation,NewBucketUserRelation,
+    },
+    user::db_types::User,
+    BoxedRepository,
+};
+use diesel::result::DatabaseErrorKind;
 use log::info;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use warp::{filters::BoxedFilter, path, Filter, Reply};
-use diesel::result::DatabaseErrorKind;
 
 pub const BUCKET_PATH: &str = "bucket";
 
@@ -68,10 +74,12 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .and(warp::path::end())
         .and(warp::get2())
         .and(state.db2())
-        .map(|slug: String, conn: BoxedRepository| -> Result<Bucket, Error> {
-            info!("get_bucket");
-            conn.get_bucket_by_slug(slug).map_err(Error::from)
-        })
+        .map(
+            |slug: String, conn: BoxedRepository| -> Result<Bucket, Error> {
+                info!("get_bucket");
+                conn.get_bucket_by_slug(slug).map_err(Error::from)
+            },
+        )
         .and_then(json_or_reject);
 
     let get_bucket_by_uuid = path!(Uuid)
@@ -155,8 +163,11 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .boxed()
 }
 
-
-fn create_bucket_handler(request: NewBucket, user_uuid: Uuid, conn: BoxedRepository) -> Result<Bucket, Error> {
+fn create_bucket_handler(
+    request: NewBucket,
+    user_uuid: Uuid,
+    conn: BoxedRepository,
+) -> Result<Bucket, Error> {
     info!("add_self_to_bucket_handler");
     let bucket = conn.create_bucket(request)?;
     let new_relation = NewBucketUserRelation {
@@ -189,7 +200,9 @@ fn add_self_to_bucket_handler(
     };
     conn.add_user_to_bucket(new_relation).map_err(|e| {
         if let diesel::result::Error::DatabaseError(DatabaseErrorKind::UniqueViolation, _) = e {
-           Error::PreConditionNotMet("There is already a relation between this user and the bucket".to_string())
+            Error::PreConditionNotMet(
+                "There is already a relation between this user and the bucket".to_string(),
+            )
         } else {
             Error::from(e)
         }
@@ -232,7 +245,10 @@ fn set_bucket_flags_handler(
     conn.change_bucket_flags(changeset).map_err(Error::from)
 }
 
-fn get_users_in_bucket_handler(bucket_uuid: Uuid, conn: BoxedRepository) -> Result<Vec<User>, Error> {
+fn get_users_in_bucket_handler(
+    bucket_uuid: Uuid,
+    conn: BoxedRepository,
+) -> Result<Vec<User>, Error> {
     info!("get_users_in_bucket_handler");
     conn.get_users_in_bucket(bucket_uuid).map_err(Error::from)
 }
@@ -280,7 +296,10 @@ fn get_public_buckets_handler(conn: BoxedRepository) -> Result<Vec<Bucket>, Erro
     conn.get_publicly_visible_buckets().map_err(Error::from)
 }
 
-fn get_buckets_user_is_in_handler(user_uuid: Uuid, conn: BoxedRepository) -> Result<Vec<Bucket>, Error> {
+fn get_buckets_user_is_in_handler(
+    user_uuid: Uuid,
+    conn: BoxedRepository,
+) -> Result<Vec<Bucket>, Error> {
     info!("get_buckets_user_is_in_handler");
     conn.get_buckets_user_is_a_part_of(user_uuid)
         .map_err(Error::from)
@@ -294,12 +313,13 @@ fn get_bucket_by_uuid_handler(uuid: Uuid, conn: BoxedRepository) -> Result<Bucke
 #[cfg(test)]
 mod tests {
     use super::*;
-    use db::test::setup;
-    use db::test::bucket_fixture::BucketFixture;
-    use db::user::db_types::NewUser;
-    use db::test::user_fixture::UserFixture;
-    use db::test::bucket_user_relation_fixture::UserBucketRelationFixture;
-
+    use db::{
+        test::{
+            bucket_fixture::BucketFixture, bucket_user_relation_fixture::UserBucketRelationFixture,
+            setup, user_fixture::UserFixture,
+        },
+        user::db_types::NewUser,
+    };
 
     #[test]
     fn add_self_to_bucket() {
@@ -307,7 +327,7 @@ mod tests {
 
         let new_user = NewUser {
             google_user_id: "12".to_string(),
-            google_name: None
+            google_name: None,
         };
         let user = db.create_user(new_user).expect("Should create new user");
 
@@ -326,7 +346,7 @@ mod tests {
         let request = ChangeBucketFlagsRequest {
             publicly_visible: None,
             drawing_enabled: None,
-            exclusive: None
+            exclusive: None,
         };
 
         let bucket = set_bucket_flags_handler(fixture.bucket.uuid, request, fixture.user1.uuid, db)
@@ -341,9 +361,10 @@ mod tests {
         let bucket_slug = "bucket".to_string();
         let new_bucket = NewBucket {
             bucket_name: bucket_name.clone(),
-            bucket_slug: bucket_slug.clone()
+            bucket_slug: bucket_slug.clone(),
         };
-        let bucket = create_bucket_handler(new_bucket, fixture.user.uuid, db).expect("Should create bucket");
+        let bucket =
+            create_bucket_handler(new_bucket, fixture.user.uuid, db).expect("Should create bucket");
         assert_eq!(bucket.bucket_name, bucket_name);
         assert_eq!(bucket.bucket_slug, bucket_slug);
     }

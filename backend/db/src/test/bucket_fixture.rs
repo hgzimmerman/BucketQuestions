@@ -1,6 +1,9 @@
 //! A fixture for testing against configurations related to buckets.
-use crate::{bucket::db_types::{Bucket, NewBucket}, BoxedRepository};
-use crate::test::fixture::Fixture;
+use crate::{
+    bucket::db_types::{Bucket, NewBucket},
+    test::fixture::Fixture,
+    BoxedRepository,
+};
 
 /// Fixture that creates one user record in the repository.
 #[derive(Clone, Debug)]
@@ -10,7 +13,6 @@ pub struct BucketFixture {
 }
 
 impl Fixture for BucketFixture {
-
     fn generate(conn: &BoxedRepository) -> Self {
         let new_bucket = NewBucket {
             bucket_name: "bucket".to_string(),

@@ -1,19 +1,18 @@
 //! Test module for convienence functions and fixtures
 pub mod answer_fixture;
+pub mod bucket_and_user_fixture;
 pub mod bucket_fixture;
 pub mod bucket_user_relation_fixture;
-pub mod bucket_and_user_fixture;
 pub mod empty_fixture;
+pub mod fixture;
 pub mod question_fixture;
 pub mod user_fixture;
-pub mod fixture;
 
 use self::fixture::Fixture;
-use crate::{RepositoryProvider, BoxedRepository};
+use crate::{mock::MockDatabase, BoxedRepository, RepositoryProvider};
 use diesel::PgConnection;
-use std::sync::{Mutex, Arc};
-use crate::mock::MockDatabase;
-use diesel_reset::setup::{setup_pool_sequential};
+use diesel_reset::setup::setup_pool_sequential;
+use std::sync::{Arc, Mutex};
 
 /// Sets up a fixture and repository to a state defined by the fixture's initialization function.
 /// The repository implementation is chosen by a feature flag.
@@ -59,7 +58,6 @@ where
     let (fixture, db) = setup_mock_impl();
     (fixture, RepositoryProvider::Mock(db))
 }
-
 
 /// Sets up a fixture and a database-backed repository
 pub fn setup_database<Fix>() -> (Fix, BoxedRepository)

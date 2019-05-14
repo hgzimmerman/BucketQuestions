@@ -1,18 +1,21 @@
 //! Implementation of the specified interfaces for PgConnection.
 
-use crate::user::interface::UserRepository;
-use crate::{AsConnRef};
-use crate::user::db_types::{NewUser, User};
-use uuid::Uuid;
-use crate::schema::{self, bq_user};
-
-use diesel::{
-    query_dsl::QueryDsl,
-    result::{Error},
-    ExpressionMethods, RunQueryDsl,
+use crate::{
+    schema::{self, bq_user},
+    user::{
+        db_types::{NewUser, User},
+        interface::UserRepository,
+    },
+    AsConnRef,
 };
+use uuid::Uuid;
 
-impl <T> UserRepository for T where T: AsConnRef {
+use diesel::{query_dsl::QueryDsl, result::Error, ExpressionMethods, RunQueryDsl};
+
+impl<T> UserRepository for T
+where
+    T: AsConnRef,
+{
     fn create_user(&self, user: NewUser) -> Result<User, Error> {
         crate::util::create_row(schema::bq_user::table, user, self.as_conn())
     }

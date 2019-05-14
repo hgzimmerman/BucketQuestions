@@ -1,18 +1,22 @@
-use crate::state::test_util::execute_test_on_repository;
-use db::test::empty_fixture::EmptyFixture;
-use db::RepositoryProvider;
-use crate::api::routes;
-use crate::state::State;
+use crate::{
+    api::{
+        auth::{test::get_jwt},
+        question::{NewQuestionRequest, SetArchivedRequest},
+        routes,
+    },
+    state::{test_util::execute_test_on_repository, State},
+    util::test_util::deserialize,
+};
 use authorization::{Secret, AUTHORIZATION_HEADER_KEY, BEARER};
-use warp::test::request;
-use crate::api::auth::LinkResponse;
-use crate::util::test_util::deserialize;
-use db::test::question_fixture::QuestionFixture;
-use db::bucket::db_types::{NewQuestion, Question};
-use crate::api::auth::test::get_jwt;
-use crate::api::question::{NewQuestionRequest, SetArchivedRequest};
-use db::test::bucket_fixture::BucketFixture;
-use warp::http::StatusCode;
+use db::{
+    question::db_types::{Question},
+    test::{
+        bucket_fixture::BucketFixture,
+        question_fixture::QuestionFixture,
+    },
+    RepositoryProvider,
+};
+use warp::{http::StatusCode, test::request};
 
 #[test]
 fn create_question_with_user_login() {
@@ -25,7 +29,7 @@ fn create_question_with_user_login() {
 
         let req = NewQuestionRequest {
             bucket_uuid: fix.bucket.uuid,
-            question_text: "Are you still there?".to_string()
+            question_text: "Are you still there?".to_string(),
         };
 
         let res = request()
@@ -55,7 +59,7 @@ fn create_question_without_user_login() {
 
         let req = NewQuestionRequest {
             bucket_uuid: fix.bucket.uuid,
-            question_text: "Are you still there?".to_string()
+            question_text: "Are you still there?".to_string(),
         };
 
         let res = request()
@@ -74,11 +78,8 @@ fn create_question_without_user_login() {
     });
 }
 
-
 #[test]
-fn delete_question() {
-
-}
+fn delete_question() {}
 
 #[test]
 fn random_question_populated() {
@@ -109,10 +110,7 @@ fn random_question_unpopulated() {
 
         let url = format!("/api/question/random?bucket_uuid={}", fix.bucket.uuid);
 
-        let res = request()
-            .method("GET")
-            .path(&url)
-            .reply(&filter);
+        let res = request().method("GET").path(&url).reply(&filter);
 
         assert_eq!(res.status(), StatusCode::OK);
 
@@ -120,7 +118,6 @@ fn random_question_unpopulated() {
         assert!(res.is_none());
     });
 }
-
 
 #[test]
 fn num_questions_in_bucket() {
@@ -130,10 +127,7 @@ fn num_questions_in_bucket() {
 
         let url = format!("/api/question/number?bucket_uuid={}", fix.bucket.uuid);
 
-        let res = request()
-            .method("GET")
-            .path(&url)
-            .reply(&filter);
+        let res = request().method("GET").path(&url).reply(&filter);
 
         assert_eq!(res.status(), StatusCode::OK);
 
@@ -150,10 +144,7 @@ fn all_questions_in_bucket() {
 
         let url = format!("/api/question/in_bucket?bucket_uuid={}", fix.bucket.uuid);
 
-        let res = request()
-            .method("GET")
-            .path(&url)
-            .reply(&filter);
+        let res = request().method("GET").path(&url).reply(&filter);
 
         assert_eq!(res.status(), StatusCode::OK);
 
@@ -170,10 +161,7 @@ fn all_questions_on_floor() {
 
         let url = format!("/api/question/on_floor?bucket_uuid={}", fix.bucket.uuid);
 
-        let res = request()
-            .method("GET")
-            .path(&url)
-            .reply(&filter);
+        let res = request().method("GET").path(&url).reply(&filter);
 
         assert_eq!(res.status(), StatusCode::OK);
 
@@ -192,7 +180,7 @@ fn set_question_archived_state() {
 
         let req = SetArchivedRequest {
             question_uuid: fix.question1.uuid,
-            archived: true
+            archived: true,
         };
 
         let res = request()
@@ -250,8 +238,6 @@ fn unfavorite_question() {
 
         let _res = deserialize::<()>(&res);
 
-
-
         let res = request()
             .method("DELETE")
             .header(AUTHORIZATION_HEADER_KEY, format!("{} {}", BEARER, jwt))
@@ -262,7 +248,6 @@ fn unfavorite_question() {
 
         let _res = deserialize::<()>(&res);
     });
-
 }
 
 #[test]

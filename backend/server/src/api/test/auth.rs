@@ -1,12 +1,11 @@
-use crate::state::test_util::execute_test_on_repository;
-use db::test::empty_fixture::EmptyFixture;
-use db::RepositoryProvider;
-use crate::api::routes;
-use crate::state::State;
+use crate::{
+    api::{auth::LinkResponse, routes},
+    state::{test_util::execute_test_on_repository, State},
+    util::test_util::deserialize,
+};
 use authorization::Secret;
+use db::{test::empty_fixture::EmptyFixture, RepositoryProvider};
 use warp::test::request;
-use crate::api::auth::LinkResponse;
-use crate::util::test_util::deserialize;
 
 #[test]
 fn get_auth_link() {

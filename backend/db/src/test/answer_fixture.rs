@@ -1,10 +1,13 @@
 //! A fixture for testing against configurations related to answers.
-use crate::{bucket::db_types::{
-    Answer, Bucket, BucketUserRelation, NewAnswer, NewBucket, NewBucketUserRelation,
-    NewQuestion, Question,
-}, user::db_types::{User}, BoxedRepository};
-use crate::test::user_fixture::UserFixture;
-use crate::test::fixture::Fixture;
+use crate::{
+    answer::db_types::{Answer, NewAnswer},
+    bucket::db_types::{Bucket, NewBucket},
+    bucket_user_relation::db_types::{BucketUserRelation, NewBucketUserRelation},
+    question::db_types::{NewQuestion, Question},
+    test::{fixture::Fixture, user_fixture::UserFixture},
+    user::db_types::User,
+    BoxedRepository,
+};
 
 /// Fixture that creates 2 users, 1 bucket, and one relation record in the repository.
 /// user1 is joined to the bucket.
@@ -24,7 +27,6 @@ pub struct AnswerFixture {
 
 impl Fixture for AnswerFixture {
     fn generate(conn: &BoxedRepository) -> Self {
-
         let user = UserFixture::generate(conn).user;
 
         let new_bucket = NewBucket {

@@ -1,6 +1,6 @@
-use url::Url;
 use authorization::Secret;
 use std::path::PathBuf;
+use url::Url;
 
 /// Configuration object for creating the state.
 ///

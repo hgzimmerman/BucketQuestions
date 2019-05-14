@@ -3,12 +3,10 @@ use crate::error::Error;
 use serde::{Deserialize, Serialize};
 use warp::{Filter, Rejection, Reply};
 
-
 /// A path filter that specifies the remaining segment(s) to match upon.
 #[allow(dead_code)]
-pub fn terminal_path(path: &'static str) -> impl Filter<Extract=(), Error = Rejection> + Copy {
-    warp::path(path)
-        .and(warp::path::end())
+pub fn terminal_path(path: &'static str) -> impl Filter<Extract = (), Error = Rejection> + Copy {
+    warp::path(path).and(warp::path::end())
 }
 
 const KILOBYTE: u64 = 1024;
@@ -71,17 +69,16 @@ where
     warp::reply::json(&target)
 }
 
-
 #[cfg(test)]
 pub mod test_util {
-    use hyper::Response;
     use bytes::Bytes;
+    use hyper::Response;
     use serde::Deserialize;
     use serde_json::from_str;
     use std::ops::Deref;
 
     /// Used in testing, this function will try to deserialize a response generated from a typical
-        /// warp::testing::request() invocation.
+    /// warp::testing::request() invocation.
     pub fn deserialize<'de, T: Deserialize<'de>>(response: &'de Response<Bytes>) -> T {
         let body = response.body();
         let bytes: &[u8] = body.deref();

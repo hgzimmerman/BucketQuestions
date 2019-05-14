@@ -1,7 +1,7 @@
 //! Module for user related database interactions.
 use uuid::Uuid;
 
-use crate::schema::{bq_user};
+use crate::schema::bq_user;
 use serde::{Deserialize, Serialize};
 
 /// A struct representing all the columns in the `users` table.

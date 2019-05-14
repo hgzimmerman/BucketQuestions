@@ -8,7 +8,7 @@ use apply::Apply;
 use authorization::AuthError;
 use diesel::result::DatabaseErrorKind;
 use log::error;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::{
     error::Error as StdError,
     fmt::{self, Display},
@@ -293,7 +293,6 @@ impl From<diesel::result::Error> for Error {
         }
     }
 }
-
 
 /// Error response template for when the errors are rewritten.
 #[derive(Debug, Clone, Deserialize, Serialize)]

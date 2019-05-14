@@ -1,16 +1,11 @@
-use crate::state::test_util::execute_test_on_repository;
-use db::RepositoryProvider;
-use crate::api::routes;
-use crate::state::State;
+use crate::{
+    api::{answer::NewAnswerRequest, auth::test::get_jwt, routes},
+    state::{test_util::execute_test_on_repository, State},
+    util::test_util::deserialize,
+};
 use authorization::{Secret, AUTHORIZATION_HEADER_KEY, BEARER};
-use warp::test::request;
-use crate::util::test_util::deserialize;
-use db::test::answer_fixture::AnswerFixture;
-use crate::api::auth::test::get_jwt;
-use crate::api::answer::NewAnswerRequest;
-use db::bucket::db_types::Answer;
-use warp::http::StatusCode;
-
+use db::{answer::db_types::Answer, test::answer_fixture::AnswerFixture, RepositoryProvider};
+use warp::{http::StatusCode, test::request};
 
 #[test]
 fn answer_question_with_user() {
@@ -24,7 +19,7 @@ fn answer_question_with_user() {
         let req = NewAnswerRequest {
             question_uuid: fix.question.uuid,
             publicly_visible: true,
-            answer_text: "this is the answer".to_string()
+            answer_text: "this is the answer".to_string(),
         };
 
         let resp = request()
@@ -41,7 +36,6 @@ fn answer_question_with_user() {
         assert!(response.publicly_visible);
         assert_eq!(response.answer_text, req.answer_text);
         assert_eq!(response.user_uuid, Some(fix.user.uuid));
-
     });
 }
 
@@ -56,7 +50,7 @@ fn answer_question_without_user() {
         let req = NewAnswerRequest {
             question_uuid: fix.question.uuid,
             publicly_visible: true,
-            answer_text: "This is the answer".to_string()
+            answer_text: "This is the answer".to_string(),
         };
 
         let resp = request()
