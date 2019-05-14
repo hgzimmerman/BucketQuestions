@@ -1,25 +1,19 @@
 //! Implementation of the specified interfaces for PgConnection.
 
 use crate::{
-    answer::db_types::{Answer, NewAnswer},
     bucket::{
         db_types::{Bucket, BucketFlagChangeset, NewBucket},
         interface::BucketRepository,
     },
-    diesel::OptionalExtension,
-    question::db_types::Question,
-    schema::{
-        answer, bq_user, bucket, bucket_user_relation, question, user_question_favorite_relation,
-    },
-    user::db_types::User,
+    schema::bucket,
     AsConnRef,
 };
 use diesel::{
     query_dsl::{QueryDsl, RunQueryDsl},
     result::Error,
-    BoolExpressionMethods, ExpressionMethods, SaveChangesDsl,
+    ExpressionMethods, SaveChangesDsl,
 };
-use log::info;
+//use log::info;
 use uuid::Uuid;
 
 impl<T> BucketRepository for T

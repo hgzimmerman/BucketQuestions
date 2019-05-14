@@ -16,6 +16,7 @@ stdenv.mkDerivation rec {
     export TEST_DATABASE_URL='postgres://hzimmerman:password@localhost/bucketquestions_test'
     export TEST_DATABASE_NAME='bucketquestions_test'
     export DROP_DATABASE_URL='postgres://hzimmerman:password@localhost/postgres'
+    export TEST_TYPE='UNIT'
 
     pg_ctl init
     pg_ctl -l db.logfile start -o "-h localhost -i"

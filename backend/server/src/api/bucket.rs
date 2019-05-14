@@ -313,57 +313,64 @@ mod tests {
     use db::{
         test::{
             bucket_fixture::BucketFixture, bucket_user_relation_fixture::UserBucketRelationFixture,
-            setup, user_fixture::UserFixture,
+            execute_test, user_fixture::UserFixture,
         },
         user::db_types::NewUser,
     };
 
     #[test]
     fn add_self_to_bucket() {
-        let (fixture, db) = setup::<BucketFixture>();
+        //        let (fixture, db) = setup::<BucketFixture>();
 
-        let new_user = NewUser {
-            google_user_id: "12".to_string(),
-            google_name: None,
-        };
-        let user = db.create_user(new_user).expect("Should create new user");
+        execute_test(|fixture: &BucketFixture, db: BoxedRepository| {
+            let new_user = NewUser {
+                google_user_id: "12".to_string(),
+                google_name: None,
+            };
+            let user = db.create_user(new_user).expect("Should create new user");
 
-        let relation = add_self_to_bucket_handler(fixture.bucket.uuid, user.uuid, db)
-            .expect("Should add user to bucket");
-        assert!(!relation.grant_permissions_permission);
-        assert!(!relation.set_public_permission);
-        assert!(!relation.set_exclusive_permission);
-        assert!(!relation.set_drawing_permission);
+            let relation = add_self_to_bucket_handler(fixture.bucket.uuid, user.uuid, db)
+                .expect("Should add user to bucket");
+            assert!(!relation.grant_permissions_permission);
+            assert!(!relation.set_public_permission);
+            assert!(!relation.set_exclusive_permission);
+            assert!(!relation.set_drawing_permission);
+        });
     }
 
     #[test]
     fn set_bucket_flags() {
-        let (fixture, db) = setup::<UserBucketRelationFixture>();
+        //        let (fixture, db) = setup::<UserBucketRelationFixture>();
+        execute_test(|fixture: &UserBucketRelationFixture, db: BoxedRepository| {
+            let request = ChangeBucketFlagsRequest {
+                publicly_visible: None,
+                drawing_enabled: None,
+                exclusive: None,
+            };
 
-        let request = ChangeBucketFlagsRequest {
-            publicly_visible: None,
-            drawing_enabled: None,
-            exclusive: None,
-        };
-
-        let bucket = set_bucket_flags_handler(fixture.bucket.uuid, request, fixture.user1.uuid, db)
-            .expect("Bucket should be returned after changing flags.");
-        assert_eq!(fixture.bucket, bucket);
+            let bucket =
+                set_bucket_flags_handler(fixture.bucket.uuid, request, fixture.user1.uuid, db)
+                    .expect("Bucket should be returned after changing flags.");
+            assert_eq!(fixture.bucket, bucket);
+        });
     }
 
     #[test]
     fn create_bucket() {
-        let (fixture, db) = setup::<UserFixture>();
-        let bucket_name = "Bucket".to_string();
-        let bucket_slug = "bucket".to_string();
-        let new_bucket = NewBucket {
-            bucket_name: bucket_name.clone(),
-            bucket_slug: bucket_slug.clone(),
-        };
-        let bucket =
-            create_bucket_handler(new_bucket, fixture.user.uuid, db).expect("Should create bucket");
-        assert_eq!(bucket.bucket_name, bucket_name);
-        assert_eq!(bucket.bucket_slug, bucket_slug);
+        //        let (fixture, db) = setup::<UserFixture>();
+
+        execute_test(|fixture: &UserFixture, db: BoxedRepository| {
+            let bucket_name = "Bucket".to_string();
+            let bucket_slug = "bucket".to_string();
+            let new_bucket = NewBucket {
+                bucket_name: bucket_name.clone(),
+                bucket_slug: bucket_slug.clone(),
+            };
+            let bucket = create_bucket_handler(new_bucket, fixture.user.uuid, db)
+                .expect("Should create bucket");
+            assert_eq!(bucket.bucket_name, bucket_name);
+            assert_eq!(bucket.bucket_slug, bucket_slug);
+        })
     }
 
 }

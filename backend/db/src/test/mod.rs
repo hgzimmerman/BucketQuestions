@@ -11,23 +11,62 @@ pub mod user_fixture;
 use self::fixture::Fixture;
 use crate::{mock::MockDatabase, BoxedRepository, RepositoryProvider};
 use diesel::PgConnection;
-use diesel_reset::setup::setup_pool_sequential;
-use std::sync::{Arc, Mutex};
+use diesel_reset::setup::{setup_pool_sequential, AdminLock};
+use std::{
+    ops::Deref,
+    sync::{Arc, Mutex},
+};
 
-/// Sets up a fixture and repository to a state defined by the fixture's initialization function.
-/// The repository implementation is chosen by a feature flag.
-///
-/// If the binary is compiled with the `integration` flag enabled, it will use the database.
-/// Otherwise, it will use the mock object more suitable for unit testing.
-pub fn setup<Fix>() -> (Fix, BoxedRepository)
+/// Determines what set of tests will run for test executors that rely on this.
+#[derive(Debug, Clone, Copy)]
+pub enum TestType {
+    /// Unit tests will run against a mock object
+    Unit,
+    /// Integration tests will run against a test database
+    Integration,
+    /// Both types of tests will run
+    Both,
+}
+impl TestType {
+    /// Gets the test type from an environment variable
+    pub fn get_test_type_from_env() -> Self {
+        let test_type = std::env::var("TEST_TYPE")
+            .expect("TEST_TYPE env variable should be specified to be either 'unit', 'integration', or 'both'.");
+        match test_type.to_lowercase().deref() {
+            "unit" => TestType::Unit,
+            "integration" => TestType::Integration,
+            "both" => TestType::Both,
+            x => panic!(
+                "Invalid test type: {}. \n Must be 'unit', 'integration', or 'both'",
+                x
+            ),
+        }
+    }
+}
+
+/// Execute a test based on what testing environment you want.
+pub fn execute_test<Fix, Fun>(f: Fun)
 where
     Fix: Fixture,
+    Fun: Fn(&Fix, BoxedRepository),
 {
-    // TODO, remove the feature flag and just use a cfg value.
-    if !cfg!(feature = "integration") {
-        setup_mock()
-    } else {
-        setup_database()
+    match TestType::get_test_type_from_env() {
+        TestType::Unit => {
+            let (fix, repo) = setup_mock::<Fix>();
+            f(&fix, repo);
+        }
+        TestType::Integration => {
+            let (fix, repo, _lock) = setup_database2::<Fix>();
+            f(&fix, repo);
+        }
+        TestType::Both => {
+            println!("Starting Unit:");
+            let (fix, repo) = setup_mock::<Fix>();
+            f(&fix, repo);
+            println!("Starting Integration:");
+            let (fix, repo, _lock) = setup_database2::<Fix>();
+            f(&fix, repo);
+        }
     }
 }
 
@@ -60,14 +99,15 @@ where
 }
 
 /// Sets up a fixture and a database-backed repository
-pub fn setup_database<Fix>() -> (Fix, BoxedRepository)
+pub fn setup_database2<'a, Fix>() -> (Fix, BoxedRepository, AdminLock<'a>)
 where
     Fix: Fixture,
 {
-    let db: PgConnection = diesel_reset::setup::setup_single_connection();
-    let db: BoxedRepository = Box::new(db);
-    let fixture = Fix::generate(&db);
-    (fixture, db)
+    let (pool, lock) = setup_pool_sequential();
+    let conn = pool.get().unwrap();
+    let conn: BoxedRepository = Box::new(conn);
+    let fixture = Fix::generate(&conn);
+    (fixture, conn, lock)
 }
 
 /// sets up a pool and executes a provided test that utilizes the pool

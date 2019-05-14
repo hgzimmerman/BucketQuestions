@@ -53,6 +53,8 @@ pub fn setup_pool() -> Pool {
 }
 
 /// Sole purpose is opaquely containing a lock on the admin connection.
+/// This keeps the global mutex locked, and prevents tests from clobbering each other
+/// by resetting each other's databases.
 pub struct AdminLock<'a>(MutexGuard<'a, PgConnection>);
 
 pub fn setup_pool_sequential<'a>() -> (Pool, AdminLock<'a>) {
@@ -100,20 +102,3 @@ pub fn setup_pool_sequential<'a>() -> (Pool, AdminLock<'a>) {
 //    run_migrations(&pool.get().unwrap(), MIGRATIONS_DIRECTORY);
 //    (pool, AdminLock(admin_conn) )
 //}
-
-// TODO, this seems unsound. I would imagine for some tests, the database could be reset mid-test due to the lack of locks.
-// This doesn't seem to happen.
-#[deprecated]
-pub fn setup_single_connection() -> PgConnection {
-    let admin_conn: MutexGuard<PgConnection> = match CONN.lock() {
-        Ok(guard) => guard,
-        Err(poisoned) => poisoned.into_inner(), // Don't care if the mutex is poisoned
-    };
-    reset_database(&admin_conn, DATABASE_NAME);
-
-    let conn: PgConnection =
-        PgConnection::establish(DATABASE_URL).expect("Database not available.");
-
-    run_migrations(&conn, MIGRATIONS_DIRECTORY);
-    conn
-}

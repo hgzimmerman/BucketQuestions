@@ -1,8 +1,6 @@
 //! Module for bucket related database interactions.
 
-use crate::schema::{
-    answer, bucket, bucket_user_relation, question, user_question_favorite_relation,
-};
+use crate::schema::bucket;
 use chrono::NaiveDateTime;
 use diesel::{Identifiable, Queryable};
 use serde::{Deserialize, Serialize};

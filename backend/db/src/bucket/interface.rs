@@ -3,11 +3,7 @@
 //! These traits should try to not include significant quantities of business logic.
 //! It should try to deal with only the types specified in db_types, and avoid wire types.
 
-use crate::{
-    bucket::db_types::{Bucket, BucketFlagChangeset, NewBucket},
-    question::db_types::Question,
-    user::db_types::User,
-};
+use crate::bucket::db_types::{Bucket, BucketFlagChangeset, NewBucket};
 use diesel::QueryResult;
 use uuid::Uuid;
 

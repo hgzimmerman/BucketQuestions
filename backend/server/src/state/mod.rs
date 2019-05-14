@@ -162,7 +162,7 @@ impl State {
 pub mod test_util {
     use super::*;
     use crate::state::state_config::RunningEnvironment;
-    use db::test::{execute_pool_test, fixture::Fixture};
+    use db::test::{execute_pool_test, fixture::Fixture, TestType};
 
     impl State {
         /// Creates a new state object from an existing object pool.
@@ -196,12 +196,17 @@ pub mod test_util {
         Fix: Fixture,
         Fun: Fn(&Fix, RepositoryProvider),
     {
-        // TODO, remove the feature flag and just use a cfg value.
-        if cfg!(feature = "integration") {
-            execute_pool_test(f)
-        } else {
-            let (fixture, mock): (Fix, RepositoryProvider) = setup_mock_provider();
-            f(&fixture, mock)
+        match TestType::get_test_type_from_env() {
+            TestType::Unit => {
+                let (fixture, mock): (Fix, RepositoryProvider) = setup_mock_provider();
+                f(&fixture, mock)
+            }
+            TestType::Integration => execute_pool_test(f),
+            TestType::Both => {
+                let (fixture, mock): (Fix, RepositoryProvider) = setup_mock_provider();
+                f(&fixture, mock);
+                execute_pool_test(f)
+            }
         }
     }
 }
