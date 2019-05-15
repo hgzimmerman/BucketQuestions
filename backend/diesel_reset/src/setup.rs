@@ -1,6 +1,6 @@
 use crate::reset::{reset_database, run_migrations};
-use diesel::{Connection, PgConnection};
-use pool::{init_pool, Pool, PoolConfig};
+use diesel::{Connection, PgConnection, r2d2};
+//use pool::{init_pool, Pool, PoolConfig};
 
 use std::sync::{Mutex, MutexGuard};
 
@@ -34,71 +34,29 @@ lazy_static! {
 
 const MIGRATIONS_DIRECTORY: &str = "../db/migrations";
 
-#[deprecated]
-pub fn setup_pool() -> Pool {
-    let admin_conn: MutexGuard<PgConnection> = match CONN.lock() {
-        Ok(guard) => guard,
-        Err(poisoned) => poisoned.into_inner(), // Don't care if the mutex is poisoned
-    };
-    reset_database(&admin_conn, DATABASE_NAME);
-
-    // Establish a pool, this will be passed in as part of the State object when simulating the api.
-    let pool_conf = PoolConfig {
-        max_connections: Some(2),
-        min_connections: Some(1),
-        max_lifetime: None,
-        connection_timeout: None,
-    };
-    init_pool(DATABASE_URL, pool_conf)
-}
 
 /// Sole purpose is opaquely containing a lock on the admin connection.
 /// This keeps the global mutex locked, and prevents tests from clobbering each other
 /// by resetting each other's databases.
 pub struct AdminLock<'a>(MutexGuard<'a, PgConnection>);
 
-pub fn setup_pool_sequential<'a>() -> (Pool, AdminLock<'a>) {
+
+use diesel::r2d2::ConnectionManager;
+pub fn setup_pool_sequential<'a>() -> (r2d2::Pool<ConnectionManager<PgConnection>>, AdminLock<'a>)
+
+{
     let admin_conn: MutexGuard<PgConnection> = match CONN.lock() {
         Ok(guard) => guard,
         Err(poisoned) => poisoned.into_inner(), // Don't care if the mutex is poisoned
     };
     reset_database(&admin_conn, DATABASE_NAME);
-    // Establish a pool, this will be passed in as part of the State object when simulating the api.
-    let pool_conf = PoolConfig {
-        // Apparently, if the pool size is too small, then the tests might time out.
-        // 2 is too small, 5 works reliably under normal circumstances
-        max_connections: Some(5),
-        min_connections: Some(1),
-        max_lifetime: None,
-        connection_timeout: None,
-    };
-    let pool = init_pool(DATABASE_URL, pool_conf);
-    run_migrations(&pool.get().unwrap(), MIGRATIONS_DIRECTORY);
-    (pool, AdminLock(admin_conn))
-}
 
-//use diesel::r2d2::ConnectionManager;
-//use diesel::connection::TransactionManager;
-//pub fn setup_pool_no_internal_dependencies<'a, C>() -> (r2d2::Pool<ConnectionManager<C>>, AdminLock<'a>)
-//where
-//    C: Connection<TransactionManager=diesel::connection::AnsiTransactionManager> + 'static,
-//    C::Backend: diesel::backend::UsesAnsiSavepointSyntax
-//        + diesel::connection::TransactionManager<C>
-//        + diesel::backend::SupportsDefaultKeyword,
-//{
-//    let admin_conn: MutexGuard<PgConnection> = match CONN.lock() {
-//        Ok(guard) => guard,
-//        Err(poisoned) => poisoned.into_inner(), // Don't care if the mutex is poisoned
-//    };
-//    reset_database(&admin_conn, DATABASE_NAME);
-//    // Establish a pool, this will be passed in as part of the State object when simulating the api.
-//
-//
-//    let manager = ConnectionManager::<C>::new(DATABASE_URL);
-//
-//    let mut builder = r2d2::Pool::builder();
-//    let builder = builder.max_size(2);
-//    let pool = builder.build(manager).expect("Could not build pool");
-//    run_migrations(&pool.get().unwrap(), MIGRATIONS_DIRECTORY);
-//    (pool, AdminLock(admin_conn) )
-//}
+    let manager = ConnectionManager::<PgConnection>::new(DATABASE_URL);
+
+    let builder = r2d2::Pool::builder()
+        .max_size(5)
+        .min_idle(Some(2));
+    let pool = builder.build(manager).expect("Could not build pool");
+    run_migrations(&pool.get().unwrap(), MIGRATIONS_DIRECTORY);
+    (pool, AdminLock(admin_conn) )
+}

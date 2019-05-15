@@ -74,7 +74,7 @@ impl Debug for RepositoryProvider {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
         match self {
             RepositoryProvider::Pool(_) => write!(f, "RepositoryProvider::Pool"),
-            RepositoryProvider::Mock(mock) => mock.fmt(f), // TODO this is inconsistent
+            RepositoryProvider::Mock(mock) => mock.fmt(f),
         }
     }
 }

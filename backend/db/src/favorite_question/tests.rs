@@ -61,7 +61,7 @@ fn get_favorite_questions() {
             .get_favorite_questions(fixture.user.uuid)
             .expect("Sholud get favorite questions");
         assert_eq!(favorites.len(), 2);
-        assert_eq!(favorites[0], fixture.question1);
+        assert_eq!(favorites[0], fixture.question1); // Oldest - TODO should be other way around.
         assert_eq!(favorites[1], fixture.question2); // is Ordering guaranteed
                                                      // TODO order favorite questions by date
     });
