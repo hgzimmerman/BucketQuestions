@@ -54,6 +54,12 @@ pub struct ChangeBucketFlagsRequest {
     pub exclusive: Option<bool>,
 }
 
+/// Request to create a bucket.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NewBucketRequest {
+    pub bucket_name: String
+}
+
 pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
     //impl Filter<Extract=(impl Reply,), Error=Rejection> + Clone{
     // Returning a boxed filter improves compile times significantly
@@ -160,13 +166,43 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .boxed()
 }
 
+
+
 fn create_bucket_handler(
-    request: NewBucket,
+    request: NewBucketRequest,
     user_uuid: Uuid,
     conn: BoxedRepository,
 ) -> Result<Bucket, Error> {
     info!("add_self_to_bucket_handler");
-    let bucket = conn.create_bucket(request)?;
+
+    fn bucket_already_exists(slug: &String, conn: &BoxedRepository) -> Result<bool, diesel::result::Error> {
+        conn.get_bucket_by_slug(slug.clone())
+            .map(|_| true)
+            .or_else(|e| {
+                if let diesel::result::Error::NotFound = e {
+                    Ok(false)
+                } else {
+                    Err(e)
+                }
+            })
+    }
+    let slug = slug::slugify(&request.bucket_name);
+    let mut candidate_slug = slug.clone();
+    let mut id = 0;
+
+    while bucket_already_exists(&candidate_slug, &conn)? {
+        candidate_slug = format!("{}-{}", slug, id);
+        id += 1;
+    }
+
+
+    let new_bucket = NewBucket {
+        bucket_name: request.bucket_name,
+        bucket_slug: candidate_slug
+    };
+
+
+    let bucket = conn.create_bucket(new_bucket)?;
     let new_relation = NewBucketUserRelation {
         user_uuid,
         bucket_uuid: bucket.uuid,
@@ -340,7 +376,6 @@ mod tests {
 
     #[test]
     fn set_bucket_flags() {
-        //        let (fixture, db) = setup::<UserBucketRelationFixture>();
         execute_test(|fixture: &UserBucketRelationFixture, db: BoxedRepository| {
             let request = ChangeBucketFlagsRequest {
                 publicly_visible: None,
@@ -357,19 +392,17 @@ mod tests {
 
     #[test]
     fn create_bucket() {
-        //        let (fixture, db) = setup::<UserFixture>();
-
         execute_test(|fixture: &UserFixture, db: BoxedRepository| {
             let bucket_name = "Bucket".to_string();
-            let bucket_slug = "bucket".to_string();
-            let new_bucket = NewBucket {
+            let new_bucket = NewBucketRequest {
                 bucket_name: bucket_name.clone(),
-                bucket_slug: bucket_slug.clone(),
             };
+            let expected_slug = "bucket".to_string();
+
             let bucket = create_bucket_handler(new_bucket, fixture.user.uuid, db)
                 .expect("Should create bucket");
             assert_eq!(bucket.bucket_name, bucket_name);
-            assert_eq!(bucket.bucket_slug, bucket_slug);
+            assert_eq!(bucket.bucket_slug, expected_slug);
         })
     }
 

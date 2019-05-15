@@ -42,7 +42,6 @@ pub struct AdminLock<'a>(MutexGuard<'a, PgConnection>);
 
 
 use diesel::r2d2::ConnectionManager;
-
 pub fn setup_pool_sequential<'a>() -> (r2d2::Pool<ConnectionManager<PgConnection>>, AdminLock<'a>)
 {
     let admin_conn: MutexGuard<PgConnection> = match CONN.lock() {
@@ -61,7 +60,8 @@ pub fn setup_pool_sequential<'a>() -> (r2d2::Pool<ConnectionManager<PgConnection
     (pool, AdminLock(admin_conn) )
 }
 
-/// Cleanup wrapper
+/// Cleanup wrapper.
+/// Contains the admin connection and the name of the database (not the whole url).
 pub struct Cleanup(PgConnection, String);
 
 impl Drop for Cleanup {
@@ -71,7 +71,7 @@ impl Drop for Cleanup {
     }
 }
 
-// TODO determine if this works
+// TODO determine if this properly drops the db
 /// Creates a random db using the admin_db, then deletes it when the test finishes
 pub fn setup_pool_random_db(admin_conn: PgConnection, url_part: &str, migrations_directory: &str) -> (r2d2::Pool<ConnectionManager<PgConnection>>, Cleanup) {
     let db_name = nanoid::simple(); // Gets a random url-safe string.
@@ -81,7 +81,7 @@ pub fn setup_pool_random_db(admin_conn: PgConnection, url_part: &str, migrations
     let manager = ConnectionManager::<PgConnection>::new(url);
 
     let pool = r2d2::Pool::builder()
-        .max_size(5)
+        .max_size(3)
         .min_idle(Some(2))
         .build(manager)
         .expect("Couldn't create pool");

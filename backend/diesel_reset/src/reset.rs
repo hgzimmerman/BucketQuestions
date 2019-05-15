@@ -3,7 +3,6 @@
 use crate::{
     database_error::{DatabaseError, DatabaseResult},
     query_helper,
-    setup::DATABASE_NAME,
 };
 use diesel::{
     query_dsl::RunQueryDsl, ExpressionMethods, OptionalExtension, PgConnection, QueryDsl,
@@ -54,7 +53,6 @@ pub fn run_migrations(conn: &PgConnection, migrations_directory: &str) {
     let migrations_dir: &Path = Path::new(migrations_directory);
     migrations::run_pending_migrations_in_directory(conn, migrations_dir, &mut ::std::io::sink())
         .expect("Could not run migrations.");
-    println!("Ran migrations:    {}", DATABASE_NAME);
 }
 
 table! {

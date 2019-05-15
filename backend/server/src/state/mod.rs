@@ -162,8 +162,7 @@ impl State {
 pub mod test_util {
     use super::*;
     use crate::state::state_config::RunningEnvironment;
-    use db::test::{execute_pool_test, fixture::Fixture, TestType, setup_database3, execute_pool_test2};
-    use diesel_reset::setup::Cleanup;
+    use db::test::{fixture::Fixture, TestType, execute_pool_test2};
 
     impl State {
         /// Creates a new state object from an existing object pool.

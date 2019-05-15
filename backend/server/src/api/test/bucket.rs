@@ -11,7 +11,7 @@ use crate::{
 };
 use authorization::{Secret, AUTHORIZATION_HEADER_KEY, BEARER};
 use db::{
-    bucket::db_types::{Bucket, NewBucket},
+    bucket::db_types::{Bucket},
     bucket_user_relation::db_types::{BucketUserPermissions, BucketUserRelation},
     test::{
         bucket_and_user_fixture::BucketAndUserFixture,
@@ -21,6 +21,7 @@ use db::{
     RepositoryProvider,
 };
 use warp::{http::status::StatusCode, test::request};
+use crate::api::bucket::NewBucketRequest;
 
 #[test]
 fn create_bucket() {
@@ -30,10 +31,11 @@ fn create_bucket() {
             let filter = routes(&state);
             let jwt = get_jwt(&state);
 
-            let new_bucket = NewBucket {
+            let new_bucket = NewBucketRequest {
                 bucket_name: "I'm a bucket".to_string(),
-                bucket_slug: "a_bucket".to_string(),
             };
+
+            let expected_slug = "i-m-a-bucket";
 
             let resp = request()
                 .method("POST")
@@ -47,7 +49,69 @@ fn create_bucket() {
 
             let bucket = deserialize::<Bucket>(&resp);
             assert_eq!(bucket.bucket_name, new_bucket.bucket_name);
-            assert_eq!(bucket.bucket_slug, new_bucket.bucket_slug);
+            assert_eq!(bucket.bucket_slug, expected_slug);
+        },
+    );
+}
+
+#[test]
+fn create_bucket_duplicates() {
+    execute_test_on_repository(
+        |_fix: &UserBucketRelationFixture, provider: RepositoryProvider| {
+            let state = State::testing_init(provider, Secret::new("hello"));
+            let filter = routes(&state);
+            let jwt = get_jwt(&state);
+
+            let new_bucket = NewBucketRequest {
+                bucket_name: "I'm a bucket".to_string(),
+            };
+
+            let expected_slug = "i-m-a-bucket";
+            let resp = request()
+                .method("POST")
+                .json(&new_bucket)
+                .header("content-length", "500")
+                .header(AUTHORIZATION_HEADER_KEY, format!("{} {}", BEARER, jwt))
+                .path("/api/bucket")
+                .reply(&filter);
+
+            assert_eq!(resp.status(), StatusCode::OK);
+
+            let bucket = deserialize::<Bucket>(&resp);
+            assert_eq!(bucket.bucket_name, new_bucket.bucket_name);
+            assert_eq!(bucket.bucket_slug, expected_slug);
+
+
+
+            let expected_slug = "i-m-a-bucket-0";
+            let resp = request()
+                .method("POST")
+                .json(&new_bucket)
+                .header("content-length", "500")
+                .header(AUTHORIZATION_HEADER_KEY, format!("{} {}", BEARER, jwt))
+                .path("/api/bucket")
+                .reply(&filter);
+
+            assert_eq!(resp.status(), StatusCode::OK);
+
+            let bucket = deserialize::<Bucket>(&resp);
+            assert_eq!(bucket.bucket_name, new_bucket.bucket_name);
+            assert_eq!(bucket.bucket_slug, expected_slug);
+
+            let expected_slug = "i-m-a-bucket-1";
+            let resp = request()
+                .method("POST")
+                .json(&new_bucket)
+                .header("content-length", "500")
+                .header(AUTHORIZATION_HEADER_KEY, format!("{} {}", BEARER, jwt))
+                .path("/api/bucket")
+                .reply(&filter);
+
+            assert_eq!(resp.status(), StatusCode::OK);
+
+            let bucket = deserialize::<Bucket>(&resp);
+            assert_eq!(bucket.bucket_name, new_bucket.bucket_name);
+            assert_eq!(bucket.bucket_slug, expected_slug);
         },
     );
 }

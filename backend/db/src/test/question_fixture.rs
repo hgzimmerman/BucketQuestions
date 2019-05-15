@@ -16,7 +16,7 @@ pub struct QuestionFixture {
     pub bucket: Bucket,
     /// User
     pub user: User,
-    /// Bucket user realiton
+    /// Bucket user relation
     pub relation: BucketUserRelation,
     /// First question
     pub question1: Question,
