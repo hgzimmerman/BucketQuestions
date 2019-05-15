@@ -20,7 +20,7 @@ pub fn reset_database(admin_conn: &PgConnection, database_name: &str) {
 }
 
 /// Drops the database, completely removing every table (and therefore every row) in the database.
-fn drop_database(admin_conn: &PgConnection, database_name: &str) -> DatabaseResult<()> {
+pub fn drop_database(admin_conn: &PgConnection, database_name: &str) -> DatabaseResult<()> {
     if pg_database_exists(&admin_conn, database_name)? {
         println!("Dropping database: {}", database_name);
         query_helper::drop_database(database_name)
@@ -34,7 +34,7 @@ fn drop_database(admin_conn: &PgConnection, database_name: &str) -> DatabaseResu
 }
 
 /// Recreates the database.
-fn create_database(admin_conn: &PgConnection, database_name: &str) -> DatabaseResult<()> {
+pub fn create_database(admin_conn: &PgConnection, database_name: &str) -> DatabaseResult<()> {
     let db_result = query_helper::create_database(database_name)
         .execute(admin_conn)
         .map_err(DatabaseError::from)

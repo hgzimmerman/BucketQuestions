@@ -9,4 +9,5 @@ edition = "2018"
 migrations_internals = "~1.4.0"
 lazy_static = "1.0"
 diesel = { version = "1.4.1", features = ["postgres", "r2d2"] }
+nanoid = "0.2.0"
 

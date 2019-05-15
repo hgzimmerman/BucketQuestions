@@ -162,7 +162,8 @@ impl State {
 pub mod test_util {
     use super::*;
     use crate::state::state_config::RunningEnvironment;
-    use db::test::{execute_pool_test, fixture::Fixture, TestType};
+    use db::test::{execute_pool_test, fixture::Fixture, TestType, setup_database3, execute_pool_test2};
+    use diesel_reset::setup::Cleanup;
 
     impl State {
         /// Creates a new state object from an existing object pool.
@@ -201,11 +202,13 @@ pub mod test_util {
                 let (fixture, mock): (Fix, RepositoryProvider) = setup_mock_provider();
                 f(&fixture, mock)
             }
-            TestType::Integration => execute_pool_test(f),
+            TestType::Integration => {
+                execute_pool_test2(f);
+            },
             TestType::Both => {
                 let (fixture, mock): (Fix, RepositoryProvider) = setup_mock_provider();
                 f(&fixture, mock);
-                execute_pool_test(f)
+                execute_pool_test2(f);
             }
         }
     }

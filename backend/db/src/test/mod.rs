@@ -11,7 +11,7 @@ pub mod user_fixture;
 use self::fixture::Fixture;
 use crate::{mock::MockDatabase, BoxedRepository, RepositoryProvider};
 use diesel::PgConnection;
-use diesel_reset::setup::{setup_pool_sequential, AdminLock};
+use diesel_reset::setup::{setup_pool_sequential, AdminLock, setup_pool_random_db, DROP_DATABASE_URL, Cleanup, MIGRATIONS_DIRECTORY};
 use std::{
     ops::Deref,
     sync::{Arc, Mutex},
@@ -56,7 +56,7 @@ where
             f(&fix, repo);
         }
         TestType::Integration => {
-            let (fix, repo, _lock) = setup_database2::<Fix>();
+            let (fix, repo, _cleanup_wrapper) = setup_database3::<Fix>();
             f(&fix, repo);
         }
         TestType::Both => {
@@ -64,7 +64,7 @@ where
             let (fix, repo) = setup_mock::<Fix>();
             f(&fix, repo);
             println!("Starting Integration:");
-            let (fix, repo, _lock) = setup_database2::<Fix>();
+            let (fix, repo, _cleanup_wrapper) = setup_database3::<Fix>();
             f(&fix, repo);
         }
     }
@@ -110,7 +110,24 @@ where
     (fixture, conn, lock)
 }
 
+/// Sets up a fixture for a database-backed repository.
+/// It will create the database from scratch before the test runs.
+/// It will drop the database once the test completes.
+pub fn setup_database3<Fix>() -> (Fix, BoxedRepository, Cleanup)
+where
+    Fix: Fixture,
+{
+    use diesel::Connection;
+    let admin_conn = PgConnection::establish(DROP_DATABASE_URL).unwrap();
+    let (pool, cleanup) = setup_pool_random_db(admin_conn, "postgres://hzimmerman:password@localhost", MIGRATIONS_DIRECTORY );
+    let conn = pool.get().unwrap();
+    let conn: BoxedRepository = Box::new(conn);
+    let fixture = Fix::generate(&conn);
+    (fixture, conn, cleanup)
+}
+
 /// sets up a pool and executes a provided test that utilizes the pool
+#[deprecated]
 pub fn execute_pool_test<Fun, Fix>(mut test_function: Fun)
 where
     Fun: FnMut(&Fix, RepositoryProvider),
@@ -118,6 +135,22 @@ where
 {
     // The lock is dropped at the end of this scope, preventing other tests from running until then.
     let (pool, _lock) = setup_pool_sequential();
+    let conn = pool.get().unwrap();
+    let conn: BoxedRepository = Box::new(conn);
+    let fixture = Fix::generate(&conn);
+
+    test_function(&fixture, RepositoryProvider::Pool(pool));
+}
+
+/// sets up a pool and executes a provided test that utilizes the pool
+pub fn execute_pool_test2<Fun, Fix>(mut test_function: Fun)
+where
+    Fun: FnMut(&Fix, RepositoryProvider),
+    Fix: Fixture,
+{
+    use diesel::Connection;
+    let admin_conn = PgConnection::establish(DROP_DATABASE_URL).unwrap();
+    let (pool, cleanup) = setup_pool_random_db(admin_conn, "postgres://hzimmerman:password@localhost", MIGRATIONS_DIRECTORY );
     let conn = pool.get().unwrap();
     let conn: BoxedRepository = Box::new(conn);
     let fixture = Fix::generate(&conn);
