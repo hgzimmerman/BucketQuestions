@@ -14,10 +14,12 @@ use std::{
     fmt::{self, Display},
 };
 use warp::{http::StatusCode, reject::Rejection, reply::Reply};
+use strum_macros::AsRefStr;
+
 
 /// Server-wide error variants.
 /// These integrate tightly with the error rewriting infrastructure provided by `warp`.
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, AsRefStr)]
 pub enum Error {
     /// The database could not be reached, or otherwise is experiencing troubles running queries.
     DatabaseUnavailable,
@@ -129,12 +131,16 @@ pub fn customize_error(err: Rejection) -> Result<impl Reply, Rejection> {
     error!("{:?} | message: {}", cause, cause);
 
     use std::fmt::Write;
-    let mut s: String = String::new();
-    write!(s, "{}", cause).map_err(|_| Error::InternalServerError(None).reject())?;
+    let mut message: String = String::new();
+    write!(message, "{}", cause).map_err(|_| Error::InternalServerError(None).reject())?;
 
     let code: StatusCode = cause.error_code();
+    let tag: &AsRef<str> = &cause;
+    let tag: String = tag.as_ref().to_string();
+
     let error_response = ErrorResponse {
-        message: s,
+        tag,
+        message,
         canonical_reason: code.canonical_reason().unwrap_or_default(),
         error_code: code.as_u16(),
     };
@@ -297,6 +303,7 @@ impl From<diesel::result::Error> for Error {
 /// Error response template for when the errors are rewritten.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ErrorResponse<'a> {
+    pub tag: String,
     pub message: String,
     pub canonical_reason: &'a str,
     pub error_code: u16,

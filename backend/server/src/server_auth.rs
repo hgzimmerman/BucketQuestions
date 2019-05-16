@@ -21,6 +21,7 @@ use url::Url;
 use uuid::Uuid;
 use warp::{filters::BoxedFilter, Filter, Rejection};
 
+/// Creates the client used to contact Google for OAuth.
 pub fn create_google_oauth_client(redirect_url: Url) -> BasicClient {
     let google_client_id = ClientId::new(
         env::var("GOOGLE_CLIENT_ID").expect("Missing the GOOGLE_CLIENT_ID environment variable."),
@@ -102,7 +103,6 @@ pub fn user_filter(s: &State) -> BoxedFilter<(Uuid,)> {
         .boxed()
 }
 
-#[allow(dead_code)]
 /// Gets an Option<UserUuid> from the request.
 /// Returns Some(user_uuid) if the user has a valid JWT, and None otherwise.
 ///
@@ -117,14 +117,14 @@ pub fn optional_user_filter(s: &State) -> BoxedFilter<(Option<Uuid>,)> {
 }
 
 #[cfg(test)]
-mod unit_test {
+mod unit {
     use super::*;
     use crate::state::state_config::{RunningEnvironment, StateConfig};
     use authorization::BEARER;
     use chrono::Duration;
 
     #[test]
-    fn pass_filter() {
+    fn pass_jwt_filter() {
         let secret = Secret::new("yeet");
         let conf = StateConfig {
             secret: Some(secret.clone()),
@@ -145,7 +145,7 @@ mod unit_test {
     }
 
     #[test]
-    fn does_not_pass_filter() {
+    fn does_not_pass_jwt_filter() {
         let secret = Secret::new("yeet");
         let conf = StateConfig {
             secret: Some(secret.clone()),
@@ -157,6 +157,68 @@ mod unit_test {
         let state = State::new(conf);
         let filter = jwt_filter::<Uuid>(&state);
         assert!(!warp::test::request().matches(&filter))
+    }
+
+    #[test]
+    fn pass_user_filter() {
+        let secret = Secret::new("yeet");
+        let conf = StateConfig {
+            secret: Some(secret.clone()),
+            max_pool_size: None,
+            server_lib_root: None,
+            environment: RunningEnvironment::default(),
+        };
+        let state = State::new(conf);
+        let uuid = Uuid::new_v4();
+        let user = User {
+            uuid,
+            google_user_id: "yeet".to_string(),
+            google_name: None
+        };
+        let jwt:JwtPayload<User> = JwtPayload::new(user, Duration::weeks(2));
+        let jwt = jwt.encode_jwt_string(&secret).unwrap();
+
+        let filter = user_filter(&state);
+
+        assert!(warp::test::request()
+            .header(AUTHORIZATION_HEADER_KEY, format!("{} {}", BEARER, jwt))
+            .matches(&filter))
+    }
+
+    #[test]
+    fn pass_optional_user_filter_empty() {
+        let secret = Secret::new("yeet");
+        let conf = StateConfig {
+            secret: Some(secret.clone()),
+            max_pool_size: None,
+            server_lib_root: None,
+            environment: RunningEnvironment::default(),
+        };
+
+        let state = State::new(conf);
+        let filter = optional_user_filter(&state);
+        assert!(warp::test::request().matches(&filter))
+    }
+
+    #[test]
+    fn pass_optional_user_filter_with_jwt() {
+        let secret = Secret::new("yeet");
+        let conf = StateConfig {
+            secret: Some(secret.clone()),
+            max_pool_size: None,
+            server_lib_root: None,
+            environment: RunningEnvironment::default(),
+        };
+        let state = State::new(conf);
+        let uuid = Uuid::new_v4();
+        let jwt = JwtPayload::new(uuid, Duration::weeks(2));
+        let jwt = jwt.encode_jwt_string(&secret).unwrap();
+
+        let filter = optional_user_filter(&state);
+
+        assert!(warp::test::request()
+            .header(AUTHORIZATION_HEADER_KEY, format!("{} {}", BEARER, jwt))
+            .matches(&filter))
     }
 
 }

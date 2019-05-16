@@ -44,7 +44,7 @@ impl DatabaseErrorInformation for DummyDbErrorInfo {
     }
 }
 
-/// A mock object that should have parity with database operations.
+/// A mock object that should have parity with the database schema and operations.
 #[derive(Debug, Clone, Default)]
 pub struct MockDatabase {
     pub(crate) users: Vec<User>,

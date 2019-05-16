@@ -75,7 +75,7 @@ fn assets(dir_path: PathBuf) -> BoxedFilter<(impl Reply,)> {
 }
 
 #[cfg(test)]
-mod unit_test {
+mod unit {
     use super::*;
 
     #[test]
