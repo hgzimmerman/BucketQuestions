@@ -2,7 +2,7 @@ use crate::{
     error::Error,
     server_auth::optional_user_filter,
     state::State,
-    util::{json_body_filter, json_or_reject},
+    util::{sized_body_json, json_or_reject},
 };
 use db::{
     answer::db_types::{Answer, NewAnswer},
@@ -26,9 +26,9 @@ pub const ANSWER_PATH: &str = "answer";
 pub fn answer_api(state: &State) -> BoxedFilter<(impl Reply,)> {
     let answer_question = warp::path::end()
         .and(warp::post2())
-        .and(json_body_filter(30))
+        .and(sized_body_json(30))
         .and(optional_user_filter(state))
-        .and(state.db2())
+        .and(state.db())
         .map(answer_question_handler)
         .and_then(json_or_reject);
 

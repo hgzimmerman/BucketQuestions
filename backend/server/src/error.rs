@@ -15,6 +15,7 @@ use std::{
 };
 use warp::{http::StatusCode, reject::Rejection, reply::Reply};
 use strum_macros::AsRefStr;
+use log::info;
 
 
 /// Server-wide error variants.
@@ -98,6 +99,28 @@ impl StdError for Error {
     }
 }
 
+impl Error {
+    fn as_error_response(&self) -> Result<(ErrorResponse, StatusCode), Rejection> {
+        use std::fmt::Write;
+
+        info!("ERROR: {:?} | message: {}", self, self);
+        let mut message: String = String::new();
+        write!(message, "{}", self).map_err(|_| Error::InternalServerError(None).reject())?;
+
+        let code: StatusCode = self.error_code();
+        let tag: &AsRef<str> = &self;
+        let tag: String = tag.as_ref().to_string();
+
+        let error_response = ErrorResponse {
+            tag,
+            message,
+            canonical_reason: code.canonical_reason().unwrap_or_default().to_string(),
+            error_code: code.as_u16(),
+        };
+        Ok((error_response, code))
+    }
+}
+
 /// Takes a rejection, which Warp would otherwise handle in its own way, and transform it into
 /// an `Ok(Reply)` where the status is set to correspond to the provided error.
 ///
@@ -128,22 +151,9 @@ pub fn customize_error(err: Rejection) -> Result<impl Reply, Rejection> {
             }
         }
     };
-    error!("{:?} | message: {}", cause, cause);
 
-    use std::fmt::Write;
-    let mut message: String = String::new();
-    write!(message, "{}", cause).map_err(|_| Error::InternalServerError(None).reject())?;
 
-    let code: StatusCode = cause.error_code();
-    let tag: &AsRef<str> = &cause;
-    let tag: String = tag.as_ref().to_string();
-
-    let error_response = ErrorResponse {
-        tag,
-        message,
-        canonical_reason: code.canonical_reason().unwrap_or_default(),
-        error_code: code.as_u16(),
-    };
+    let (error_response, code) = cause.as_error_response()?;
     let json = warp::reply::json(&error_response);
 
     Ok(warp::reply::with_status(json, code))
@@ -302,9 +312,9 @@ impl From<diesel::result::Error> for Error {
 
 /// Error response template for when the errors are rewritten.
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct ErrorResponse<'a> {
+pub struct ErrorResponse {
     pub tag: String,
     pub message: String,
-    pub canonical_reason: &'a str,
+    pub canonical_reason: String,
     pub error_code: u16,
 }

@@ -38,6 +38,9 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+// TODO Corsider replacing this with an enum, that has a method that does the same thing.
+// This trait was useful in managaing a transition to an abstract Repository type, but now that that is done,
+// a plain &PgConnection isn't useful, and the Repository trait could just be implemented for just PooledConn.
 /// Trait for anything that can resolve a reference to a Postgres Connection
 pub trait AsConnRef {
     /// Get the postgres connection.
@@ -124,4 +127,20 @@ impl<T> Repository for T where
         + FavoriteQuestionRelationRepository
         + UserRepository
 {
+}
+
+#[cfg(test)]
+mod unit {
+    use super::*;
+    use static_assertions;
+
+    #[test]
+    fn mock_is_repository() {
+        static_assertions::assert_impl!(Arc<Mutex<MockDatabase>>, Repository)
+    }
+
+    #[test]
+    fn pool_conn_is_repository() {
+        static_assertions::assert_impl!(PooledConn, Repository)
+    }
 }

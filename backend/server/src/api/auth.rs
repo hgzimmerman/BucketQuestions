@@ -95,7 +95,7 @@ pub fn auth_api(state: &State) -> BoxedFilter<(impl Reply,)> {
             },
         )
         .and_then(crate::util::reject)
-        .and(state.db2())
+        .and(state.db())
         .map(get_or_create_user)
         .and_then(crate::util::reject)
         .and(state.secret())
@@ -271,7 +271,7 @@ pub mod test {
     ///
     pub fn get_jwt(state: &State) -> String {
         let secret: Secret = warp::test::request().filter(&state.secret()).unwrap();
-        let conn: BoxedRepository = warp::test::request().filter(&state.db2()).unwrap();
+        let conn: BoxedRepository = warp::test::request().filter(&state.db()).unwrap();
 
         let google_jwt_payload = GoogleJWTPayload {
             sub: TEST_GOOGLE_USER_ID.to_string(),

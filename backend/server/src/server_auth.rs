@@ -80,7 +80,7 @@ where
         .boxed()
 }
 
-/// Brings the secret into scope.
+/// Brings the secret into a filter chain.
 /// The secret is used to create and verify JWTs.
 ///
 /// # Arguments
@@ -221,4 +221,29 @@ mod unit {
             .matches(&filter))
     }
 
+    #[test]
+    fn reject_outdated() {
+        let mut payload = JwtPayload::new("hello_there".to_string(), Duration::weeks(-1)); // Expire a week ago
+        payload.iat = (chrono::Utc::now() - Duration::weeks(2)).naive_utc(); // "issued at" 2 weeks ago
+
+        let secret = Secret::new("secret");
+        let encoded = payload.encode_jwt_string(&secret).unwrap();
+        let header_string = format!("{} {}", BEARER, encoded);
+
+        let conf = StateConfig {
+            secret: Some(secret.clone()),
+            max_pool_size: None,
+            server_lib_root: None,
+            environment: RunningEnvironment::default(),
+        };
+        let state = State::new(conf);
+
+
+        let filter = jwt_filter::<String>(&state);
+
+        assert!(!warp::test::request()
+            .header(AUTHORIZATION_HEADER_KEY, header_string)
+            .matches(&filter)
+        );
+    }
 }

@@ -2,7 +2,7 @@ use crate::{
     error::Error,
     server_auth::user_filter,
     state::State,
-    util::{json_body_filter, json_or_reject},
+    util::{sized_body_json, json_or_reject},
 };
 use db::{
     bucket::db_types::{Bucket, BucketFlagChangeset, NewBucket},
@@ -67,16 +67,16 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
     // Must be logged in to create a bucket
     let create_bucket = warp::post2()
         .and(warp::path::end())
-        .and(json_body_filter(2))
+        .and(sized_body_json(2))
         .and(user_filter(state))
-        .and(state.db2())
+        .and(state.db())
         .map(create_bucket_handler)
         .and_then(json_or_reject);
 
     let get_bucket = path!("slug" / String)
         .and(warp::path::end())
         .and(warp::get2())
-        .and(state.db2())
+        .and(state.db())
         .map(
             |slug: String, conn: BoxedRepository| -> Result<Bucket, Error> {
                 info!("get_bucket");
@@ -88,7 +88,7 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
     let get_bucket_by_uuid = path!(Uuid)
         .and(warp::path::end())
         .and(warp::get2())
-        .and(state.db2())
+        .and(state.db())
         .map(get_bucket_by_uuid_handler)
         .and_then(json_or_reject);
 
@@ -96,14 +96,14 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .and(warp::path::end())
         .and(warp::get2())
         .and(user_filter(state))
-        .and(state.db2())
+        .and(state.db())
         .map(get_buckets_user_is_in_handler)
         .and_then(json_or_reject);
 
     let get_public_buckets = path!("public")
         .and(warp::path::end())
         .and(warp::get2())
-        .and(state.db2())
+        .and(state.db())
         .map(get_public_buckets_handler)
         .and_then(json_or_reject);
 
@@ -112,7 +112,7 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .and(warp::path::end())
         .and(warp::post2())
         .and(user_filter(state))
-        .and(state.db2())
+        .and(state.db())
         .map(add_self_to_bucket_handler)
         .and_then(json_or_reject);
 
@@ -121,32 +121,32 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .and(warp::path::end())
         .and(warp::get2())
         .and(user_filter(state))
-        .and(state.db2())
+        .and(state.db())
         .map(get_permissions_for_self_handler)
         .and_then(json_or_reject);
 
     let set_permissions = path!(Uuid / "user")
         .and(warp::path::end())
         .and(warp::put2())
-        .and(json_body_filter(2))
+        .and(sized_body_json(2))
         .and(user_filter(state))
-        .and(state.db2())
+        .and(state.db())
         .map(set_permissions_handler)
         .and_then(json_or_reject);
 
     let set_bucket_flags = path!(Uuid)
         .and(warp::path::end())
         .and(warp::put2())
-        .and(json_body_filter(1))
+        .and(sized_body_json(1))
         .and(user_filter(state))
-        .and(state.db2())
+        .and(state.db())
         .map(set_bucket_flags_handler)
         .and_then(json_or_reject);
 
     let get_users_in_bucket = path!(Uuid / "users")
         .and(warp::path::end())
         .and(warp::get2())
-        .and(state.db2())
+        .and(state.db())
         .map(get_users_in_bucket_handler)
         .and_then(json_or_reject);
 

@@ -15,15 +15,16 @@ const KILOBYTE: u64 = 1024;
 /// # Arguments
 /// * kb_limit - The maximum number of kilobytes, over which the request will be rejected.
 /// This is done to limit abusively sized requests.
-pub fn json_body_filter<T>(kb_limit: u64) -> impl Filter<Extract = (T,), Error = Rejection> + Copy
+pub fn sized_body_json<T>(kb_limit: u64) -> impl Filter<Extract = (T,), Error = Rejection> + Copy
 where
     T: for<'de> Deserialize<'de> + Send + Sync + 'static,
 {
     warp::body::content_length_limit(KILOBYTE * kb_limit).and(warp::body::json())
 }
 
+/// Utility function that takes a value of a type and converts
+/// it to another type before serializing it.
 #[allow(dead_code)]
-/// Util function that makes replying easier.
 pub fn json_convert<T, U>(source: T) -> impl Reply
 where
     T: Into<U>,
@@ -41,7 +42,8 @@ where
     warp::reply::json(&source)
 }
 
-/// Either converts a result to json or creates a rejection from the error.
+/// Either converts a result's Ok variant to JSON or creates a rejection from the Err,
+/// provided that the `E` can be converted to an `Error` first.
 pub fn json_or_reject<T, E>(source: Result<T, E>) -> Result<impl Reply, Rejection>
 where
     T: Serialize,
@@ -50,6 +52,7 @@ where
     source.map(json).map_err(|e| e.into().reject())
 }
 
+/// Rejects a value that can be converted to an Error.
 #[allow(dead_code)]
 pub fn reject<T, E>(source: Result<T, E>) -> Result<T, Rejection>
 where
@@ -58,7 +61,7 @@ where
     source.map_err(|e| e.into().reject())
 }
 
-/// Converts a vector of T to a vector of U then converts the U vector to a JSON reply.
+/// Converts a Iterable of T to a vector of U then converts the U vector to a JSON reply.
 #[allow(dead_code)]
 pub fn many_json_converts<T, U>(source: impl IntoIterator<Item = T>) -> impl Reply
 where
@@ -87,6 +90,7 @@ pub mod test_util {
         from_str::<T>(body_string).expect("Should be able to deserialize body")
     }
 
+    /// "deserialize" a string from the response.
     #[allow(unused)]
     pub fn deserialize_string(response: Response<Bytes>) -> String {
         let body = response.into_body();

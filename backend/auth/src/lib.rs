@@ -18,6 +18,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::fmt::{self, Debug, Display, Error, Formatter};
 use warp::{filters::BoxedFilter, Filter};
+use log::warn;
 
 /// Enumeration of all errors that can occur while authenticating.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
@@ -176,6 +177,9 @@ impl Debug for Secret {
 impl Secret {
     /// Creates a new secret.
     pub fn new(s: &str) -> Self {
+        if s.len() < 100 {
+            warn!("Secret length is under 100 characters. There may not be sufficient entropy to be secure.")
+        }
         Secret(s.to_string())
     }
 }
@@ -221,5 +225,6 @@ mod test {
         let decoded = JwtPayload::<String>::extract_jwt(header_string, &secret).unwrap();
         assert_eq!(decoded, payload)
     }
+
 
 }
