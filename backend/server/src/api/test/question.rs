@@ -7,7 +7,7 @@ use crate::{
     state::{test_util::execute_test_on_repository, State},
     util::test_util::deserialize,
 };
-use authorization::{Secret, AUTHORIZATION_HEADER_KEY, BEARER};
+use authorization::{AUTHORIZATION_HEADER_KEY, BEARER, Secret};
 use db::{
     question::db_types::Question,
     test::{bucket_fixture::BucketFixture, question_fixture::QuestionFixture},
@@ -18,7 +18,7 @@ use warp::{http::StatusCode, test::request};
 #[test]
 fn create_question_with_user_login() {
     execute_test_on_repository(|fix: &QuestionFixture, provider: RepositoryProvider| {
-        let state = State::testing_init(provider, Secret::new("hello"));
+        let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
         let filter = routes(&state);
         let jwt = get_jwt(&state);
 
@@ -49,7 +49,7 @@ fn create_question_with_user_login() {
 #[test]
 fn create_question_without_user_login() {
     execute_test_on_repository(|fix: &QuestionFixture, provider: RepositoryProvider| {
-        let state = State::testing_init(provider, Secret::new("hello"));
+        let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
         let filter = routes(&state);
 
         let url = "/api/question";
@@ -81,7 +81,7 @@ fn delete_question() {}
 #[test]
 fn random_question_populated() {
     execute_test_on_repository(|fix: &QuestionFixture, provider: RepositoryProvider| {
-        let state = State::testing_init(provider, Secret::new("hello"));
+        let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
         let filter = routes(&state);
 
         let url = format!("/api/question/random?bucket_uuid={}", fix.bucket.uuid);
@@ -102,7 +102,7 @@ fn random_question_populated() {
 #[test]
 fn random_question_unpopulated() {
     execute_test_on_repository(|fix: &BucketFixture, provider: RepositoryProvider| {
-        let state = State::testing_init(provider, Secret::new("hello"));
+        let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
         let filter = routes(&state);
 
         let url = format!("/api/question/random?bucket_uuid={}", fix.bucket.uuid);
@@ -119,7 +119,7 @@ fn random_question_unpopulated() {
 #[test]
 fn num_questions_in_bucket() {
     execute_test_on_repository(|fix: &QuestionFixture, provider: RepositoryProvider| {
-        let state = State::testing_init(provider, Secret::new("hello"));
+        let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
         let filter = routes(&state);
 
         let url = format!("/api/question/number?bucket_uuid={}", fix.bucket.uuid);
@@ -136,7 +136,7 @@ fn num_questions_in_bucket() {
 #[test]
 fn all_questions_in_bucket() {
     execute_test_on_repository(|fix: &QuestionFixture, provider: RepositoryProvider| {
-        let state = State::testing_init(provider, Secret::new("hello"));
+        let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
         let filter = routes(&state);
 
         let url = format!("/api/question/in_bucket?bucket_uuid={}", fix.bucket.uuid);
@@ -153,7 +153,7 @@ fn all_questions_in_bucket() {
 #[test]
 fn all_questions_on_floor() {
     execute_test_on_repository(|fix: &QuestionFixture, provider: RepositoryProvider| {
-        let state = State::testing_init(provider, Secret::new("hello"));
+        let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
         let filter = routes(&state);
 
         let url = format!("/api/question/on_floor?bucket_uuid={}", fix.bucket.uuid);
@@ -170,7 +170,7 @@ fn all_questions_on_floor() {
 #[test]
 fn set_question_archived_state() {
     execute_test_on_repository(|fix: &QuestionFixture, provider: RepositoryProvider| {
-        let state = State::testing_init(provider, Secret::new("hello"));
+        let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
         let filter = routes(&state);
 
         let url = "/api/question/archive";
@@ -197,7 +197,7 @@ fn set_question_archived_state() {
 #[test]
 fn favorite_question() {
     execute_test_on_repository(|fix: &QuestionFixture, provider: RepositoryProvider| {
-        let state = State::testing_init(provider, Secret::new("hello"));
+        let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
         let filter = routes(&state);
         let jwt = get_jwt(&state);
 
@@ -219,7 +219,7 @@ fn favorite_question() {
 #[test]
 fn unfavorite_question() {
     execute_test_on_repository(|fix: &QuestionFixture, provider: RepositoryProvider| {
-        let state = State::testing_init(provider, Secret::new("hello"));
+        let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
         let filter = routes(&state);
         let jwt = get_jwt(&state);
 
@@ -250,7 +250,7 @@ fn unfavorite_question() {
 #[test]
 fn get_favorite_questions() {
     execute_test_on_repository(|fix: &QuestionFixture, provider: RepositoryProvider| {
-        let state = State::testing_init(provider, Secret::new("hello"));
+        let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
         let filter = routes(&state);
         let jwt = get_jwt(&state);
 

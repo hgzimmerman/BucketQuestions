@@ -7,7 +7,7 @@ use crate::{
     error::Error, server_auth::create_google_oauth_client, state::state_config::StateConfig,
 };
 use apply::Apply;
-use authorization::Secret;
+use authorization::{Secret};
 use db::{Repository, RepositoryProvider};
 use hyper::{
     client::{connect::dns::GaiResolver, HttpConnector},
@@ -70,7 +70,7 @@ impl State {
                 .sample_iter(&Alphanumeric)
                 .take(RANDOM_KEY_LENGTH)
                 .collect::<String>()
-                .apply(|s| Secret::new(&s))
+                .apply(|s| Secret::new_hmac(s))
         });
 
         let pool_conf = PoolConfig {

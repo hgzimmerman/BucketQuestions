@@ -2,6 +2,7 @@
 //! It is flexible in that it can support arbitrary payload subjects.
 //!
 //! It currently only supports HS256 keys.
+//!
 
 #![deny(
     missing_docs,
@@ -144,7 +145,7 @@ where
     /// # fn main() -> Result<(), AuthError> {
     /// # use authorization::{JwtPayload, Secret};
     /// let payload = JwtPayload::new("hello".to_string(), chrono::Duration::weeks(2));
-    /// let secret = Secret::new("Secret");
+    /// let secret = Secret::new_hmac("Secret".to_string());
     /// let jwt = payload.encode_jwt_string(&secret)?;
     /// # Ok(())
     /// # }
@@ -153,16 +154,25 @@ where
         let header = json!({});
         use serde_json::Value;
 
-        let secret: &String = &secret.0;
-
         let payload: Value = match serde_json::to_value(&self) {
             Ok(x) => x,
             Err(_) => return Err(AuthError::SerializeError),
         };
-        match encode(header, secret, &payload, Algorithm::HS256) {
-            Ok(x) => Ok(x),
-            Err(_) => Err(AuthError::JwtEncodeError),
+
+        match secret {
+            Secret::Hmac(key) => {
+                encode(header, key, &payload, Algorithm::HS256)
+            }
+            Secret::Rsa { private_key, .. } => {
+                encode(header, private_key, &payload, Algorithm::RS512)
+            }
+            Secret::Es { private_key, .. } => {
+                encode(header, private_key, &payload, Algorithm::ES512)
+            }
         }
+            .map_err(|_| AuthError::JwtEncodeError)
+
+
     }
 
     /// Decodes the JWT into its payload.
@@ -173,7 +183,7 @@ where
     /// # use authorization::AuthError;
     /// # fn main() -> Result<(), AuthError> {
     /// # use authorization::{JwtPayload, Secret};
-    /// # let secret = Secret::new("Secret");
+    /// # let secret = Secret::new_hmac("Secret".to_string());
     /// let payload = JwtPayload::new("hello".to_string(), chrono::Duration::weeks(2));
     /// let jwt: String = payload.encode_jwt_string(&secret)?;
     /// let decoded_payload: JwtPayload<String> = JwtPayload::decode_jwt_string(&jwt, &secret)?;
@@ -182,15 +192,20 @@ where
     /// # }
     /// ```
     pub fn decode_jwt_string(jwt_str: &str, secret: &Secret) -> Result<JwtPayload<T>, AuthError> {
-        let secret: &String = &secret.0;
-        let (_header, payload) = match decode(&jwt_str.to_string(), secret, Algorithm::HS256) {
-            Ok(x) => x,
-            Err(_) => return Err(AuthError::JwtDecodeError),
-        };
-        let jwt: JwtPayload<T> = match serde_json::from_value(payload) {
-            Ok(x) => x,
-            Err(_) => return Err(AuthError::DeserializeError),
-        };
+        let (_header, payload) = match secret {
+            Secret::Hmac(key) => {
+                decode(&jwt_str.to_string(), key, Algorithm::HS256)
+            }
+            Secret::Rsa { public_key, .. } => {
+                decode(&jwt_str.to_string(), public_key, Algorithm::RS512)
+            }
+            Secret::Es { public_key, .. } => {
+                decode(&jwt_str.to_string(), public_key, Algorithm::ES512)
+            }
+        }
+            .map_err(|_| AuthError::JwtDecodeError)?;
+
+        let jwt: JwtPayload<T> = serde_json::from_value(payload).map_err(|_| AuthError::DeserializeError)?;
         Ok(jwt)
     }
 
@@ -202,7 +217,7 @@ where
     /// # fn main() -> Result<(), AuthError> {
     /// # use authorization::{JwtPayload, Secret, AuthError};
     /// # let payload = JwtPayload::new("hello".to_string(), chrono::Duration::weeks(2));
-    /// # let secret = Secret::new("Secret");
+    /// # let secret = Secret::new_hmac("Secret".to_string());
     /// let jwt: String = payload.encode_jwt_string(&secret)?;
     /// let bearer_string = format!("bearer {}", jwt);
     /// let decoded_payload: JwtPayload<String> = JwtPayload::extract_jwt(bearer_string, &secret)?;
@@ -225,29 +240,68 @@ where
     }
 }
 
-/// A string that acts like a key to validate JWT signatures.
+/// Secret used for authentication
+///
+///
+/// # Warning
+/// No guarantees are made about Rsa and Es variants working yet.
 #[derive(Clone)]
-pub struct Secret(String);
-
+pub enum Secret {
+    /// HMAC secret
+    Hmac(String),
+    /// RSA secrets
+    Rsa {
+        /// Private key
+        private_key: String,
+        /// Public key
+        public_key: String
+    },
+    /// Es secrets
+    Es {
+        /// Private key
+        private_key: String,
+        /// Public key
+        public_key: String
+    }
+}
 impl Debug for Secret {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
-        let first_five_letters = self.0.chars().take(5).collect::<String>();
-        let length = self.0.len();
+        let (first_five_letters, length) = match self {
+            Secret::Hmac(key) => {
+                (key.chars().take(5).collect::<String>(), key.len())
+            },
+            Secret::Rsa {private_key, ..} => {
+                (private_key.chars().take(5).collect::<String>(), private_key.len())
+            },
+            Secret::Es {private_key, ..} => {
+                (private_key.chars().take(5).collect::<String>(), private_key.len())
+            },
+        };
         f.debug_struct("Secret")
-            .field("secret", &format!("{}[redacted]", first_five_letters))
+            .field("secret", &format!("{}[REDACTED]", first_five_letters))
             .field("(secret_length)", &format!("{}", length))
             .finish()
     }
 }
 
 impl Secret {
-    /// Creates a new secret.
-    pub fn new(s: &str) -> Self {
-        if s.len() < 100 {
-            warn!("Secret length is under 100 characters. There may not be sufficient entropy to be secure.")
+    /// Create a new HMAC secret.
+    pub fn new_hmac(key: String) -> Self {
+        if key.len() < 100 {
+            warn!("HMAC key is fewer than 100 characters");
         }
-        Secret(s.to_string())
+        Secret::Hmac(key)
     }
+
+    /// Create a new RSA secret
+    pub fn new_rsa(private_key: String, public_key: String) -> Self {
+        Secret::Rsa{private_key, public_key}
+    }
+    /// Create a new Es secret
+    pub fn new_es(private_key: String, public_key: String) -> Self {
+        Secret::Es{private_key, public_key}
+    }
+
 }
 
 /// The prefix before the encoded JWT in the header value that corresponds to the "Authorization" key.
@@ -263,7 +317,7 @@ mod test {
     #[test]
     fn encode_decode() {
         let payload = JwtPayload::new("hello_there".to_string(), Duration::weeks(2));
-        let secret = Secret::new("secret");
+        let secret = Secret::new_hmac("secret".to_string());
 
         let encoded = payload.encode_jwt_string(&secret).unwrap();
         let decoded = JwtPayload::<String>::decode_jwt_string(&encoded, &secret).unwrap();
@@ -275,7 +329,7 @@ mod test {
     #[test]
     fn encode_extract() {
         let payload = JwtPayload::new("hello_there".to_string(), Duration::weeks(2));
-        let secret = Secret::new("secret");
+        let secret = Secret::new_hmac("secret".to_string());
         let encoded = payload.encode_jwt_string(&secret).unwrap();
         let header_string = format!("{} {}", BEARER, encoded);
 

@@ -114,7 +114,7 @@ mod unit {
 
     #[test]
     fn pass_jwt_filter() {
-        let secret = Secret::new("yeet");
+        let secret = Secret::new_hmac("yeet".to_string());
         let conf = StateConfig {
             secret: Some(secret.clone()),
             max_pool_size: None,
@@ -135,7 +135,7 @@ mod unit {
 
     #[test]
     fn does_not_pass_jwt_filter() {
-        let secret = Secret::new("yeet");
+        let secret = Secret::new_hmac("yeet".to_string());
         let conf = StateConfig {
             secret: Some(secret.clone()),
             max_pool_size: None,
@@ -150,7 +150,7 @@ mod unit {
 
     #[test]
     fn pass_user_filter() {
-        let secret = Secret::new("yeet");
+        let secret = Secret::new_hmac("yeet".to_string());
         let conf = StateConfig {
             secret: Some(secret.clone()),
             max_pool_size: None,
@@ -176,7 +176,7 @@ mod unit {
 
     #[test]
     fn pass_optional_user_filter_empty() {
-        let secret = Secret::new("yeet");
+        let secret = Secret::new_hmac("yeet".to_string());
         let conf = StateConfig {
             secret: Some(secret.clone()),
             max_pool_size: None,
@@ -191,7 +191,7 @@ mod unit {
 
     #[test]
     fn pass_optional_user_filter_with_jwt() {
-        let secret = Secret::new("yeet");
+        let secret = Secret::new_hmac("yeet".to_string());
         let conf = StateConfig {
             secret: Some(secret.clone()),
             max_pool_size: None,
@@ -215,7 +215,7 @@ mod unit {
         let mut payload = JwtPayload::new("hello_there".to_string(), Duration::weeks(-1)); // Expire a week ago
         payload.iat = (chrono::Utc::now() - Duration::weeks(2)).naive_utc(); // "issued at" 2 weeks ago
 
-        let secret = Secret::new("secret");
+        let secret = Secret::new_hmac("yeet".to_string());
         let encoded = payload.encode_jwt_string(&secret).unwrap();
         let header_string = format!("{} {}", BEARER, encoded);
 

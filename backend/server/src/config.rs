@@ -101,7 +101,7 @@ impl Config {
 
                 let tls_enabled = matches.is_present("tls");
 
-                let secret = matches.value_of("secret").map(Secret::new);
+                let secret = matches.value_of("secret").map(String::from).map(Secret::new_hmac);
 
                 let max_pool_size: u32 = if let Some(size) = matches.value_of("max_pool_size") {
                     size.parse().expect("Pool size must be an integer.")

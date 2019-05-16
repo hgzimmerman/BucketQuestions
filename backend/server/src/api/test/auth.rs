@@ -3,14 +3,14 @@ use crate::{
     state::{test_util::execute_test_on_repository, State},
     util::test_util::deserialize,
 };
-use authorization::Secret;
+use authorization::{Secret};
 use db::{test::empty_fixture::EmptyFixture, RepositoryProvider};
 use warp::test::request;
 
 #[test]
 fn get_auth_link() {
     execute_test_on_repository(|_fix: &EmptyFixture, provider: RepositoryProvider| {
-        let state = State::testing_init(provider, Secret::new("hello"));
+        let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
         let filter = routes(&state);
 
         let resp = request()

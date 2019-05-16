@@ -1,4 +1,4 @@
-use authorization::Secret;
+use authorization::{Secret};
 use std::path::PathBuf;
 use url::Url;
 

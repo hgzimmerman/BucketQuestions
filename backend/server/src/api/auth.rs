@@ -286,7 +286,7 @@ pub mod test {
     #[test]
     fn get_jwt_util_creates_user() {
         execute_test_on_repository(|_fix: &EmptyFixture, provider: RepositoryProvider| {
-            let state = State::testing_init(provider.clone(), Secret::new("hello"));
+            let state = State::testing_init(provider.clone(), Secret::new_hmac("hello".to_string()));
 
             let repo = provider.get_repo().expect("Should get repo.");
             repo.get_user_by_google_id(TEST_GOOGLE_USER_ID.to_string())
@@ -303,7 +303,7 @@ pub mod test {
     #[test]
     fn get_jwt_util_gets_user() {
         execute_test_on_repository(|_fix: &UserFixture, provider: RepositoryProvider| {
-            let state = State::testing_init(provider.clone(), Secret::new("hello"));
+            let state = State::testing_init(provider.clone(), Secret::new_hmac("hello".to_string()));
 
             let repo = provider.get_repo().expect("Should get repo.");
             repo.get_user_by_google_id(TEST_GOOGLE_USER_ID.to_string())

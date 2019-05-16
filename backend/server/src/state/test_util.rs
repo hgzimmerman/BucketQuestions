@@ -2,7 +2,7 @@ use crate::{
     server_auth::create_google_oauth_client,
     state::{state_config::RunningEnvironment, State},
 };
-use authorization::Secret;
+use authorization::{Secret};
 use db::{
     test::{
         fixture::Fixture,

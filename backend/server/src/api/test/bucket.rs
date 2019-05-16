@@ -9,7 +9,7 @@ use crate::{
     state::{test_util::execute_test_on_repository, State},
     util::test_util::deserialize,
 };
-use authorization::{Secret, AUTHORIZATION_HEADER_KEY, BEARER};
+use authorization::{AUTHORIZATION_HEADER_KEY, BEARER, Secret};
 use db::{
     bucket::db_types::Bucket,
     bucket_user_relation::db_types::{BucketUserPermissions, BucketUserRelation},
@@ -26,7 +26,7 @@ use warp::{http::status::StatusCode, test::request};
 fn create_bucket() {
     execute_test_on_repository(
         |_fix: &UserBucketRelationFixture, provider: RepositoryProvider| {
-            let state = State::testing_init(provider, Secret::new("hello"));
+            let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
             let filter = routes(&state);
             let jwt = get_jwt(&state);
 
@@ -57,7 +57,7 @@ fn create_bucket() {
 fn create_bucket_duplicates() {
     execute_test_on_repository(
         |_fix: &UserBucketRelationFixture, provider: RepositoryProvider| {
-            let state = State::testing_init(provider, Secret::new("hello"));
+            let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
             let filter = routes(&state);
             let jwt = get_jwt(&state);
 
@@ -117,7 +117,7 @@ fn create_bucket_duplicates() {
 fn get_bucket() {
     execute_test_on_repository(
         |fix: &UserBucketRelationFixture, provider: RepositoryProvider| {
-            let state = State::testing_init(provider, Secret::new("hello"));
+            let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
             let filter = routes(&state);
 
             let url = format!("/api/bucket/slug/{}", fix.bucket.bucket_slug);
@@ -137,7 +137,7 @@ fn get_bucket() {
 fn get_bucket_by_uuid() {
     execute_test_on_repository(
         |fix: &UserBucketRelationFixture, provider: RepositoryProvider| {
-            let state = State::testing_init(provider, Secret::new("hello"));
+            let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
             let filter = routes(&state);
 
             let url = format!("/api/bucket/{}", fix.bucket.uuid);
@@ -156,7 +156,7 @@ fn get_bucket_by_uuid() {
 fn get_buckets_user_is_in() {
     execute_test_on_repository(
         |fix: &UserBucketRelationFixture, provider: RepositoryProvider| {
-            let state = State::testing_init(provider, Secret::new("hello"));
+            let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
             let filter = routes(&state);
 
             let jwt = get_jwt(&state);
@@ -182,7 +182,7 @@ fn get_buckets_user_is_in() {
 fn get_public_buckets() {
     execute_test_on_repository(
         |fix: &UserBucketRelationFixture, provider: RepositoryProvider| {
-            let state = State::testing_init(provider, Secret::new("hello"));
+            let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
             let filter = routes(&state);
 
             let url = "/api/bucket/public";
@@ -201,7 +201,7 @@ fn get_public_buckets() {
 #[test]
 fn add_self_to_bucket() {
     execute_test_on_repository(|fix: &BucketAndUserFixture, provider: RepositoryProvider| {
-        let state = State::testing_init(provider, Secret::new("hello"));
+        let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
         let filter = routes(&state);
         let jwt = get_jwt(&state);
 
@@ -224,7 +224,7 @@ fn add_self_to_bucket() {
 fn add_self_to_bucket_no_duplicates() {
     execute_test_on_repository(
         |fix: &UserBucketRelationFixture, provider: RepositoryProvider| {
-            let state = State::testing_init(provider, Secret::new("hello"));
+            let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
             let filter = routes(&state);
             let jwt = get_jwt(&state);
 
@@ -248,7 +248,7 @@ fn add_self_to_bucket_no_duplicates() {
 fn get_permissions_for_self() {
     execute_test_on_repository(
         |fix: &UserBucketRelationFixture, provider: RepositoryProvider| {
-            let state = State::testing_init(provider, Secret::new("hello"));
+            let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
             let filter = routes(&state);
             let jwt = get_jwt(&state);
 
@@ -283,7 +283,7 @@ fn get_permissions_for_self() {
 fn set_permissions() {
     execute_test_on_repository(
         |fix: &UserBucketRelationFixture, provider: RepositoryProvider| {
-            let state = State::testing_init(provider, Secret::new("hello"));
+            let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
             let filter = routes(&state);
             let jwt = get_jwt(&state);
 
@@ -322,7 +322,7 @@ fn set_permissions() {
 fn set_bucket_flags() {
     execute_test_on_repository(
         |fix: &UserBucketRelationFixture, provider: RepositoryProvider| {
-            let state = State::testing_init(provider, Secret::new("hello"));
+            let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
             let filter = routes(&state);
             let jwt = get_jwt(&state);
 
@@ -356,7 +356,7 @@ fn set_bucket_flags() {
 fn get_users_in_bucket() {
     execute_test_on_repository(
         |fix: &UserBucketRelationFixture, provider: RepositoryProvider| {
-            let state = State::testing_init(provider, Secret::new("hello"));
+            let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
             let filter = routes(&state);
             let jwt = get_jwt(&state);
 

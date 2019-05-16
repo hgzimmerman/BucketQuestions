@@ -3,14 +3,14 @@ use crate::{
     state::{test_util::execute_test_on_repository, State},
     util::test_util::deserialize,
 };
-use authorization::{Secret, AUTHORIZATION_HEADER_KEY, BEARER};
+use authorization::{AUTHORIZATION_HEADER_KEY, BEARER, Secret};
 use db::{answer::db_types::Answer, test::answer_fixture::AnswerFixture, RepositoryProvider};
 use warp::{http::StatusCode, test::request};
 
 #[test]
 fn answer_question_with_user() {
     execute_test_on_repository(|fix: &AnswerFixture, provider: RepositoryProvider| {
-        let state = State::testing_init(provider, Secret::new("hello"));
+        let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
         let filter = routes(&state);
         let jwt = get_jwt(&state);
 
@@ -42,7 +42,7 @@ fn answer_question_with_user() {
 #[test]
 fn answer_question_without_user() {
     execute_test_on_repository(|fix: &AnswerFixture, provider: RepositoryProvider| {
-        let state = State::testing_init(provider, Secret::new("hello"));
+        let state = State::testing_init(provider, Secret::new_hmac("hello".to_string()));
         let filter = routes(&state);
 
         let url = "/api/answer";
