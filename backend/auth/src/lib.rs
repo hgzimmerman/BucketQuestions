@@ -1,5 +1,7 @@
 //! This is a crate for wrapping common JWT functionality needed for securing information in a webapp.
 //! It is flexible in that it can support arbitrary payload subjects.
+//!
+//! It currently only supports HS256 keys.
 
 #![deny(
     missing_docs,
@@ -66,11 +68,11 @@ impl Display for AuthError {
 /// The payload section of the JWT
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct JwtPayload<T> {
-    /// Issue date
+    /// Issue date of the token
     pub iat: NaiveDateTime,
-    /// Subject (the user being authenticated by this token)
+    /// Subject - the information being authenticated by this token
     pub sub: T,
-    /// Expire date
+    /// Expiration date of the token
     pub exp: NaiveDateTime,
 }
 
@@ -78,15 +80,16 @@ impl<T> JwtPayload<T>
 where
     for<'de> T: Serialize + Deserialize<'de> + Send,
 {
-    /// Creates a new token for the user that will expire after a specified time.
+    /// Creates a new token for the subject that will expire after a specified time.
     ///
     /// # Arguments
-    /// * subject - The subject of the JWT, it holds the contents that should be trusted by the server on return trips.
+    /// * subject - The subject of the JWT, it holds the contents that can be trusted by the server on return trips.
     /// * lifetime - How long the JWT will be valid for after its creation.
     ///
+    /// # Example
     /// ```
-    ///     use authorization::JwtPayload;
-    ///     let payload = JwtPayload::new("hello".to_string(), chrono::Duration::weeks(2));
+    /// # use authorization::JwtPayload;
+    /// let payload = JwtPayload::new("hello".to_string(), chrono::Duration::weeks(2));
     /// ```
     pub fn new(subject: T, lifetime: Duration) -> Self {
         let now = chrono::Utc::now().naive_utc();
@@ -99,11 +102,13 @@ where
     }
 
     /// Gets the subject of the JWT payload.
+    ///
+    /// # Example
     /// ```
     /// # use authorization::{JwtPayload};
-    ///     let payload = JwtPayload::new("hello".to_string(), chrono::Duration::weeks(4));
-    ///     let subject = payload.subject();
-    ///     assert_eq!(subject, "hello".to_string());
+    /// let payload = JwtPayload::new("hello".to_string(), chrono::Duration::weeks(4));
+    /// let subject = payload.subject();
+    /// assert_eq!(subject, "hello".to_string());
     /// ```
     pub fn subject(self) -> T {
         self.sub
@@ -112,12 +117,14 @@ where
     /// Validates if the token is expired or not.
     /// It also checks if the token was issued in the future, to further complicate the attack
     /// surface of someone creating forgeries.
+    ///
+    /// # Example
     /// ```
     /// # use authorization::{AuthError, JwtPayload};
     /// # fn main() -> Result<(), AuthError> {
-    ///     let payload = JwtPayload::new("hello".to_string(), chrono::Duration::weeks(4));
-    ///     let payload = payload.validate_dates()?;
-    ///     # Ok(())
+    /// let payload = JwtPayload::new("hello".to_string(), chrono::Duration::weeks(4));
+    /// let payload = payload.validate_dates()?;
+    /// # Ok(())
     /// # }
     /// ```
     pub fn validate_dates(self) -> Result<Self, AuthError> {
@@ -129,16 +136,17 @@ where
         }
     }
 
-    /// Encodes the payload, producing a JWT in string form.
+    /// Encodes the payload, producing a JWT String.
     ///
+    /// # Example
     /// ```
     /// # use authorization::AuthError;
     /// # fn main() -> Result<(), AuthError> {
-    ///     # use authorization::{JwtPayload, Secret};
-    ///     let payload = JwtPayload::new("hello".to_string(), chrono::Duration::weeks(2));
-    ///     let secret = Secret::new("Secret");
-    ///     let jwt = payload.encode_jwt_string(&secret)?;
-    ///     # Ok(())
+    /// # use authorization::{JwtPayload, Secret};
+    /// let payload = JwtPayload::new("hello".to_string(), chrono::Duration::weeks(2));
+    /// let secret = Secret::new("Secret");
+    /// let jwt = payload.encode_jwt_string(&secret)?;
+    /// # Ok(())
     /// # }
     /// ```
     pub fn encode_jwt_string(&self, secret: &Secret) -> Result<String, AuthError> {
@@ -160,16 +168,17 @@ where
     /// Decodes the JWT into its payload.
     /// If the signature doesn't match, then a decode error is thrown.
     ///
+    /// # Example
     /// ```
     /// # use authorization::AuthError;
     /// # fn main() -> Result<(), AuthError> {
-    ///     # use authorization::{JwtPayload, Secret};
-    ///     # let secret = Secret::new("Secret");
-    ///     let payload = JwtPayload::new("hello".to_string(), chrono::Duration::weeks(2));
-    ///     let jwt: String = payload.encode_jwt_string(&secret)?;
-    ///     let decoded_payload: JwtPayload<String> = JwtPayload::decode_jwt_string(&jwt, &secret)?;
-    ///     assert_eq!(payload, decoded_payload);
-    ///     # Ok(())
+    /// # use authorization::{JwtPayload, Secret};
+    /// # let secret = Secret::new("Secret");
+    /// let payload = JwtPayload::new("hello".to_string(), chrono::Duration::weeks(2));
+    /// let jwt: String = payload.encode_jwt_string(&secret)?;
+    /// let decoded_payload: JwtPayload<String> = JwtPayload::decode_jwt_string(&jwt, &secret)?;
+    /// assert_eq!(payload, decoded_payload);
+    /// # Ok(())
     /// # }
     /// ```
     pub fn decode_jwt_string(jwt_str: &str, secret: &Secret) -> Result<JwtPayload<T>, AuthError> {
@@ -185,18 +194,19 @@ where
         Ok(jwt)
     }
 
-    /// Removes the jwt from the bearer string, and decodes it to determine if it was signed properly.
+    /// Extracts the JWT from the bearer string, and decodes it to determine if it was signed properly.
     ///
+    /// # Example
     /// ```
     /// # use authorization::AuthError;
     /// # fn main() -> Result<(), AuthError> {
-    ///     # use authorization::{JwtPayload, Secret, AuthError};
-    ///     # let payload = JwtPayload::new("hello".to_string(), chrono::Duration::weeks(2));
-    ///     # let secret = Secret::new("Secret");
-    ///     let jwt: String = payload.encode_jwt_string(&secret)?;
-    ///     let bearer_string = format!("bearer {}", jwt);
-    ///     let decoded_payload: JwtPayload<String> = JwtPayload::extract_jwt(bearer_string, &secret)?;
-    ///     # Ok(())
+    /// # use authorization::{JwtPayload, Secret, AuthError};
+    /// # let payload = JwtPayload::new("hello".to_string(), chrono::Duration::weeks(2));
+    /// # let secret = Secret::new("Secret");
+    /// let jwt: String = payload.encode_jwt_string(&secret)?;
+    /// let bearer_string = format!("bearer {}", jwt);
+    /// let decoded_payload: JwtPayload<String> = JwtPayload::extract_jwt(bearer_string, &secret)?;
+    /// # Ok(())
     /// # }
     /// ```
     pub fn extract_jwt(bearer_string: String, secret: &Secret) -> Result<JwtPayload<T>, AuthError> {
