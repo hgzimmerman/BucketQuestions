@@ -16,10 +16,10 @@
 
 use chrono::{Duration, NaiveDateTime};
 use frank_jwt::{decode, encode, Algorithm};
+use log::warn;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::fmt::{self, Debug, Display, Error, Formatter};
-use log::warn;
 
 /// Enumeration of all errors that can occur while authenticating.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
@@ -255,7 +255,6 @@ pub const BEARER: &str = "bearer";
 /// The key used in the header to map to the authentication data.
 pub const AUTHORIZATION_HEADER_KEY: &str = "Authorization";
 
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -283,6 +282,5 @@ mod test {
         let decoded = JwtPayload::<String>::extract_jwt(header_string, &secret).unwrap();
         assert_eq!(decoded, payload)
     }
-
 
 }

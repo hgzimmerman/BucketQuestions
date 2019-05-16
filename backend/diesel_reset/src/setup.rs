@@ -1,5 +1,5 @@
 use crate::reset::{reset_database, run_migrations};
-use diesel::{Connection, PgConnection, r2d2};
+use diesel::{r2d2, Connection, PgConnection};
 //use pool::{init_pool, Pool, PoolConfig};
 
 use std::sync::{Mutex, MutexGuard};
@@ -34,16 +34,13 @@ lazy_static! {
 
 pub const MIGRATIONS_DIRECTORY: &str = "../db/migrations";
 
-
 /// Sole purpose is opaquely containing a lock on the admin connection.
 /// This keeps the global mutex locked, and prevents tests from clobbering each other
 /// by resetting each other's databases.
 pub struct AdminLock<'a>(MutexGuard<'a, PgConnection>);
 
-
 use diesel::r2d2::ConnectionManager;
-pub fn setup_pool_sequential<'a>() -> (r2d2::Pool<ConnectionManager<PgConnection>>, AdminLock<'a>)
-{
+pub fn setup_pool_sequential<'a>() -> (r2d2::Pool<ConnectionManager<PgConnection>>, AdminLock<'a>) {
     let admin_conn: MutexGuard<PgConnection> = match CONN.lock() {
         Ok(guard) => guard,
         Err(poisoned) => poisoned.into_inner(), // Don't care if the mutex is poisoned
@@ -52,12 +49,10 @@ pub fn setup_pool_sequential<'a>() -> (r2d2::Pool<ConnectionManager<PgConnection
 
     let manager = ConnectionManager::<PgConnection>::new(DATABASE_URL);
 
-    let builder = r2d2::Pool::builder()
-        .max_size(5)
-        .min_idle(Some(2));
+    let builder = r2d2::Pool::builder().max_size(5).min_idle(Some(2));
     let pool = builder.build(manager).expect("Could not build pool");
     run_migrations(&pool.get().unwrap(), MIGRATIONS_DIRECTORY);
-    (pool, AdminLock(admin_conn) )
+    (pool, AdminLock(admin_conn))
 }
 
 /// Cleanup wrapper.
@@ -73,7 +68,11 @@ impl Drop for Cleanup {
 
 // TODO determine if this properly drops the db
 /// Creates a random db using the admin_db, then deletes it when the test finishes
-pub fn setup_pool_random_db(admin_conn: PgConnection, url_part: &str, migrations_directory: &str) -> (r2d2::Pool<ConnectionManager<PgConnection>>, Cleanup) {
+pub fn setup_pool_random_db(
+    admin_conn: PgConnection,
+    url_part: &str,
+    migrations_directory: &str,
+) -> (r2d2::Pool<ConnectionManager<PgConnection>>, Cleanup) {
     let db_name = nanoid::simple(); // Gets a random url-safe string.
     crate::reset::create_database(&admin_conn, &db_name).expect("Couldn't create database");
 

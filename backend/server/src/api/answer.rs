@@ -2,7 +2,7 @@ use crate::{
     error::Error,
     server_auth::optional_user_filter,
     state::State,
-    util::{sized_body_json, json_or_reject},
+    util::{json_or_reject, sized_body_json},
 };
 use db::{
     answer::db_types::{Answer, NewAnswer},

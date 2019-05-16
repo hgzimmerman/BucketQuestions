@@ -2,7 +2,7 @@
 use crate::{
     api::{
         auth::test::get_jwt,
-        bucket::{ChangeBucketFlagsRequest, SetPermissionsRequest},
+        bucket::{ChangeBucketFlagsRequest, NewBucketRequest, SetPermissionsRequest},
         routes,
     },
     error::ErrorResponse,
@@ -11,7 +11,7 @@ use crate::{
 };
 use authorization::{Secret, AUTHORIZATION_HEADER_KEY, BEARER};
 use db::{
-    bucket::db_types::{Bucket},
+    bucket::db_types::Bucket,
     bucket_user_relation::db_types::{BucketUserPermissions, BucketUserRelation},
     test::{
         bucket_and_user_fixture::BucketAndUserFixture,
@@ -21,7 +21,6 @@ use db::{
     RepositoryProvider,
 };
 use warp::{http::status::StatusCode, test::request};
-use crate::api::bucket::NewBucketRequest;
 
 #[test]
 fn create_bucket() {
@@ -80,8 +79,6 @@ fn create_bucket_duplicates() {
             let bucket = deserialize::<Bucket>(&resp);
             assert_eq!(bucket.bucket_name, new_bucket.bucket_name);
             assert_eq!(bucket.bucket_slug, expected_slug);
-
-
 
             let expected_slug = "i-m-a-bucket-0";
             let resp = request()

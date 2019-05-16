@@ -1,6 +1,6 @@
 use crate::{
     bucket_user_relation::db_types::{BucketUserPermissionsChangeset, NewBucketUserRelation},
-    test::{bucket_user_relation_fixture::UserBucketRelationFixture, execute_test},
+    test::{bucket_user_relation_fixture::UserBucketRelationFixture, util::execute_test},
     BoxedRepository,
 };
 

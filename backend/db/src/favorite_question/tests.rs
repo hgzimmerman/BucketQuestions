@@ -1,6 +1,6 @@
 use crate::{
     favorite_question::db_types::NewFavoriteQuestionRelation,
-    test::{execute_test, question_fixture::QuestionFixture},
+    test::{question_fixture::QuestionFixture, util::execute_test},
     BoxedRepository,
 };
 

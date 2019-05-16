@@ -1,6 +1,6 @@
 use crate::{
     question::db_types::{NewQuestion, Question},
-    test::{bucket_fixture::BucketFixture, execute_test, question_fixture::QuestionFixture},
+    test::{bucket_fixture::BucketFixture, question_fixture::QuestionFixture, util::execute_test},
     BoxedRepository,
 };
 

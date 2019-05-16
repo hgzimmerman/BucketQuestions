@@ -6,7 +6,7 @@ use diesel::result::Error;
 
 mod bucket {
     use super::*;
-    use crate::{test::execute_test, BoxedRepository};
+    use crate::{test::util::execute_test, BoxedRepository};
 
     #[test]
     fn create_bucket() {

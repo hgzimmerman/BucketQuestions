@@ -9,10 +9,6 @@ license = "MIT"
 name = "server_bin"
 path = "src/main.rs"
 
-
-[features]
-integration = ["db/integration"] # use integration tests instead of unit tests
-
 [dependencies]
 warp = { version = "0.1.15", features = ["tls"] }
 apply = "0.2.2"

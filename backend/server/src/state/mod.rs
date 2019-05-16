@@ -3,9 +3,9 @@ pub mod state_config;
 #[cfg(test)]
 pub mod test_util;
 
-
-use crate::{error::Error};
-use crate::{server_auth::create_google_oauth_client, state::state_config::StateConfig};
+use crate::{
+    error::Error, server_auth::create_google_oauth_client, state::state_config::StateConfig,
+};
 use apply::Apply;
 use authorization::Secret;
 use db::{Repository, RepositoryProvider};
@@ -117,9 +117,8 @@ impl State {
 
     /// Gets the secret used for authoring JWTs
     pub fn secret(&self) -> impl Filter<Extract = (Secret,), Error = Rejection> + Clone {
-
         let secret = self.secret.clone();
-        warp::any().and_then(move || -> Result<Secret, Rejection> {Ok(secret.clone())})
+        warp::any().and_then(move || -> Result<Secret, Rejection> { Ok(secret.clone()) })
     }
 
     /// Gets the https client used for making dependent api calls.

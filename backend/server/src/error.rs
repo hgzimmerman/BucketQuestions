@@ -7,16 +7,14 @@
 use apply::Apply;
 use authorization::AuthError;
 use diesel::result::DatabaseErrorKind;
-use log::error;
+use log::{error, info};
 use serde::{Deserialize, Serialize};
 use std::{
     error::Error as StdError,
     fmt::{self, Display},
 };
-use warp::{http::StatusCode, reject::Rejection, reply::Reply};
 use strum_macros::AsRefStr;
-use log::info;
-
+use warp::{http::StatusCode, reject::Rejection, reply::Reply};
 
 /// Server-wide error variants.
 /// These integrate tightly with the error rewriting infrastructure provided by `warp`.
@@ -151,7 +149,6 @@ pub fn customize_error(err: Rejection) -> Result<impl Reply, Rejection> {
             }
         }
     };
-
 
     let (error_response, code) = cause.as_error_response()?;
     let json = warp::reply::json(&error_response);

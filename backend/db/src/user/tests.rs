@@ -1,5 +1,5 @@
 use crate::{
-    test::{empty_fixture::EmptyFixture, execute_test, user_fixture::UserFixture},
+    test::{empty_fixture::EmptyFixture, user_fixture::UserFixture, util::execute_test},
     user::db_types::NewUser,
     BoxedRepository,
 };

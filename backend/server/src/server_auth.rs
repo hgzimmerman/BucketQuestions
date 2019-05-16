@@ -9,7 +9,7 @@
 //!
 
 use crate::{error::Error, state::State};
-use authorization::{JwtPayload, AUTHORIZATION_HEADER_KEY, Secret};
+use authorization::{JwtPayload, Secret, AUTHORIZATION_HEADER_KEY};
 use db::user::db_types::User;
 use oauth2::{
     basic::BasicClient, prelude::*, AuthUrl, ClientId, ClientSecret, CsrfToken, RedirectUrl, Scope,
@@ -79,7 +79,6 @@ where
         })
         .boxed()
 }
-
 
 /// If the user has a JWT, then the user has basic user privileges.
 ///
@@ -163,9 +162,9 @@ mod unit {
         let user = User {
             uuid,
             google_user_id: "yeet".to_string(),
-            google_name: None
+            google_name: None,
         };
-        let jwt:JwtPayload<User> = JwtPayload::new(user, Duration::weeks(2));
+        let jwt: JwtPayload<User> = JwtPayload::new(user, Duration::weeks(2));
         let jwt = jwt.encode_jwt_string(&secret).unwrap();
 
         let filter = user_filter(&state);
@@ -228,12 +227,10 @@ mod unit {
         };
         let state = State::new(conf);
 
-
         let filter = jwt_filter::<String>(&state);
 
         assert!(!warp::test::request()
             .header(AUTHORIZATION_HEADER_KEY, header_string)
-            .matches(&filter)
-        );
+            .matches(&filter));
     }
 }

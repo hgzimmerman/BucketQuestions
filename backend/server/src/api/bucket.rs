@@ -2,7 +2,7 @@ use crate::{
     error::Error,
     server_auth::user_filter,
     state::State,
-    util::{sized_body_json, json_or_reject},
+    util::{json_or_reject, sized_body_json},
 };
 use db::{
     bucket::db_types::{Bucket, BucketFlagChangeset, NewBucket},
@@ -57,7 +57,7 @@ pub struct ChangeBucketFlagsRequest {
 /// Request to create a bucket.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NewBucketRequest {
-    pub bucket_name: String
+    pub bucket_name: String,
 }
 
 pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
@@ -166,8 +166,6 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .boxed()
 }
 
-
-
 fn create_bucket_handler(
     request: NewBucketRequest,
     user_uuid: Uuid,
@@ -175,7 +173,10 @@ fn create_bucket_handler(
 ) -> Result<Bucket, Error> {
     info!("add_self_to_bucket_handler");
 
-    fn bucket_already_exists(slug: &String, conn: &BoxedRepository) -> Result<bool, diesel::result::Error> {
+    fn bucket_already_exists(
+        slug: &String,
+        conn: &BoxedRepository,
+    ) -> Result<bool, diesel::result::Error> {
         conn.get_bucket_by_slug(slug.clone())
             .map(|_| true)
             .or_else(|e| {
@@ -195,12 +196,10 @@ fn create_bucket_handler(
         id += 1;
     }
 
-
     let new_bucket = NewBucket {
         bucket_name: request.bucket_name,
-        bucket_slug: candidate_slug
+        bucket_slug: candidate_slug,
     };
-
 
     let bucket = conn.create_bucket(new_bucket)?;
     let new_relation = NewBucketUserRelation {
@@ -349,15 +348,13 @@ mod tests {
     use db::{
         test::{
             bucket_fixture::BucketFixture, bucket_user_relation_fixture::UserBucketRelationFixture,
-            execute_test, user_fixture::UserFixture,
+            user_fixture::UserFixture, util::execute_test,
         },
         user::db_types::NewUser,
     };
 
     #[test]
     fn add_self_to_bucket() {
-        //        let (fixture, db) = setup::<BucketFixture>();
-
         execute_test(|fixture: &BucketFixture, db: BoxedRepository| {
             let new_user = NewUser {
                 google_user_id: "12".to_string(),

@@ -1,11 +1,18 @@
-use crate::state::state_config::RunningEnvironment;
-use db::test::{fixture::Fixture, TestType, execute_pool_test2, setup_mock_provider};
-use crate::state::State;
-use hyper_tls::HttpsConnector;
-use hyper::{Client, Body};
-use db::RepositoryProvider;
+use crate::{
+    server_auth::create_google_oauth_client,
+    state::{state_config::RunningEnvironment, State},
+};
 use authorization::Secret;
-use crate::server_auth::create_google_oauth_client;
+use db::{
+    test::{
+        fixture::Fixture,
+        util::{execute_pool_test2, setup_mock_provider},
+        TestType,
+    },
+    RepositoryProvider,
+};
+use hyper::{Body, Client};
+use hyper_tls::HttpsConnector;
 use std::path::PathBuf;
 
 impl State {
@@ -47,7 +54,7 @@ where
         }
         TestType::Integration => {
             execute_pool_test2(f);
-        },
+        }
         TestType::Both => {
             let (fixture, mock): (Fix, RepositoryProvider) = setup_mock_provider();
             f(&fixture, mock);

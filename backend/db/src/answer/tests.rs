@@ -1,6 +1,6 @@
 use crate::{
     answer::db_types::{Answer, NewAnswer},
-    test::{answer_fixture::AnswerFixture, execute_test},
+    test::{answer_fixture::AnswerFixture, util::execute_test},
     BoxedRepository,
 };
 
