@@ -1,59 +1,25 @@
-use crate::reset::{reset_database, run_migrations};
-use diesel::{r2d2, Connection, PgConnection};
-//use pool::{init_pool, Pool, PoolConfig};
+use crate::reset::{run_migrations};
+use diesel::{r2d2, PgConnection};
+#[cfg(test)]
+use diesel::Connection;
 
-use std::sync::{Mutex, MutexGuard};
-
-pub const DATABASE_NAME: &str = env!("TEST_DATABASE_NAME");
-
-/// Points to the database that tests will be performed on.
-/// The database schema will be destroyed and recreated before every test.
-/// It absolutely should _never_ point to a production database,
-/// as tests ran using it will likely create an admin account that has known login credentials.
-pub const DATABASE_URL: &str = env!("TEST_DATABASE_URL");
+/// The origin (scheme, user, password, address, port) of the test database.
+///
+/// This determines which database server is connected to, but allows for specification of
+/// a specific database instance within the server to connect to and run tests with.
+#[cfg(test)]
+pub const DATABASE_ORIGIN: &str = env!("TEST_DATABASE_ORIGIN");
 
 /// Should point to the base postgres account.
-/// One that has authority to create and destroy other databases.
+/// One that has authority to create and destroy other database instances.
+///
+/// It is expected to be on the same database server as the one indicated by DATABASE_ORIGIN.
 pub const DROP_DATABASE_URL: &str = env!("DROP_DATABASE_URL");
 
-// This creates a singleton of the base database connection.
-//
-// The base database connection is required, because you cannot drop the other database from itself.
-//
-// Because it is wrapped in a mutex, only one test at a time can access it.
-// The setup method will lock it and use it to reset the database.
-//
-// It is ok if a test fails and poisons the mutex, as the one place where it is used disregards the poison.
-// Disregarding the poison is fine because code using the mutex-ed value never modifies the value,
-// so there is no indeterminate state to contend with if a prior test has panicked.
-lazy_static! {
-    static ref CONN: Mutex<PgConnection> = Mutex::new(
-        PgConnection::establish(DROP_DATABASE_URL).expect("Administration database not available")
-    );
-}
 
 pub const MIGRATIONS_DIRECTORY: &str = "../db/migrations";
 
-/// Sole purpose is opaquely containing a lock on the admin connection.
-/// This keeps the global mutex locked, and prevents tests from clobbering each other
-/// by resetting each other's databases.
-pub struct AdminLock<'a>(MutexGuard<'a, PgConnection>);
-
 use diesel::r2d2::ConnectionManager;
-pub fn setup_pool_sequential<'a>() -> (r2d2::Pool<ConnectionManager<PgConnection>>, AdminLock<'a>) {
-    let admin_conn: MutexGuard<PgConnection> = match CONN.lock() {
-        Ok(guard) => guard,
-        Err(poisoned) => poisoned.into_inner(), // Don't care if the mutex is poisoned
-    };
-    reset_database(&admin_conn, DATABASE_NAME);
-
-    let manager = ConnectionManager::<PgConnection>::new(DATABASE_URL);
-
-    let builder = r2d2::Pool::builder().max_size(5).min_idle(Some(2));
-    let pool = builder.build(manager).expect("Could not build pool");
-    run_migrations(&pool.get().unwrap(), MIGRATIONS_DIRECTORY);
-    (pool, AdminLock(admin_conn))
-}
 
 /// Cleanup wrapper.
 /// Contains the admin connection and the name of the database (not the whole url).
@@ -66,7 +32,6 @@ impl Drop for Cleanup {
     }
 }
 
-// TODO determine if this properly drops the db
 /// Creates a random db using the admin_db, then deletes it when the test finishes
 pub fn setup_pool_random_db(
     admin_conn: PgConnection,
@@ -74,6 +39,22 @@ pub fn setup_pool_random_db(
     migrations_directory: &str,
 ) -> (r2d2::Pool<ConnectionManager<PgConnection>>, Cleanup) {
     let db_name = nanoid::simple(); // Gets a random url-safe string.
+    // delegate logic to this function
+    setup_pool_named_db(admin_conn, url_part, migrations_directory, db_name)
+}
+
+/// Utility function that creates a database with a known name and runs migrations on it.
+///
+/// # Note
+/// This function exists to facilitate verification that that the database is still dropped
+/// even if a test panics.
+fn setup_pool_named_db(
+    admin_conn: PgConnection,
+    url_part: &str,
+    migrations_directory: &str,
+    db_name: String
+) -> (r2d2::Pool<ConnectionManager<PgConnection>>, Cleanup) {
+    // This makes the assumption that the provided database name does not already exist on the system.
     crate::reset::create_database(&admin_conn, &db_name).expect("Couldn't create database");
 
     let url = format!("{}/{}", url_part, db_name);
@@ -90,3 +71,27 @@ pub fn setup_pool_random_db(
     let cleanup = Cleanup(admin_conn, db_name);
     (pool, cleanup)
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn cleanup_drops_db_after_panic() {
+        let url_origin = DATABASE_ORIGIN;
+
+        let db_name= "cleanup_drops_db_after_panic_TEST_DB".to_string();
+
+        std::panic::catch_unwind(|| {
+            let admin_conn = PgConnection::establish(DROP_DATABASE_URL).expect("Should be able to connect to admin db");
+            let _ = setup_pool_named_db(admin_conn, url_origin, "../db/migrations", db_name.clone());
+            panic!("expected_panic");
+        })
+            .expect_err("Should catch panic.");
+
+        let admin_conn = PgConnection::establish(DROP_DATABASE_URL).expect("Should be able to connect to admin db");
+        let database_exists: bool = crate::reset::pg_database_exists(&admin_conn, &db_name)
+            .expect("Should determine if database exists");
+        assert!(!database_exists)
+    }
+}
+

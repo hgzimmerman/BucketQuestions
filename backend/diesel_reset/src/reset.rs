@@ -10,23 +10,21 @@ use diesel::{
 };
 use migrations_internals as migrations;
 
-/// Drops the database and then recreates it.
-/// The guarantee that this function provides is that the test database will be in a default
-/// state, without any run migrations after this ran.
-pub fn reset_database(admin_conn: &PgConnection, database_name: &str) {
-    drop_database(&admin_conn, database_name).expect("Could not drop db");
-    create_database(&admin_conn, database_name).expect("Could not create Database");
-}
-
 /// Drops the database, completely removing every table (and therefore every row) in the database.
 pub fn drop_database(admin_conn: &PgConnection, database_name: &str) -> DatabaseResult<()> {
     if pg_database_exists(&admin_conn, database_name)? {
-        println!("Dropping database: {}", database_name);
-        query_helper::drop_database(database_name)
+//        std::thread::sleep(std::time::Duration::new(1,0));
+        let result = query_helper::drop_database(database_name)
             .if_exists()
             .execute(admin_conn)
             .map_err(DatabaseError::from)
-            .map(|_| ())
+            .map(|_| ());
+
+        if let Err(DatabaseError::QueryError(diesel::result::Error::DatabaseError(diesel::result::DatabaseErrorKind::__Unknown, _))) = result {
+            eprintln!("Could not drop DB !!!!!!!");
+        }
+        result
+
     } else {
         Ok(()) // Database has already been dropped
     }
@@ -45,7 +43,7 @@ pub fn create_database(admin_conn: &PgConnection, database_name: &str) -> Databa
 /// Creates tables in the database.
 ///
 /// # Note
-/// THe connection used here should be different from the admin connection used for resetting the database.
+/// The connection used here should be different from the admin connection used for resetting the database.
 /// Instead, the connection should be to the database on which tests will be performed on.
 pub fn run_migrations(conn: &PgConnection, migrations_directory: &str) {
     use std::path::Path;
@@ -63,7 +61,7 @@ table! {
 }
 
 /// Convenience function used when dropping the database.
-fn pg_database_exists(conn: &PgConnection, database_name: &str) -> QueryResult<bool> {
+pub(crate) fn pg_database_exists(conn: &PgConnection, database_name: &str) -> QueryResult<bool> {
     use self::pg_database::dsl::*;
 
     pg_database

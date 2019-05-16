@@ -46,19 +46,17 @@ pub enum AuthError {
 impl Display for AuthError {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         let description = match self {
-            AuthError::DeserializeError => "Something could not be deserialized".to_string(),
-            AuthError::SerializeError => "Something could not be serialized".to_string(),
-            AuthError::JwtDecodeError => "JWT could not be decoded".to_string(),
-            AuthError::JwtEncodeError => "JWT could not be encoded".to_string(),
-            AuthError::IllegalToken => "The provided token is invalid".to_string(),
+            AuthError::DeserializeError => "JWT could not be deserialized.",
+            AuthError::SerializeError => "JWT could not be serialized.",
+            AuthError::JwtDecodeError => "JWT could not be decoded.",
+            AuthError::JwtEncodeError => "JWT could not be encoded.",
+            AuthError::IllegalToken => "The provided token is invalid.",
             AuthError::ExpiredToken => {
-                "The provided token has expired, please reauthenticate to acquire a new one"
-                    .to_string()
+                "The provided token has expired, please reauthenticate to acquire a new one."
             }
-            AuthError::MalformedToken => "The token was not formatted correctly".to_string(),
+            AuthError::MalformedToken => "The token was not formatted correctly.",
             AuthError::MissingToken => {
-                "The Api route was expecting a JWT token and none was provided. Try logging in."
-                    .to_string()
+                "A JWT token was expected and none was provided. Try logging in."
             }
         };
 

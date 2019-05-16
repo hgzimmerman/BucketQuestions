@@ -13,8 +13,7 @@ stdenv.mkDerivation rec {
     export PGDATA='pgsql'
     # to set the password, run `psql` and enter `\password` and set it to the password below
     export DATABASE_URL='postgres://hzimmerman:password@localhost/bucketquestions'
-    export TEST_DATABASE_URL='postgres://hzimmerman:password@localhost/bucketquestions_test'
-    export TEST_DATABASE_NAME='bucketquestions_test'
+    export TEST_DATABASE_ORIGIN='postgres://hzimmerman:password@localhost'
     export DROP_DATABASE_URL='postgres://hzimmerman:password@localhost/postgres'
     export TEST_TYPE='UNIT'
 

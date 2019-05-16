@@ -28,11 +28,9 @@ services:
       - db
     environment:
       DATABASE_URL: 'postgres://user:example@db:5432/bucketquestions'
-      TEST_DATABASE_URL: 'postgres://user:example@db:5432/bucketquestions_test'
-      TEST_DATABASE_NAME: 'bucketquestions_test'
+      TEST_DATABASE_ORIGIN: 'postgres://user:example@db:5432'
       DROP_DATABASE_URL: 'postgres://user:example@db:5432/postgres'
-
-
+      TEST_TYPE: 'UNIT'
 
     # diesel infer_schema macro gives warnings with this flag.
     # environment:
