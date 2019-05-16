@@ -17,7 +17,6 @@ use frank_jwt::{decode, encode, Algorithm};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::fmt::{self, Debug, Display, Error, Formatter};
-use warp::{filters::BoxedFilter, Filter};
 use log::warn;
 
 /// Enumeration of all errors that can occur while authenticating.
@@ -84,6 +83,11 @@ where
     /// # Arguments
     /// * subject - The subject of the JWT, it holds the contents that should be trusted by the server on return trips.
     /// * lifetime - How long the JWT will be valid for after its creation.
+    ///
+    /// ```
+    ///     use authorization::JwtPayload;
+    ///     let payload = JwtPayload::new("hello".to_string(), chrono::Duration::weeks(2));
+    /// ```
     pub fn new(subject: T, lifetime: Duration) -> Self {
         let now = chrono::Utc::now().naive_utc();
 
@@ -95,12 +99,27 @@ where
     }
 
     /// Gets the subject of the JWT payload.
+    /// ```
+    /// # use authorization::{JwtPayload};
+    ///     let payload = JwtPayload::new("hello".to_string(), chrono::Duration::weeks(4));
+    ///     let subject = payload.subject();
+    ///     assert_eq!(subject, "hello".to_string());
+    /// ```
     pub fn subject(self) -> T {
         self.sub
     }
 
     /// Validates if the token is expired or not.
-    /// It also checks if the token was issued in the future, to further complicate the attack surface of someone creating forgeries.
+    /// It also checks if the token was issued in the future, to further complicate the attack
+    /// surface of someone creating forgeries.
+    /// ```
+    /// # use authorization::{AuthError, JwtPayload};
+    /// # fn main() -> Result<(), AuthError> {
+    ///     let payload = JwtPayload::new("hello".to_string(), chrono::Duration::weeks(4));
+    ///     let payload = payload.validate_dates()?;
+    ///     # Ok(())
+    /// # }
+    /// ```
     pub fn validate_dates(self) -> Result<Self, AuthError> {
         let now = chrono::Utc::now().naive_utc();
         if self.exp < now || self.iat > now {
@@ -111,6 +130,17 @@ where
     }
 
     /// Encodes the payload, producing a JWT in string form.
+    ///
+    /// ```
+    /// # use authorization::AuthError;
+    /// # fn main() -> Result<(), AuthError> {
+    ///     # use authorization::{JwtPayload, Secret};
+    ///     let payload = JwtPayload::new("hello".to_string(), chrono::Duration::weeks(2));
+    ///     let secret = Secret::new("Secret");
+    ///     let jwt = payload.encode_jwt_string(&secret)?;
+    ///     # Ok(())
+    /// # }
+    /// ```
     pub fn encode_jwt_string(&self, secret: &Secret) -> Result<String, AuthError> {
         let header = json!({});
         use serde_json::Value;
@@ -129,6 +159,19 @@ where
 
     /// Decodes the JWT into its payload.
     /// If the signature doesn't match, then a decode error is thrown.
+    ///
+    /// ```
+    /// # use authorization::AuthError;
+    /// # fn main() -> Result<(), AuthError> {
+    ///     # use authorization::{JwtPayload, Secret};
+    ///     # let secret = Secret::new("Secret");
+    ///     let payload = JwtPayload::new("hello".to_string(), chrono::Duration::weeks(2));
+    ///     let jwt: String = payload.encode_jwt_string(&secret)?;
+    ///     let decoded_payload: JwtPayload<String> = JwtPayload::decode_jwt_string(&jwt, &secret)?;
+    ///     assert_eq!(payload, decoded_payload);
+    ///     # Ok(())
+    /// # }
+    /// ```
     pub fn decode_jwt_string(jwt_str: &str, secret: &Secret) -> Result<JwtPayload<T>, AuthError> {
         let secret: &String = &secret.0;
         let (_header, payload) = match decode(&jwt_str.to_string(), secret, Algorithm::HS256) {
@@ -143,6 +186,19 @@ where
     }
 
     /// Removes the jwt from the bearer string, and decodes it to determine if it was signed properly.
+    ///
+    /// ```
+    /// # use authorization::AuthError;
+    /// # fn main() -> Result<(), AuthError> {
+    ///     # use authorization::{JwtPayload, Secret, AuthError};
+    ///     # let payload = JwtPayload::new("hello".to_string(), chrono::Duration::weeks(2));
+    ///     # let secret = Secret::new("Secret");
+    ///     let jwt: String = payload.encode_jwt_string(&secret)?;
+    ///     let bearer_string = format!("bearer {}", jwt);
+    ///     let decoded_payload: JwtPayload<String> = JwtPayload::extract_jwt(bearer_string, &secret)?;
+    ///     # Ok(())
+    /// # }
+    /// ```
     pub fn extract_jwt(bearer_string: String, secret: &Secret) -> Result<JwtPayload<T>, AuthError> {
         let authorization_words: Vec<String> =
             bearer_string.split_whitespace().map(String::from).collect();
@@ -189,14 +245,6 @@ pub const BEARER: &str = "bearer";
 /// The key used in the header to map to the authentication data.
 pub const AUTHORIZATION_HEADER_KEY: &str = "Authorization";
 
-/// Brings the secret into scope.
-/// The secret is used to create and verify JWTs.
-///
-/// # Arguments
-/// secret - The secret that will be returned by the filter.
-pub fn secret_filter(secret: Secret) -> BoxedFilter<(Secret,)> {
-    warp::any().map(move || secret.clone()).boxed()
-}
 
 #[cfg(test)]
 mod test {

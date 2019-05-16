@@ -9,7 +9,7 @@
 //!
 
 use crate::{error::Error, state::State};
-use authorization::{JwtPayload, Secret, AUTHORIZATION_HEADER_KEY};
+use authorization::{JwtPayload, AUTHORIZATION_HEADER_KEY, Secret};
 use db::user::db_types::User;
 use oauth2::{
     basic::BasicClient, prelude::*, AuthUrl, ClientId, ClientSecret, CsrfToken, RedirectUrl, Scope,
@@ -71,7 +71,7 @@ where
     warp::header::header::<String>(AUTHORIZATION_HEADER_KEY)
         .or_else(|_: Rejection| Error::not_authorized("Token Required").reject_result())
         .and(s.secret())
-        .and_then(|bearer_string, secret| {
+        .and_then(|bearer_string: String, secret: Secret| {
             JwtPayload::extract_jwt(bearer_string, &secret)
                 .and_then(JwtPayload::validate_dates)
                 .map_err(Error::AuthError)
@@ -80,16 +80,6 @@ where
         .boxed()
 }
 
-/// Brings the secret into a filter chain.
-/// The secret is used to create and verify JWTs.
-///
-/// # Arguments
-/// * secret - The secret to be made available by the returned Filter.
-pub fn secret_filter(
-    secret: Secret,
-) -> impl Filter<Extract = (Secret,), Error = Rejection> + Clone {
-    warp::any().and_then(move || -> Result<Secret, Rejection> { Ok(secret.clone()) })
-}
 
 /// If the user has a JWT, then the user has basic user privileges.
 ///
