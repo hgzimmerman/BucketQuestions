@@ -41,7 +41,7 @@ impl Error for DatabaseError {
         match *self {
             CargoTomlNotFound => "Unable to find Cargo.toml in this directory or any parent directories.",
             DatabaseUrlMissing => {
-                "The --database-url argument must be passed, or the DATABASE_URL environment variable must be set."
+                "The --database-url argument must be passed, or the DATABASE_ORIGIN environment variable must be set."
             }
             IoError(ref error) => error
                 .source()

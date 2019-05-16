@@ -13,18 +13,21 @@ use migrations_internals as migrations;
 /// Drops the database, completely removing every table (and therefore every row) in the database.
 pub fn drop_database(admin_conn: &PgConnection, database_name: &str) -> DatabaseResult<()> {
     if pg_database_exists(&admin_conn, database_name)? {
-//        std::thread::sleep(std::time::Duration::new(1,0));
+        //        std::thread::sleep(std::time::Duration::new(1,0));
         let result = query_helper::drop_database(database_name)
             .if_exists()
             .execute(admin_conn)
             .map_err(DatabaseError::from)
             .map(|_| ());
 
-        if let Err(DatabaseError::QueryError(diesel::result::Error::DatabaseError(diesel::result::DatabaseErrorKind::__Unknown, _))) = result {
+        if let Err(DatabaseError::QueryError(diesel::result::Error::DatabaseError(
+            diesel::result::DatabaseErrorKind::__Unknown,
+            _,
+        ))) = result
+        {
             eprintln!("Could not drop DB !!!!!!!");
         }
         result
-
     } else {
         Ok(()) // Database has already been dropped
     }

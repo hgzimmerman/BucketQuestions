@@ -1,7 +1,7 @@
-use crate::reset::{run_migrations};
-use diesel::{r2d2, PgConnection};
+use crate::reset::run_migrations;
 #[cfg(test)]
 use diesel::Connection;
+use diesel::{r2d2, PgConnection};
 
 /// The origin (scheme, user, password, address, port) of the test database.
 ///
@@ -15,7 +15,6 @@ pub const DATABASE_ORIGIN: &str = env!("TEST_DATABASE_ORIGIN");
 ///
 /// It is expected to be on the same database server as the one indicated by DATABASE_ORIGIN.
 pub const DROP_DATABASE_URL: &str = env!("DROP_DATABASE_URL");
-
 
 pub const MIGRATIONS_DIRECTORY: &str = "../db/migrations";
 
@@ -38,8 +37,8 @@ pub fn setup_pool_random_db(
     url_part: &str,
     migrations_directory: &str,
 ) -> (r2d2::Pool<ConnectionManager<PgConnection>>, Cleanup) {
-    let db_name = nanoid::simple(); // Gets a random url-safe string.
-    // delegate logic to this function
+    let db_name = nanoid::generate(40); // Gets a random url-safe string.
+                                        // delegate logic to this function
     setup_pool_named_db(admin_conn, url_part, migrations_directory, db_name)
 }
 
@@ -52,7 +51,7 @@ fn setup_pool_named_db(
     admin_conn: PgConnection,
     url_part: &str,
     migrations_directory: &str,
-    db_name: String
+    db_name: String,
 ) -> (r2d2::Pool<ConnectionManager<PgConnection>>, Cleanup) {
     // This makes the assumption that the provided database name does not already exist on the system.
     crate::reset::create_database(&admin_conn, &db_name).expect("Couldn't create database");
@@ -79,19 +78,21 @@ mod test {
     fn cleanup_drops_db_after_panic() {
         let url_origin = DATABASE_ORIGIN;
 
-        let db_name= "cleanup_drops_db_after_panic_TEST_DB".to_string();
+        let db_name = "cleanup_drops_db_after_panic_TEST_DB".to_string();
 
         std::panic::catch_unwind(|| {
-            let admin_conn = PgConnection::establish(DROP_DATABASE_URL).expect("Should be able to connect to admin db");
-            let _ = setup_pool_named_db(admin_conn, url_origin, "../db/migrations", db_name.clone());
+            let admin_conn = PgConnection::establish(DROP_DATABASE_URL)
+                .expect("Should be able to connect to admin db");
+            let _ =
+                setup_pool_named_db(admin_conn, url_origin, "../db/migrations", db_name.clone());
             panic!("expected_panic");
         })
-            .expect_err("Should catch panic.");
+        .expect_err("Should catch panic.");
 
-        let admin_conn = PgConnection::establish(DROP_DATABASE_URL).expect("Should be able to connect to admin db");
+        let admin_conn = PgConnection::establish(DROP_DATABASE_URL)
+            .expect("Should be able to connect to admin db");
         let database_exists: bool = crate::reset::pg_database_exists(&admin_conn, &db_name)
             .expect("Should determine if database exists");
         assert!(!database_exists)
     }
 }
-

@@ -9,7 +9,7 @@ use crate::{
     state::{test_util::execute_test_on_repository, State},
     util::test_util::deserialize,
 };
-use authorization::{AUTHORIZATION_HEADER_KEY, BEARER, Secret};
+use authorization::{Secret, AUTHORIZATION_HEADER_KEY, BEARER};
 use db::{
     bucket::db_types::Bucket,
     bucket_user_relation::db_types::{BucketUserPermissions, BucketUserRelation},

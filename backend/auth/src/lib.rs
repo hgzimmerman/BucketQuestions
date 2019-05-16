@@ -158,9 +158,7 @@ where
         };
 
         match secret {
-            Secret::Hmac(key) => {
-                encode(header, key, &payload, Algorithm::HS256)
-            }
+            Secret::Hmac(key) => encode(header, key, &payload, Algorithm::HS256),
             Secret::Rsa { private_key, .. } => {
                 encode(header, private_key, &payload, Algorithm::RS512)
             }
@@ -168,9 +166,7 @@ where
                 encode(header, private_key, &payload, Algorithm::ES512)
             }
         }
-            .map_err(|_| AuthError::JwtEncodeError)
-
-
+        .map_err(|_| AuthError::JwtEncodeError)
     }
 
     /// Decodes the JWT into its payload.
@@ -191,9 +187,7 @@ where
     /// ```
     pub fn decode_jwt_string(jwt_str: &str, secret: &Secret) -> Result<JwtPayload<T>, AuthError> {
         let (_header, payload) = match secret {
-            Secret::Hmac(key) => {
-                decode(&jwt_str.to_string(), key, Algorithm::HS256)
-            }
+            Secret::Hmac(key) => decode(&jwt_str.to_string(), key, Algorithm::HS256),
             Secret::Rsa { public_key, .. } => {
                 decode(&jwt_str.to_string(), public_key, Algorithm::RS512)
             }
@@ -201,9 +195,10 @@ where
                 decode(&jwt_str.to_string(), public_key, Algorithm::ES512)
             }
         }
-            .map_err(|_| AuthError::JwtDecodeError)?;
+        .map_err(|_| AuthError::JwtDecodeError)?;
 
-        let jwt: JwtPayload<T> = serde_json::from_value(payload).map_err(|_| AuthError::DeserializeError)?;
+        let jwt: JwtPayload<T> =
+            serde_json::from_value(payload).map_err(|_| AuthError::DeserializeError)?;
         Ok(jwt)
     }
 
@@ -252,28 +247,28 @@ pub enum Secret {
         /// Private key
         private_key: String,
         /// Public key
-        public_key: String
+        public_key: String,
     },
     /// Es secrets
     Es {
         /// Private key
         private_key: String,
         /// Public key
-        public_key: String
-    }
+        public_key: String,
+    },
 }
 impl Debug for Secret {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
         let (first_five_letters, length) = match self {
-            Secret::Hmac(key) => {
-                (key.chars().take(5).collect::<String>(), key.len())
-            },
-            Secret::Rsa {private_key, ..} => {
-                (private_key.chars().take(5).collect::<String>(), private_key.len())
-            },
-            Secret::Es {private_key, ..} => {
-                (private_key.chars().take(5).collect::<String>(), private_key.len())
-            },
+            Secret::Hmac(key) => (key.chars().take(5).collect::<String>(), key.len()),
+            Secret::Rsa { private_key, .. } => (
+                private_key.chars().take(5).collect::<String>(),
+                private_key.len(),
+            ),
+            Secret::Es { private_key, .. } => (
+                private_key.chars().take(5).collect::<String>(),
+                private_key.len(),
+            ),
         };
         f.debug_struct("Secret")
             .field("secret", &format!("{}[REDACTED]", first_five_letters))
@@ -293,13 +288,18 @@ impl Secret {
 
     /// Create a new RSA secret
     pub fn new_rsa(private_key: String, public_key: String) -> Self {
-        Secret::Rsa{private_key, public_key}
+        Secret::Rsa {
+            private_key,
+            public_key,
+        }
     }
     /// Create a new Es secret
     pub fn new_es(private_key: String, public_key: String) -> Self {
-        Secret::Es{private_key, public_key}
+        Secret::Es {
+            private_key,
+            public_key,
+        }
     }
-
 }
 
 /// The prefix before the encoded JWT in the header value that corresponds to the "Authorization" key.

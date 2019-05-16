@@ -3,7 +3,7 @@ use crate::{
     state::{test_util::execute_test_on_repository, State},
     util::test_util::deserialize,
 };
-use authorization::{Secret};
+use authorization::Secret;
 use db::{test::empty_fixture::EmptyFixture, RepositoryProvider};
 use warp::test::request;
 

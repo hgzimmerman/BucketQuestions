@@ -7,7 +7,7 @@ use crate::{
     state::{test_util::execute_test_on_repository, State},
     util::test_util::deserialize,
 };
-use authorization::{AUTHORIZATION_HEADER_KEY, BEARER, Secret};
+use authorization::{Secret, AUTHORIZATION_HEADER_KEY, BEARER};
 use db::{
     question::db_types::Question,
     test::{bucket_fixture::BucketFixture, question_fixture::QuestionFixture},
