@@ -6,7 +6,7 @@ use authorization::Secret;
 use db::{
     test::{
         fixture::Fixture,
-        util::{execute_pool_test2, setup_mock_provider},
+        util::{execute_pool_test2, setup_fake_provider},
         TestType,
     },
     RepositoryProvider,
@@ -49,14 +49,14 @@ where
 {
     match TestType::get_test_type_from_env() {
         TestType::Unit => {
-            let (fixture, mock): (Fix, RepositoryProvider) = setup_mock_provider();
+            let (fixture, mock): (Fix, RepositoryProvider) = setup_fake_provider();
             f(&fixture, mock)
         }
         TestType::Integration => {
             execute_pool_test2(f);
         }
         TestType::Both => {
-            let (fixture, mock): (Fix, RepositoryProvider) = setup_mock_provider();
+            let (fixture, mock): (Fix, RepositoryProvider) = setup_fake_provider();
             f(&fixture, mock);
             execute_pool_test2(f);
         }

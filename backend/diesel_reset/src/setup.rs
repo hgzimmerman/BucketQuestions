@@ -2,26 +2,13 @@ use crate::reset::run_migrations;
 #[cfg(test)]
 use diesel::Connection;
 use diesel::{r2d2, PgConnection};
-
-/// The origin (scheme, user, password, address, port) of the test database.
-///
-/// This determines which database server is connected to, but allows for specification of
-/// a specific database instance within the server to connect to and run tests with.
-#[cfg(test)]
-pub const DATABASE_ORIGIN: &str = env!("TEST_DATABASE_ORIGIN");
-
-/// Should point to the base postgres account.
-/// One that has authority to create and destroy other database instances.
-///
-/// It is expected to be on the same database server as the one indicated by DATABASE_ORIGIN.
-pub const DROP_DATABASE_URL: &str = env!("DROP_DATABASE_URL");
-
-pub const MIGRATIONS_DIRECTORY: &str = "../db/migrations";
-
 use diesel::r2d2::ConnectionManager;
 
 /// Cleanup wrapper.
 /// Contains the admin connection and the name of the database (not the whole url).
+///
+/// When this struct goes out of scope, it will use the data it owns to drop the database it's
+/// associated with.
 pub struct Cleanup(PgConnection, String);
 
 impl Drop for Cleanup {
@@ -31,22 +18,27 @@ impl Drop for Cleanup {
     }
 }
 
-/// Creates a random db using the admin_db, then deletes it when the test finishes
+/// Creates a db with a random name using the administrative connection.
+/// The database will be deleted when the Cleanup return value is dropped.
+///
+/// # Arguments
+/// * `admin_conn`: A connection to a database that has the authority to create other databases on the system.
+/// * `database_origin`: A string representing the scheme + authority pointing to the database server that tests will be conducted on.
+/// * `migrations directory`: A string pointing to the directory where Diesel migrations are stored.
+///
+/// # Note
+/// The `admin_conn` should have been created with the same origin present in `database_origin`.
 pub fn setup_pool_random_db(
     admin_conn: PgConnection,
-    url_part: &str,
-    migrations_directory: &str,
+    database_origin: &str,
+    migrations_directory: &str, // TODO make this a pathbuf
 ) -> (r2d2::Pool<ConnectionManager<PgConnection>>, Cleanup) {
     let db_name = nanoid::generate(40); // Gets a random url-safe string.
-                                        // delegate logic to this function
-    setup_pool_named_db(admin_conn, url_part, migrations_directory, db_name)
+    setup_pool_named_db(admin_conn, database_origin, migrations_directory, db_name)
 }
 
 /// Utility function that creates a database with a known name and runs migrations on it.
 ///
-/// # Note
-/// This function exists to facilitate verification that that the database is still dropped
-/// even if a test panics.
 fn setup_pool_named_db(
     admin_conn: PgConnection,
     url_part: &str,
@@ -61,7 +53,6 @@ fn setup_pool_named_db(
 
     let pool = r2d2::Pool::builder()
         .max_size(3)
-        .min_idle(Some(2))
         .build(manager)
         .expect("Couldn't create pool");
 
@@ -71,13 +62,26 @@ fn setup_pool_named_db(
     (pool, cleanup)
 }
 
+// TODO all tests should be integration style.
+// Likely hide them behind some sort of ENV VAR that indicates that it is running in a docker container or something
 #[cfg(test)]
 mod test {
     use super::*;
+
+    /// Should point to the base postgres account.
+    /// One that has authority to create and destroy other database instances.
+    ///
+    /// It is expected to be on the same database server as the one indicated by DATABASE_ORIGIN.
+    const DROP_DATABASE_URL: &str = env!("DROP_DATABASE_URL");
+    /// The origin (scheme, user, password, address, port) of the test database.
+    ///
+    /// This determines which database server is connected to, but allows for specification of
+    /// a specific database instance within the server to connect to and run tests with.
+    const DATABASE_ORIGIN: &str = env!("TEST_DATABASE_ORIGIN");
+
     #[test]
     fn cleanup_drops_db_after_panic() {
         let url_origin = DATABASE_ORIGIN;
-
         let db_name = "cleanup_drops_db_after_panic_TEST_DB".to_string();
 
         std::panic::catch_unwind(|| {
@@ -91,6 +95,31 @@ mod test {
 
         let admin_conn = PgConnection::establish(DROP_DATABASE_URL)
             .expect("Should be able to connect to admin db");
+        let database_exists: bool = crate::reset::pg_database_exists(&admin_conn, &db_name)
+            .expect("Should determine if database exists");
+        assert!(!database_exists)
+    }
+
+    #[test]
+    fn cleanup_drops_database() {
+        let url_origin = DATABASE_ORIGIN;
+        let db_name = "cleanup_drops_database_TEST_DB".to_string();
+
+         let admin_conn = PgConnection::establish(DROP_DATABASE_URL)
+                .expect("Should be able to connect to admin db");
+        let (pool, cleanup) =
+                setup_pool_named_db(admin_conn, url_origin, "../db/migrations", db_name.clone());
+
+        let admin_conn = PgConnection::establish(DROP_DATABASE_URL)
+            .expect("Should be able to connect to admin db");
+
+        let database_exists: bool = crate::reset::pg_database_exists(&admin_conn, &db_name)
+            .expect("Should determine if database exists");
+        assert!(database_exists);
+
+        std::mem::drop(pool);
+        std::mem::drop(cleanup);
+
         let database_exists: bool = crate::reset::pg_database_exists(&admin_conn, &db_name)
             .expect("Should determine if database exists");
         assert!(!database_exists)

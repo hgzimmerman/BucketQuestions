@@ -8,14 +8,14 @@ use crate::{
         },
         interface::BucketUserRelationRepository,
     },
-    mock::{DummyDbErrorInfo, MockDatabase},
+    fake::{DummyDbErrorInfo, FakeDatabase},
     user::db_types::User,
 };
 use diesel::result::{DatabaseErrorKind, Error};
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
-impl BucketUserRelationRepository for Arc<Mutex<MockDatabase>> {
+impl BucketUserRelationRepository for Arc<Mutex<FakeDatabase>> {
     fn add_user_to_bucket(
         &self,
         relation: NewBucketUserRelation,
@@ -79,7 +79,7 @@ impl BucketUserRelationRepository for Arc<Mutex<MockDatabase>> {
         permissions_changeset: BucketUserPermissionsChangeset,
     ) -> Result<BucketUserRelation, Error> {
         let mut db = self.lock().unwrap();
-        let relation = db
+        let mut relation = db
             .user_bucket_relations
             .iter_mut()
             .find(|r| {

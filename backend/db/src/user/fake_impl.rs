@@ -1,6 +1,6 @@
 //! Mock impl
 use crate::{
-    mock::{DummyDbErrorInfo, MockDatabase},
+    fake::{DummyDbErrorInfo, FakeDatabase},
     user::{
         db_types::{NewUser, User},
         interface::UserRepository,
@@ -10,7 +10,7 @@ use diesel::result::{DatabaseErrorKind, Error};
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
-impl UserRepository for Arc<Mutex<MockDatabase>> {
+impl UserRepository for Arc<Mutex<FakeDatabase>> {
     fn create_user(&self, user: NewUser) -> Result<User, Error> {
         let uuid = Uuid::new_v4();
         let user = User {

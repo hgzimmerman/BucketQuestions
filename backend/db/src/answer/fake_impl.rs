@@ -5,13 +5,13 @@ use crate::{
         db_types::{Answer, NewAnswer},
         interface::AnswerRepository,
     },
-    mock::{DummyDbErrorInfo, MockDatabase},
+    fake::{DummyDbErrorInfo, FakeDatabase},
 };
 use diesel::result::{DatabaseErrorKind, Error};
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
-impl AnswerRepository for Arc<Mutex<MockDatabase>> {
+impl AnswerRepository for Arc<Mutex<FakeDatabase>> {
     fn create_answer(&self, answer: NewAnswer) -> Result<Answer, Error> {
         let uuid = Uuid::new_v4();
         let answer = Answer {

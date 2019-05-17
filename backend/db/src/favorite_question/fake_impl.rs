@@ -5,14 +5,14 @@ use crate::{
         db_types::{FavoriteQuestionRelation, NewFavoriteQuestionRelation},
         interface::FavoriteQuestionRelationRepository,
     },
-    mock::{DummyDbErrorInfo, MockDatabase},
+    fake::{DummyDbErrorInfo, FakeDatabase},
     question::db_types::Question,
 };
 use diesel::result::{DatabaseErrorKind, Error};
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
-impl FavoriteQuestionRelationRepository for Arc<Mutex<MockDatabase>> {
+impl FavoriteQuestionRelationRepository for Arc<Mutex<FakeDatabase>> {
     fn favorite_question(&self, relation: NewFavoriteQuestionRelation) -> Result<(), Error> {
         let mut db = self.lock().unwrap();
         let relation = FavoriteQuestionRelation {

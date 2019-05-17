@@ -18,7 +18,7 @@ pub mod answer;
 pub mod bucket;
 pub mod bucket_user_relation;
 pub mod favorite_question;
-pub mod mock;
+pub mod fake;
 pub mod question;
 mod schema;
 pub mod test;
@@ -28,7 +28,7 @@ mod util;
 use crate::{
     answer::interface::AnswerRepository, bucket::interface::BucketRepository,
     bucket_user_relation::interface::BucketUserRelationRepository,
-    favorite_question::interface::FavoriteQuestionRelationRepository, mock::MockDatabase,
+    favorite_question::interface::FavoriteQuestionRelationRepository, fake::FakeDatabase,
     question::interface::QuestionRepository, user::interface::UserRepository,
 };
 use diesel::PgConnection;
@@ -70,7 +70,7 @@ pub enum RepositoryProvider {
     /// Pool repository provider
     Pool(Pool),
     /// Mock repository provider
-    Mock(Arc<Mutex<MockDatabase>>),
+    Mock(Arc<Mutex<FakeDatabase>>),
 }
 
 impl Debug for RepositoryProvider {
@@ -135,8 +135,8 @@ mod unit {
     use static_assertions;
 
     #[test]
-    fn mock_is_repository() {
-        static_assertions::assert_impl!(Arc<Mutex<MockDatabase>>, Repository)
+    fn fake_is_repository() {
+        static_assertions::assert_impl!(Arc<Mutex<FakeDatabase>>, Repository)
     }
 
     #[test]

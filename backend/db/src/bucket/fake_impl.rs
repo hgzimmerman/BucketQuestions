@@ -4,13 +4,13 @@ use crate::{
         db_types::{Bucket, BucketFlagChangeset, NewBucket},
         interface::BucketRepository,
     },
-    mock::{DummyDbErrorInfo, MockDatabase},
+    fake::{DummyDbErrorInfo, FakeDatabase},
 };
 use diesel::result::{DatabaseErrorKind, Error};
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
-impl BucketRepository for Arc<Mutex<MockDatabase>> {
+impl BucketRepository for Arc<Mutex<FakeDatabase>> {
     fn create_bucket(&self, new_bucket: NewBucket) -> Result<Bucket, Error> {
         let mut db = self.lock().unwrap();
         let uuid = Uuid::new_v4();

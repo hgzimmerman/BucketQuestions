@@ -1,7 +1,7 @@
 //! Mock impl
 
 use crate::{
-    mock::{DummyDbErrorInfo, MockDatabase},
+    fake::{DummyDbErrorInfo, FakeDatabase},
     question::{
         db_types::{NewQuestion, Question},
         interface::QuestionRepository,
@@ -12,7 +12,7 @@ use rand::{thread_rng, Rng};
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
-impl QuestionRepository for Arc<Mutex<MockDatabase>> {
+impl QuestionRepository for Arc<Mutex<FakeDatabase>> {
     fn create_question(&self, question: NewQuestion) -> Result<Question, Error> {
         let uuid = Uuid::new_v4();
         let question = Question {

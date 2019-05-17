@@ -44,9 +44,10 @@ impl DatabaseErrorInformation for DummyDbErrorInfo {
     }
 }
 
+// TODO should technically be a FakeDatabase.
 /// A mock object that should have parity with the database schema and operations.
 #[derive(Debug, Clone, Default)]
-pub struct MockDatabase {
+pub struct FakeDatabase {
     pub(crate) users: Vec<User>,
     pub(crate) buckets: Vec<Bucket>,
     pub(crate) user_bucket_relations: Vec<BucketUserRelation>,

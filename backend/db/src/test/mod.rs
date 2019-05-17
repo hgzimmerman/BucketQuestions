@@ -41,12 +41,16 @@ impl TestType {
 pub mod util {
     use self::fixture::Fixture;
     use super::*;
-    use crate::{mock::MockDatabase, BoxedRepository, RepositoryProvider};
+    use crate::{fake::FakeDatabase, BoxedRepository, RepositoryProvider};
     use diesel::PgConnection;
     use diesel_reset::setup::{
-        setup_pool_random_db, Cleanup, DROP_DATABASE_URL, MIGRATIONS_DIRECTORY,
+        setup_pool_random_db, Cleanup
     };
     use std::sync::{Arc, Mutex};
+
+    const MIGRATIONS_DIRECTORY: &str = "../db/migrations";
+
+    const DROP_DATABASE_URL: &str = env!("DROP_DATABASE_URL"); // TODO, I don't think, outside of tests, that any env var should be compiled into this lib.
 
     /// Execute a test based on what testing environment you want.
     pub fn execute_test<Fix, Fun>(f: Fun)
@@ -56,7 +60,7 @@ pub mod util {
     {
         match TestType::get_test_type_from_env() {
             TestType::Unit => {
-                let (fix, repo) = setup_mock::<Fix>();
+                let (fix, repo) = setup_fake::<Fix>();
                 f(&fix, repo);
             }
             TestType::Integration => {
@@ -65,7 +69,7 @@ pub mod util {
             }
             TestType::Both => {
                 println!("Starting Unit:");
-                let (fix, repo) = setup_mock::<Fix>();
+                let (fix, repo) = setup_fake::<Fix>();
                 f(&fix, repo);
                 println!("Starting Integration:");
                 let (fix, repo, _cleanup_wrapper) = setup_database3::<Fix>();
@@ -74,31 +78,31 @@ pub mod util {
         }
     }
 
-    fn setup_mock_impl<Fix>() -> (Fix, Arc<Mutex<MockDatabase>>)
+    fn setup_fake_db_impl<Fix>() -> (Fix, Arc<Mutex<FakeDatabase>>)
     where
         Fix: Fixture,
     {
-        let db = Arc::new(Mutex::new(MockDatabase::default()));
+        let db = Arc::new(Mutex::new(FakeDatabase::default()));
         let db_clone: BoxedRepository = Box::new(db.clone());
         let fixture = Fix::generate(&db_clone);
         (fixture, db)
     }
 
     /// Sets up a fixture and a mock repository
-    pub fn setup_mock<Fix>() -> (Fix, BoxedRepository)
+    pub fn setup_fake<Fix>() -> (Fix, BoxedRepository)
     where
         Fix: Fixture,
     {
-        let (fixture, db) = setup_mock_impl();
+        let (fixture, db) = setup_fake_db_impl();
         (fixture, Box::new(db))
     }
 
     /// Sets up a provider of mocks
-    pub fn setup_mock_provider<Fix>() -> (Fix, RepositoryProvider)
+    pub fn setup_fake_provider<Fix>() -> (Fix, RepositoryProvider)
     where
         Fix: Fixture,
     {
-        let (fixture, db) = setup_mock_impl();
+        let (fixture, db) = setup_fake_db_impl();
         (fixture, RepositoryProvider::Mock(db))
     }
 
@@ -121,6 +125,8 @@ pub mod util {
         let fixture = Fix::generate(&conn);
         (fixture, conn, cleanup)
     }
+
+
 
     /// sets up a pool and executes a provided test that utilizes the pool
     pub fn execute_pool_test2<Fun, Fix>(mut test_function: Fun)
