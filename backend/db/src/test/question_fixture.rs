@@ -10,6 +10,8 @@ use crate::{
 
 /// Fixture that creates 2 users, 1 bucket, and one relation record in the repository.
 /// user1 is joined to the bucket.
+///
+/// user has full permissions on bucket.
 #[derive(Clone, Debug)]
 pub struct QuestionFixture {
     /// Bucket
@@ -42,6 +44,7 @@ impl Fixture for QuestionFixture {
             set_public_permission: true,
             set_drawing_permission: true,
             set_exclusive_permission: true,
+            kick_permission: true,
             grant_permissions_permission: true,
         };
 

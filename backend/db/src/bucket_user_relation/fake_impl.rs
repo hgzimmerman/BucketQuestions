@@ -27,6 +27,7 @@ impl BucketUserRelationRepository for Arc<Mutex<FakeDatabase>> {
             set_public_permission: relation.set_public_permission,
             set_drawing_permission: relation.set_drawing_permission,
             set_exclusive_permission: relation.set_exclusive_permission,
+            kick_permission: relation.kick_permission,
             grant_permissions_permission: relation.grant_permissions_permission,
             updated_at: chrono::Utc::now().naive_utc(),
             created_at: chrono::Utc::now().naive_utc(),
@@ -115,6 +116,7 @@ impl BucketUserRelationRepository for Arc<Mutex<FakeDatabase>> {
                 set_drawing_permission: r.set_drawing_permission,
                 set_exclusive_permission: r.set_exclusive_permission,
                 grant_permissions_permission: r.grant_permissions_permission,
+                kick_permission: r.kick_permission
             })
     }
 

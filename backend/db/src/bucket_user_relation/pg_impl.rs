@@ -93,6 +93,7 @@ where
                 bucket_user_relation::set_public_permission,
                 bucket_user_relation::set_drawing_permission,
                 bucket_user_relation::set_exclusive_permission,
+                bucket_user_relation::kick_permission,
                 bucket_user_relation::grant_permissions_permission,
             ))
             .get_result::<BucketUserPermissions>(self.as_conn())

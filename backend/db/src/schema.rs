@@ -38,6 +38,7 @@ table! {
         set_public_permission -> Bool,
         set_drawing_permission -> Bool,
         set_exclusive_permission -> Bool,
+        kick_permission -> Bool,
         grant_permissions_permission -> Bool,
         updated_at -> Timestamp,
         created_at -> Timestamp,

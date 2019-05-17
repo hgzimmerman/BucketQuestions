@@ -46,6 +46,7 @@ impl Fixture for UserBucketRelationFixture {
             set_public_permission: true,
             set_drawing_permission: true,
             set_exclusive_permission: true,
+            kick_permission: true,
             grant_permissions_permission: true,
         };
 

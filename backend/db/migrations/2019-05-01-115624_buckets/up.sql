@@ -17,6 +17,7 @@ CREATE TABLE bucket_user_relation (
   set_public_permission BOOLEAN NOT NULL, -- Can the user make the bucket visible on the main page.
   set_drawing_permission BOOLEAN NOT NULL, -- Can the user set the mode to enable answering questions.
   set_exclusive_permission BOOLEAN NOT NULL, -- Can the user set the mode to disable joining by random individuals.
+  kick_permission BOOLEAN NOT NULL, -- Can the user kick other users from the bucket.
   grant_permissions_permission BOOLEAN NOT NULL, -- Can the user grant other users permissions for this bucket.
   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),

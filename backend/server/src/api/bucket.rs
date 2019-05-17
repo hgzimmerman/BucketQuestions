@@ -22,6 +22,11 @@ use warp::{filters::BoxedFilter, path, Filter, Reply};
 pub const BUCKET_PATH: &str = "bucket";
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct UserUuidQueryParam {
+    pub user_uuid: Uuid
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SetPermissionsRequest {
     pub target_user_uuid: Uuid,
     /// Can the user set the visibility of the bucket.
@@ -30,6 +35,8 @@ pub struct SetPermissionsRequest {
     pub set_drawing_permission: Option<bool>,
     /// Can the user set the bucket to private.
     pub set_exclusive_permission: Option<bool>,
+    /// Can the user kick other users.
+    pub kick_permission: Option<bool>,
     /// Can the user grant permissions to other users.
     pub grant_permissions_permission: Option<bool>,
 }
@@ -116,6 +123,15 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .map(add_self_to_bucket_handler)
         .and_then(json_or_reject);
 
+    let remove_user_from_bucket = path!(Uuid / "user")
+        .and(warp::path::end())
+        .and(warp::delete2())
+        .and(user_filter(state))
+        .and(warp::query())
+        .and(state.db())
+        .map(remove_user_from_bucket_handler)
+        .and_then(json_or_reject);
+
     // Gets permissions for a bucket for the logged in user.
     let get_permissions_for_self = path!(Uuid / "user")
         .and(warp::path::end())
@@ -157,6 +173,7 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
                 .or(get_buckets_user_is_in)
                 .or(get_public_buckets)
                 .or(add_self_to_bucket)
+                .or(remove_user_from_bucket)
                 .or(get_permissions_for_self)
                 .or(set_permissions)
                 .or(set_bucket_flags)
@@ -202,12 +219,14 @@ fn create_bucket_handler(
     };
 
     let bucket = conn.create_bucket(new_bucket)?;
+    // By default, the user has full permissions when they create a bucket.
     let new_relation = NewBucketUserRelation {
         user_uuid,
         bucket_uuid: bucket.uuid,
         set_public_permission: true,
         set_drawing_permission: true,
         set_exclusive_permission: true,
+        kick_permission: true,
         grant_permissions_permission: true,
     };
     conn.add_user_to_bucket(new_relation)?;
@@ -221,13 +240,21 @@ fn add_self_to_bucket_handler(
     user_uuid: Uuid,
     conn: BoxedRepository,
 ) -> Result<BucketUserRelation, Error> {
+
+    let bucket = conn.get_bucket_by_uuid(bucket_uuid)?;
+    if bucket.exclusive {
+        return Err(Error::PreConditionNotMet("Bucket is set to exclusive. Users are not allowed to join.".to_string()));
+    }
+
     info!("add_self_to_bucket_handler");
+    // By default, users don't have any permissions.
     let new_relation = NewBucketUserRelation {
         user_uuid,
         bucket_uuid,
         set_public_permission: false,
         set_drawing_permission: false,
         set_exclusive_permission: false,
+        kick_permission: false,
         grant_permissions_permission: false,
     };
     conn.add_user_to_bucket(new_relation).map_err(|e| {
@@ -277,6 +304,21 @@ fn set_bucket_flags_handler(
     conn.change_bucket_flags(changeset).map_err(Error::from)
 }
 
+
+fn remove_user_from_bucket_handler(bucket_uuid: Uuid, account_user_uuid: Uuid, target_user_uuid: UserUuidQueryParam, db: BoxedRepository) -> Result<BucketUserRelation, Error> {
+    info!("remove_user_from_bucket_handler");
+
+    let relation = db.get_user_bucket_relation(account_user_uuid, bucket_uuid)?;
+
+
+    // Does user have permission to remove user
+    if relation.kick_permission || account_user_uuid == target_user_uuid.user_uuid{
+        db.remove_user_from_bucket(target_user_uuid.user_uuid, bucket_uuid).map_err(Error::from)
+    } else {
+        Err(Error::PreConditionNotMet("User does not have permission to remove another user from this bucket.".to_string()))
+    }
+}
+
 fn get_users_in_bucket_handler(
     bucket_uuid: Uuid,
     conn: BoxedRepository,
@@ -302,6 +344,7 @@ fn set_permissions_handler(
             set_public_permission: permissions_request.set_public_permission,
             set_drawing_permission: permissions_request.set_drawing_permission,
             set_exclusive_permission: permissions_request.set_exclusive_permission,
+            kick_permission: permissions_request.kick_permission,
             grant_permissions_permission: permissions_request.grant_permissions_permission,
         };
         conn.set_permissions(permissions_changeset)
@@ -403,4 +446,74 @@ mod tests {
         })
     }
 
+    #[test]
+    fn remove_self_from_bucket() {
+        execute_test(|fixture: &UserBucketRelationFixture, db: BoxedRepository| {
+           let new_relation = NewBucketUserRelation {
+                user_uuid: fixture.user2.uuid,
+                bucket_uuid: fixture.bucket.uuid,
+                set_public_permission: false,
+                set_drawing_permission: false,
+                set_exclusive_permission: false,
+                kick_permission: false,
+                grant_permissions_permission: false,
+            };
+            db.add_user_to_bucket(new_relation).expect("Should add user to bucket");
+
+            let query = UserUuidQueryParam {
+                user_uuid: fixture.user2.uuid
+            };
+
+            remove_user_from_bucket_handler(fixture.bucket.uuid, fixture.user2.uuid, query,  db)
+                .expect("User should be removed");
+        })
+    }
+
+    #[test]
+    fn remove_other_from_bucket() {
+        execute_test(|fixture: &UserBucketRelationFixture, db: BoxedRepository| {
+           let new_relation = NewBucketUserRelation {
+                user_uuid: fixture.user2.uuid,
+                bucket_uuid: fixture.bucket.uuid,
+                set_public_permission: false,
+                set_drawing_permission: false,
+                set_exclusive_permission: false,
+                kick_permission: false,
+                grant_permissions_permission: false,
+            };
+            db.add_user_to_bucket(new_relation).expect("Should add user to bucket");
+
+            let query = UserUuidQueryParam {
+                user_uuid: fixture.user2.uuid
+            };
+
+            // User 1, who has permissions, should remove user 2.
+            remove_user_from_bucket_handler(fixture.bucket.uuid, fixture.user1.uuid, query,  db)
+                .expect("User should be removed");
+        })
+    }
+
+    #[test]
+    fn cant_remove_other_from_bucket() {
+        execute_test(|fixture: &UserBucketRelationFixture, db: BoxedRepository| {
+           let new_relation = NewBucketUserRelation {
+                user_uuid: fixture.user2.uuid,
+                bucket_uuid: fixture.bucket.uuid,
+                set_public_permission: false,
+                set_drawing_permission: false,
+                set_exclusive_permission: false,
+                kick_permission: false,
+                grant_permissions_permission: false,
+            };
+            db.add_user_to_bucket(new_relation).expect("Should add user to bucket");
+
+            let query = UserUuidQueryParam {
+                user_uuid: fixture.user1.uuid
+            };
+
+            // User 2, who does not have kick permissions, should not be able to remove user 1.
+            remove_user_from_bucket_handler(fixture.bucket.uuid, fixture.user2.uuid, query,  db)
+                .expect_err("User should not be removed.");
+        })
+    }
 }

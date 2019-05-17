@@ -294,6 +294,7 @@ fn set_permissions() {
                 set_public_permission: Some(false),
                 set_drawing_permission: None,
                 set_exclusive_permission: Some(true),
+                kick_permission: None,
                 grant_permissions_permission: None,
             };
 

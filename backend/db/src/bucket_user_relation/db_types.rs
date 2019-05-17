@@ -23,6 +23,8 @@ pub struct BucketUserRelation {
     pub set_drawing_permission: bool,
     /// Can the user set the bucket to private.
     pub set_exclusive_permission: bool,
+    /// Can the user kick other users in the bucket.
+    pub kick_permission: bool,
     /// Can the user grant permissions to other users.
     pub grant_permissions_permission: bool,
     /// When the row was last updated.
@@ -45,6 +47,8 @@ pub struct NewBucketUserRelation {
     pub set_drawing_permission: bool,
     /// Can the user set the bucket to private.
     pub set_exclusive_permission: bool,
+    /// Can the user kick other users.
+    pub kick_permission: bool,
     /// Can the user grant permissions to other users.
     pub grant_permissions_permission: bool,
 }
@@ -63,9 +67,13 @@ pub struct BucketUserPermissionsChangeset {
     pub set_drawing_permission: Option<bool>,
     /// Can the user set the bucket to private.
     pub set_exclusive_permission: Option<bool>,
+    /// Can the user kick other users.
+    pub kick_permission: Option<bool>,
     /// Can the user grant permissions to other users.
     pub grant_permissions_permission: Option<bool>,
 }
+
+// TODO, maybe remove this structure.
 
 /// Structure that just contains the permissions for a user-bucket relation.
 #[derive(Clone, Copy, Queryable, Debug, Serialize, Deserialize)]
@@ -78,4 +86,6 @@ pub struct BucketUserPermissions {
     pub set_exclusive_permission: bool,
     /// Can the user grant permissions to other users.
     pub grant_permissions_permission: bool,
+    /// Can the user kick other users.
+    pub kick_permission: bool,
 }
