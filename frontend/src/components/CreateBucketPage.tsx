@@ -13,19 +13,16 @@ interface Props {
 
 interface State {
   name: string,
-  slug: string,
   error: null | "string"
 }
 
 interface CreateBucketRequest {
   bucket_name: string,
-  bucket_slug: string
 }
 
 export class CreateBucketPage extends React.Component<Props, State> {
   state: State = {
     name: "",
-    slug: "",
     error: null
   };
 
@@ -34,7 +31,6 @@ export class CreateBucketPage extends React.Component<Props, State> {
     const url = "/api/bucket";
     let request: CreateBucketRequest = {
       bucket_name: this.state.name,
-      bucket_slug: this.state.slug
     };
 
     let options: RequestInit = {
@@ -51,10 +47,6 @@ export class CreateBucketPage extends React.Component<Props, State> {
   handleNameUpdate = (event: ChangeEvent<HTMLInputElement>) => {
     this.setState({name: event.target.value})
     // TODO update the slug at the same time if its not "dirty"
-  };
-
-  handleSlugUpdate = (event: ChangeEvent<HTMLInputElement>) => {
-    this.setState({slug: event.target.value})
   };
 
 
@@ -81,11 +73,6 @@ export class CreateBucketPage extends React.Component<Props, State> {
                   label={"Bucket Name"}
                   fullWidth={true}
                   onChange={this.handleNameUpdate}
-                />
-                <TextField
-                  label={"URL Slug"}
-                  fullWidth={true}
-                  onChange={this.handleSlugUpdate}
                 />
               </div>
             <div style={styles.verticalSpacing}/>

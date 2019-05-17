@@ -16,6 +16,7 @@ pub struct Answer {
     /// The question to which the answer is responding.
     pub question_uuid: Uuid,
     /// Can the outside world see the answer.
+    /// This is in contrast to if just the user themselves can see the answer.
     pub publicly_visible: bool,
     /// The answer
     pub answer_text: String,

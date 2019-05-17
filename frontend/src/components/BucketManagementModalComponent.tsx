@@ -73,7 +73,7 @@ export class BucketManagementModalComponent extends React.Component<Props, State
       >
         <div style={styles.flex}>
           <Paper style={styles.floating}>
-            <FormControl>
+            <FormControl style={styles.form}>
               <FormLabel>Bucket Settings</FormLabel>
               <FormGroup>
                 <FormControlLabel
@@ -115,6 +115,7 @@ export class BucketManagementModalComponent extends React.Component<Props, State
                 />
                 <FormLabel>Prevents anyone who hasn't already joined from joining the bucket.</FormLabel>
               </FormGroup>
+              <div style={styles.grow}/>
               <Button
                 onClick={() => this.saveChanges()}
                 disabled={!this.state.dirty}
@@ -148,5 +149,12 @@ const styles = {
     display: "flex",
     justifyContent: "center",
     alignContent: "center",
+  },
+  form: {
+    width: "100%",
+    height: "100%"
+  },
+  grow: {
+    flex: 1
   }
 };

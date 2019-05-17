@@ -7,6 +7,7 @@ import List from "@material-ui/core/List";
 import {Route} from "react-router-dom";
 import Paper from "@material-ui/core/Paper";
 import {LoadingComponent} from "./LoadingComponent";
+import Typography from "@material-ui/core/Typography";
 
 
 
@@ -40,7 +41,17 @@ export class BucketList extends React.Component<Props, State> {
           button
           onClick={() => history.push(`/bucket/${bucket.bucket_slug}`)}
         >
-            {bucket.bucket_name}
+
+          <div style={styles.horizontalContainer}>
+            <Typography>
+              {bucket.bucket_name}
+            </Typography>
+
+            <Typography variant="caption">
+              {bucket.bucket_slug}
+            </Typography>
+          </div>
+
         </ListItem>
     )
   }
@@ -85,5 +96,12 @@ const styles = {
     maxWidth: 700,
     width: "100%",
     marginBottom: 15
+  },
+  horizontalContainer: {
+    display: "flex",
+    flexDirection: "row" as "row",
+    margin: 2,
+    justifyContent: "space-between",
+    width: "100%"
   }
 };

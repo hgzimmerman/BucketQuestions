@@ -4,7 +4,7 @@ import {authenticatedFetchAndDeserialize, isAuthenticated} from "../App";
 import {
   ArchiveQuestionRequest,
   Bucket,
-  BucketUserPermissions, ChangeBucketFlagsRequest,
+  BucketUserPermissions, BucketUserRelation, ChangeBucketFlagsRequest,
   ErrorResponse,
   NewQuestionRequest,
   Question, SetPermissionsRequest, User, Uuid
@@ -67,9 +67,8 @@ export class BucketPage extends React.Component<Props, State> {
       .then((bucket: Bucket | void) => {
         if (bucket != null) {
           this.getNumberOfQuestions(bucket);
-          if (isAuthenticated()) {
-            this.getPermissions(bucket.uuid)
-          }
+          this.getPermissions(bucket.uuid);
+          this.addSelfToBucket(bucket);
         }
       });
   }
@@ -96,13 +95,15 @@ export class BucketPage extends React.Component<Props, State> {
 
   getPermissions = (bucket_uuid: Uuid) => {
     const url = `/api/bucket/${bucket_uuid}/user`;
-    return authenticatedFetchAndDeserialize<BucketUserPermissions>(url)
-      .then((permissions: BucketUserPermissions) => {
-        this.setState({permissions: Loadable.loaded(permissions)})
-      })
-      .catch((error: ErrorResponse) => {
-        this.setState({permissions: Loadable.errored(error.message)})
-      });
+    if (isAuthenticated()) {
+      return authenticatedFetchAndDeserialize<BucketUserPermissions>(url)
+        .then((permissions: BucketUserPermissions) => {
+          this.setState({permissions: Loadable.loaded(permissions)})
+        })
+        .catch((error: ErrorResponse) => {
+          this.setState({permissions: Loadable.errored(error.message)})
+        });
+    }
   };
 
   changeBucketFlagsRequest = (bucket_uuid: Uuid, changes: ChangeBucketFlagsRequest) => {
@@ -119,6 +120,7 @@ export class BucketPage extends React.Component<Props, State> {
   };
 
 
+
   setPermissions = (permissions: SetPermissionsRequest, bucket_uuid: Uuid) => {
     const user_uuid = permissions.target_user_uuid;
     const url = `/api/bucket/${bucket_uuid}/user`;
@@ -132,6 +134,23 @@ export class BucketPage extends React.Component<Props, State> {
         console.log(JSON.stringify(response)) // TODO remove this.
         // TODO Might need some logic for setting own permissions vs others
       });
+  };
+
+  addSelfToBucket = (bucket: Bucket) => {
+    const url = `/api/bucket/${bucket.uuid}/user`;
+    // If the user is logged in and the bucket is not exclusive, add the user to the bucket.
+    if (isAuthenticated() && !bucket.exclusive) {
+      const options = {
+        method: "POST",
+      };
+      authenticatedFetchAndDeserialize<BucketUserRelation>(url, options)
+        .then(() => {
+          console.log("Added self to bucket.")
+        })
+        .catch(() => {
+          console.log("User already added to bucket. The 412 response is expected behavior.")
+        })
+    }
   };
 
   getBucket: () => Promise<Bucket | undefined> = () => {

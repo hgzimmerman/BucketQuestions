@@ -39,7 +39,6 @@ pub fn create_database(admin_conn: &PgConnection, database_name: &str) -> Databa
         .execute(admin_conn)
         .map_err(DatabaseError::from)
         .map(|_| ());
-    println!("Created database:  {}", database_name);
     db_result
 }
 

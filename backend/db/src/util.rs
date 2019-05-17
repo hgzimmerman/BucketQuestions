@@ -3,17 +3,15 @@ use diesel::{
     associations::HasTable,
     delete,
     dsl::Find,
-    expression::Expression,
     helper_types::Update,
     insertable::Insertable,
-    pg::{Pg, PgConnection},
+    pg::{PgConnection},
     query_builder::{
-        AsChangeset, DeleteStatement, InsertStatement, IntoUpdateTarget, QueryFragment, QueryId,
+        AsChangeset, DeleteStatement, InsertStatement, IntoUpdateTarget,
     },
     query_dsl::{filter_dsl::FindDsl, LoadQuery, RunQueryDsl},
-    query_source::{QuerySource, Table},
+    query_source::{QuerySource},
     result::QueryResult,
-    sql_types::HasSqlType,
 };
 use uuid::Uuid;
 
@@ -64,11 +62,8 @@ where
 #[inline(always)]
 pub fn delete_row<Model, Tab>(table: Tab, uuid: Uuid, conn: &PgConnection) -> QueryResult<Model>
 where
-    Tab: FindDsl<Uuid> + Table,
+    Tab: FindDsl<Uuid>,
     <Tab as FindDsl<Uuid>>::Output: IntoUpdateTarget,
-    Pg: HasSqlType<<<<<Tab as FindDsl<Uuid>>::Output as HasTable>::Table as Table>::AllColumns as Expression>::SqlType>,
-    <<<Tab as FindDsl<Uuid>>::Output as HasTable>::Table as Table>::AllColumns: QueryId,
-    <<<Tab as FindDsl<Uuid>>::Output as HasTable>::Table as Table>::AllColumns: QueryFragment<Pg>,
     DeleteStatement<
         <<Tab as FindDsl<Uuid>>::Output as HasTable>::Table,
         <<Tab as FindDsl<Uuid>>::Output as IntoUpdateTarget>::WhereClause,

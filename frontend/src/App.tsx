@@ -52,17 +52,11 @@ function authenticatedFetch(url: string, init?: RequestInit): Promise<Response> 
     headers["Authorization"] = jwt;
   }
 
-  if (init !== undefined &&init.method !== undefined && init.body !== undefined) {
-    console.log("making a request with a body");
-    let newInit: RequestInit = {
-      headers,
-      ...init
-    };
-    return fetch(url, newInit)
-  } else {
-    console.log("making request without body");
-    return fetch(url, {headers})
-  }
+   let newInit: RequestInit = {
+    headers,
+    ...init
+  };
+  return fetch(url, newInit);
 }
 
 /**
