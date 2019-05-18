@@ -65,14 +65,14 @@ fn setup_pool_named_db(
 // TODO all tests should be integration style.
 // Likely hide them behind some sort of ENV VAR that indicates that it is running in a docker container or something
 #[cfg(test)]
-mod test {
+pub(crate) mod test {
     use super::*;
 
     /// Should point to the base postgres account.
     /// One that has authority to create and destroy other database instances.
     ///
     /// It is expected to be on the same database server as the one indicated by DATABASE_ORIGIN.
-    const DROP_DATABASE_URL: &str = env!("DROP_DATABASE_URL");
+    pub(crate) const DROP_DATABASE_URL: &str = env!("DROP_DATABASE_URL");
     /// The origin (scheme, user, password, address, port) of the test database.
     ///
     /// This determines which database server is connected to, but allows for specification of

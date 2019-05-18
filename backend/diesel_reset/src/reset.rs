@@ -9,6 +9,7 @@ use diesel::{
     QueryResult,
 };
 use migrations_internals as migrations;
+use diesel::dsl::sql;
 
 /// Drops the database, completely removing every table (and therefore every row) in the database.
 pub fn drop_database(admin_conn: &PgConnection, database_name: &str) -> DatabaseResult<()> {
@@ -73,4 +74,33 @@ pub(crate) fn pg_database_exists(conn: &PgConnection, database_name: &str) -> Qu
         .get_result::<String>(conn)
         .optional()
         .map(|x| x.is_some())
+}
+
+table! {
+    pg_user (usename) {
+        usename -> Text,
+        usesuper -> Bool,
+    }
+}
+
+pub fn is_superuser(conn: &PgConnection) -> QueryResult<bool> {
+    // select usesuper from pg_user where usename = CURRENT_USER;
+    pg_user::table
+        .select(pg_user::usesuper)
+        .filter(sql("usename = CURRENT_USER"))
+        .get_result::<bool>(conn)
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use diesel::Connection;
+    use crate::setup::test::DROP_DATABASE_URL;
+    #[test]
+    fn is_super() {
+        let admin_conn = PgConnection::establish(DROP_DATABASE_URL)
+            .expect("Should be able to connect to admin db");
+        let is_super = is_superuser(&admin_conn).expect("Should get valid response back");
+        assert!(is_super)
+    }
 }
