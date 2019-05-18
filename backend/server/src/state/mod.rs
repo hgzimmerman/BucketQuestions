@@ -23,6 +23,9 @@ use std::{
 };
 use url::Url;
 use warp::{Filter, Rejection};
+use crate::config::RepositoryType;
+use db::fake::FakeDatabase;
+use std::sync::{Mutex, Arc};
 
 /// Simplified type for representing a HttpClient.
 pub type HttpsClient = Client<HttpsConnector<HttpConnector<GaiResolver>>, Body>;
@@ -86,7 +89,11 @@ impl State {
 
         let root = conf.server_lib_root.unwrap_or_else(|| PathBuf::from("./"));
 
-        let repository_provider = RepositoryProvider::Pool(init_pool(DATABASE_URL, pool_conf));
+
+        let repository_provider = match conf.repository {
+            RepositoryType::Fake => RepositoryProvider::Mock(Arc::new(Mutex::new(FakeDatabase::default()))),
+            RepositoryType::Database => RepositoryProvider::Pool(init_pool(DATABASE_URL, pool_conf))
+        };
 
         State {
             repository_provider,

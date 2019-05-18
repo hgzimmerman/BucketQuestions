@@ -33,13 +33,7 @@ pub fn start(config: Config) {
     let localhost = [0, 0, 0, 0];
     let addr = (localhost, config.port);
 
-    let state_config = StateConfig {
-        secret: config.secret,
-        max_pool_size: config.max_pool_size,
-        server_lib_root: config.server_lib_root,
-        environment: config.running_environment,
-    };
-
+    let state_config = StateConfig::from(config.clone());
     let state = State::new(state_config);
     info!("{:#?}", state);
 

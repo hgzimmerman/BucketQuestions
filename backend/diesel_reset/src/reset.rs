@@ -83,6 +83,7 @@ table! {
     }
 }
 
+/// Indicates if the current connection has superuser privileges.
 pub fn is_superuser(conn: &PgConnection) -> QueryResult<bool> {
     // select usesuper from pg_user where usename = CURRENT_USER;
     pg_user::table

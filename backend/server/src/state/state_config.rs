@@ -1,6 +1,8 @@
 use authorization::Secret;
 use std::path::PathBuf;
 use url::Url;
+use crate::config::RepositoryType;
+use crate::Config;
 
 /// Configuration object for creating the state.
 ///
@@ -11,10 +13,24 @@ pub struct StateConfig {
     pub max_pool_size: Option<u32>,
     pub server_lib_root: Option<PathBuf>,
     pub environment: RunningEnvironment,
+    pub repository: RepositoryType
 }
 
+impl From<Config> for StateConfig {
+    fn from(config: Config) -> Self {
+        StateConfig {
+            secret: config.secret,
+            max_pool_size: config.max_pool_size,
+            server_lib_root: config.server_lib_root,
+            environment: config.running_environment,
+            repository: config.repository
+        }
+    }
+}
+
+
 /// Where is the program running
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum RunningEnvironment {
     /// Frontend is running off of `npm start`
     Node { port: u16 },

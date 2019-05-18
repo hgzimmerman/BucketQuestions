@@ -9,8 +9,23 @@ use std::path::PathBuf;
 
 const DEFAULT_PORT: u16 = 8080;
 
+/// Determines which data store will be used by the backend.
+///
+/// By default, Database will be selected.
+#[derive(Clone, Copy, Debug)]
+pub enum RepositoryType {
+    Fake,
+    Database
+}
+
+impl Default for RepositoryType {
+    fn default() -> Self {
+        RepositoryType::Database
+    }
+}
+
 /// Configuration options for initializing the server.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Config {
     /// The port to start the server on.
     pub port: u16,
@@ -23,11 +38,13 @@ pub struct Config {
     pub max_pool_size: Option<u32>,
     /// The root of the server lib.
     /// This is used to find static assets with and around the server crate.
-    /// If the binary is launched from somewhere other than .../server, then this parameter needs to be supplied.
+    /// If the binary is _launched_ from somewhere other than `/backend/server`, then this parameter needs to be supplied.
     pub server_lib_root: Option<PathBuf>,
-    //    pub is_production: bool,
     /// What environment is the application running in?
+    /// This can determine a multitude of things, but is currently mostly related to the redirection url used in logins.
     pub running_environment: RunningEnvironment,
+    /// Determines which data store will be used by the server.
+    pub repository: RepositoryType
 }
 
 impl Config {
@@ -89,6 +106,10 @@ impl Config {
                     .conflicts_with_all(&["production", "development"])
                     .help("Run with configurations made for a staging environment.")
             )
+            .arg(Arg::with_name("fake_database")
+                .long("fake")
+                .help("If present, the server will start with a fake database instead of connecting to the real one.")
+            )
             .get_matches_safe();
 
         match matches {
@@ -130,6 +151,13 @@ impl Config {
                     }
                 };
 
+                let repository = if matches.is_present("fake_database") {
+                    warn!("Application starting with a fake database. This is ok for testing purposes, but should not be done in production.");
+                    RepositoryType::Fake
+                } else {
+                    RepositoryType::Database
+                };
+
                 Config {
                     port,
                     tls_enabled,
@@ -137,6 +165,7 @@ impl Config {
                     max_pool_size,
                     server_lib_root,
                     running_environment,
+                    repository
                 }
             }
             Err(error) => {
