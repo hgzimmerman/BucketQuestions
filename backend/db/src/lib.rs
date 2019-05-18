@@ -64,25 +64,25 @@ pub enum RepoAcquisitionError {
     CouldNotGetRepo,
 }
 
-/// Provides repositories
+/// Provides repositories.
 #[derive(Clone)]
 pub enum RepositoryProvider {
-    /// Pool repository provider
+    /// Pool repository provider.
     Pool(Pool),
-    /// Mock repository provider
-    Mock(Arc<Mutex<FakeDatabase>>),
+    /// Fake repository provider.
+    Fake(Arc<Mutex<FakeDatabase>>),
 }
 
 impl Debug for RepositoryProvider {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
         match self {
             RepositoryProvider::Pool(_) => write!(f, "RepositoryProvider::Pool"),
-            RepositoryProvider::Mock(mock) => mock.fmt(f),
+            RepositoryProvider::Fake(fake) => fake.fmt(f),
         }
     }
 }
 
-/// An abstract repository that is sendable across threads
+/// An abstract repository that is sendable across threads.
 pub type BoxedRepository = Box<dyn Repository + Send>;
 
 impl RepositoryProvider {
@@ -95,8 +95,10 @@ impl RepositoryProvider {
                     .map_err(|_| RepoAcquisitionError::CouldNotGetRepo)?;
                 Ok(Box::new(repo))
             }
-            RepositoryProvider::Mock(mock) => {
-                let repo = mock.clone();
+            RepositoryProvider::Fake(fake) => {
+                let repo = fake.clone();
+                // It feels strange wrapping an Arc in a Box to make it a trait object.
+                // It seems wasteful.
                 Ok(Box::new(repo))
             }
         }

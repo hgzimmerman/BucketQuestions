@@ -91,7 +91,7 @@ impl State {
 
 
         let repository_provider = match conf.repository {
-            RepositoryType::Fake => RepositoryProvider::Mock(Arc::new(Mutex::new(FakeDatabase::default()))),
+            RepositoryType::Fake => RepositoryProvider::Fake(Arc::new(Mutex::new(FakeDatabase::default()))),
             RepositoryType::Database => RepositoryProvider::Pool(init_pool(DATABASE_URL, pool_conf))
         };
 

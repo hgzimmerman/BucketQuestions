@@ -103,7 +103,7 @@ pub mod util {
         Fix: Fixture,
     {
         let (fixture, db) = setup_fake_db_impl();
-        (fixture, RepositoryProvider::Mock(db))
+        (fixture, RepositoryProvider::Fake(db))
     }
 
     /// Sets up a fixture for a database-backed repository.
