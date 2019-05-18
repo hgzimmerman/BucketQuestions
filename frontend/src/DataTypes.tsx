@@ -1,5 +1,9 @@
 export type Uuid = string;
 
+export interface UuidResponse {
+  uuid: Uuid
+}
+
 export interface Bucket {
   uuid: string;
   bucket_name: string;

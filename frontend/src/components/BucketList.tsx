@@ -1,6 +1,6 @@
 import React from 'react';
 import {ListItem} from "@material-ui/core";
-import {Bucket} from "../DataTypes";
+import {Bucket, UuidResponse} from "../DataTypes";
 import {Loadable} from "../Util";
 import {Error} from "../Util";
 import List from "@material-ui/core/List";
@@ -8,6 +8,7 @@ import {Route} from "react-router-dom";
 import Paper from "@material-ui/core/Paper";
 import {LoadingComponent} from "./LoadingComponent";
 import Typography from "@material-ui/core/Typography";
+import {authenticatedFetchAndDeserialize} from "../App";
 
 
 
@@ -33,6 +34,28 @@ export class BucketList extends React.Component<Props, State> {
         this.setState({buckets: Loadable.errored("Couldn't get buckets")})
       });
   }
+
+  remove_self_from_bucket = (bucket: Bucket) => {
+    const uuid_url = "/api/user/uuid";
+    authenticatedFetchAndDeserialize<UuidResponse>(uuid_url)
+      .then((uuidResponse: UuidResponse) => {
+        const remove_self_from_bucket_url = `/api/bucket/${bucket.uuid}/user/?user_uuid=${uuidResponse.uuid}`;
+        let options: RequestInit = {
+          method: "DELETE"
+        };
+        authenticatedFetchAndDeserialize(remove_self_from_bucket_url, options)
+          .then(() => {
+            console.log("removed bucket") // TODO actually refresh the bucket list
+          })
+          .catch(() => {
+            console.log("Couldn't remove self from bucket");
+          })
+      })
+      .catch(() => {
+        console.log("Couldn't get uuid required to make request to remove self from bucket.");
+      })
+
+  };
 
   static render_bucket(bucket: Bucket, history: any) {
     return (

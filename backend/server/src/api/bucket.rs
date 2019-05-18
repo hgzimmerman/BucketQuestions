@@ -243,7 +243,7 @@ fn add_self_to_bucket_handler(
 
     let bucket = conn.get_bucket_by_uuid(bucket_uuid)?;
     if bucket.exclusive {
-        return Err(Error::PreConditionNotMet("Bucket is set to exclusive. Users are not allowed to join.".to_string()));
+        return Err(Error::PreconditionNotMet("Bucket is set to exclusive. Users are not allowed to join.".to_string()));
     }
 
     info!("add_self_to_bucket_handler");
@@ -259,7 +259,7 @@ fn add_self_to_bucket_handler(
     };
     conn.add_user_to_bucket(new_relation).map_err(|e| {
         if let diesel::result::Error::DatabaseError(DatabaseErrorKind::UniqueViolation, _) = e {
-            Error::PreConditionNotMet(
+            Error::PreconditionNotMet(
                 "There is already a relation between this user and the bucket".to_string(),
             )
         } else {
@@ -315,7 +315,7 @@ fn remove_user_from_bucket_handler(bucket_uuid: Uuid, account_user_uuid: Uuid, t
     if relation.kick_permission || account_user_uuid == target_user_uuid.user_uuid{
         db.remove_user_from_bucket(target_user_uuid.user_uuid, bucket_uuid).map_err(Error::from)
     } else {
-        Err(Error::PreConditionNotMet("User does not have permission to remove another user from this bucket.".to_string()))
+        Err(Error::PreconditionNotMet("User does not have permission to remove another user from this bucket.".to_string()))
     }
 }
 

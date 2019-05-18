@@ -25,7 +25,7 @@ pub enum Error {
     /// The database encountered an error while running a query.
     DatabaseError(String),
     /// The client expected the server to be in a given state, but it was not, so the request was rejected.
-    PreConditionNotMet(String),
+    PreconditionNotMet(String),
     /// If the server needs to talk to an external API to properly serve a request,
     /// and that server experiences an error, this is the error to represent that.
     DependentConnectionFailed(DependentConnectionError),
@@ -57,7 +57,7 @@ impl Display for Error {
                 "Could not acquire a connection to the database, the connection pool may be occupied".to_string()
             }
             Error::DatabaseError(e) => e.to_string(),
-            Error::PreConditionNotMet(e) => e.to_string(),
+            Error::PreconditionNotMet(e) => e.to_string(),
             Error::BadRequest(s)=> s.to_string(),
             Error::InternalServerError(s) => {
                 if let Some(e) = s {
@@ -162,7 +162,7 @@ impl Error {
         match *self {
             Error::DatabaseUnavailable => StatusCode::INTERNAL_SERVER_ERROR,
             Error::DatabaseError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            Error::PreConditionNotMet(_) => StatusCode::PRECONDITION_FAILED,
+            Error::PreconditionNotMet(_) => StatusCode::PRECONDITION_FAILED,
             Error::BadRequest(_) => StatusCode::BAD_REQUEST,
             Error::NotFound { .. } => StatusCode::NOT_FOUND,
             Error::InternalServerError(_) => StatusCode::INTERNAL_SERVER_ERROR,
