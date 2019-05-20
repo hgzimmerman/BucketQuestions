@@ -15,7 +15,7 @@ use log::{error, info, warn};
 use oauth2::basic::BasicClient;
 use serde::{Deserialize, Serialize};
 use url::Url;
-use warp::{filters::BoxedFilter, path, query::query, Filter, Reply};
+use warp::{filters::BoxedFilter, path, query::query, Filter, Reply, Rejection};
 
 /// The path segment for the auth api.
 pub const AUTH_PATH: &str = "auth";
@@ -99,8 +99,7 @@ pub fn auth_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .map(get_or_create_user)
         .and_then(crate::util::reject)
         .and(state.secret())
-        .map(create_jwt)
-        .and_then(crate::util::reject)
+        .and_then(create_jwt)
         .map(|jwt: String| login_template_render(&jwt, "/"))
         .with(warp::reply::with::header("content-type", "text/html"));
 
@@ -182,7 +181,7 @@ fn make_request_for_google_jwt_token(
             let body = String::from_utf8_lossy(&v).to_string();
 
             let response: TokenResponse = serde_json::from_str(&body).map_err(|_| {
-                Error::InternalServerError(Some(format!("Could not parse response {}", body)))
+                Error::internal_server_error(format!("Could not parse response {}", body))
             })?;
             Ok(response)
         })
@@ -211,6 +210,7 @@ fn get_or_create_user(
     use diesel::result::Error as DieselError;
     conn.get_user_by_google_id(google_jwt_payload.sub.clone())
         .or_else(|error| {
+            // If the user could not be gotten from the database, then a new user will be created.
             if let DieselError::NotFound = error {
                 let new_user = NewUser {
                     google_user_id: google_jwt_payload.sub,
@@ -227,10 +227,10 @@ fn get_or_create_user(
 }
 
 /// Creates the jwt from a User record.
-fn create_jwt(user: User, secret: Secret) -> Result<String, Error> {
+fn create_jwt(user: User, secret: Secret) -> Result<String, Rejection> {
     let lifetime = chrono::Duration::weeks(30);
     let payload: JwtPayload<User> = JwtPayload::new(user, lifetime);
-    payload.encode_jwt_string(&secret).map_err(Error::from)
+    payload.encode_jwt_string(&secret).map_err(warp::reject::custom)
 }
 
 /// Login by sending a small html page that inserts the JWT into localstorage

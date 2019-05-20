@@ -74,8 +74,7 @@ where
         .and_then(|bearer_string: String, secret: Secret| {
             JwtPayload::extract_jwt(bearer_string, &secret)
                 .and_then(JwtPayload::validate_dates)
-                .map_err(Error::AuthError)
-                .map_err(Error::reject)
+                .map_err(warp::reject::custom)
         })
         .boxed()
 }
@@ -111,6 +110,7 @@ mod unit {
     use crate::state::state_config::{RunningEnvironment, StateConfig};
     use authorization::BEARER;
     use chrono::Duration;
+    use crate::config::RepositoryType;
 
     #[test]
     fn pass_jwt_filter() {
@@ -120,6 +120,7 @@ mod unit {
             max_pool_size: None,
             server_lib_root: None,
             environment: RunningEnvironment::default(),
+            repository: RepositoryType::Fake
         };
         let state = State::new(conf);
         let uuid = Uuid::new_v4();
@@ -141,6 +142,7 @@ mod unit {
             max_pool_size: None,
             server_lib_root: None,
             environment: RunningEnvironment::default(),
+            repository: RepositoryType::Fake
         };
 
         let state = State::new(conf);
@@ -156,6 +158,7 @@ mod unit {
             max_pool_size: None,
             server_lib_root: None,
             environment: RunningEnvironment::default(),
+            repository: RepositoryType::Fake
         };
         let state = State::new(conf);
         let uuid = Uuid::new_v4();
@@ -182,6 +185,7 @@ mod unit {
             max_pool_size: None,
             server_lib_root: None,
             environment: RunningEnvironment::default(),
+            repository: RepositoryType::Fake
         };
 
         let state = State::new(conf);
@@ -197,6 +201,7 @@ mod unit {
             max_pool_size: None,
             server_lib_root: None,
             environment: RunningEnvironment::default(),
+            repository: RepositoryType::Fake
         };
         let state = State::new(conf);
         let uuid = Uuid::new_v4();
@@ -224,6 +229,7 @@ mod unit {
             max_pool_size: None,
             server_lib_root: None,
             environment: RunningEnvironment::default(),
+            repository: RepositoryType::Fake
         };
         let state = State::new(conf);
 

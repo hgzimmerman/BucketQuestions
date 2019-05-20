@@ -69,13 +69,13 @@ export interface BucketUserRelation {
 //   grant_permissions_permission?: boolean
 // }
 
-// TODO consider the ?: syntax instead of boolean | null
 export interface SetPermissionsRequest {
     target_user_uuid: Uuid,
-    set_public_permission: boolean| null,
-    set_drawing_permission: boolean | null,
-    set_exclusive_permission: boolean | null,
-    grant_permissions_permission: boolean | null
+    set_public_permission?: boolean,
+    set_drawing_permission?: boolean,
+    set_exclusive_permission?: boolean,
+    kick_permission?: null,
+    grant_permissions_permission?: boolean
 }
 
 export interface LinkResponse {

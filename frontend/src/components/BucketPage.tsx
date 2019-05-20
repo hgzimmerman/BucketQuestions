@@ -33,7 +33,7 @@ interface State {
   permissions: Loadable<BucketUserPermissions>,
   user: Loadable<User>,
   newQuestionText: string,
-  modalOpen: boolean
+  settingsModalOpen: boolean
 }
 
 export class BucketPage extends React.Component<Props, State> {
@@ -44,7 +44,7 @@ export class BucketPage extends React.Component<Props, State> {
     permissions: Loadable.unloaded(),
     user: Loadable.unloaded(),
     newQuestionText: "",
-    modalOpen: false
+    settingsModalOpen: false
   };
 
   componentWillReceiveProps(nextProps: Readonly<Props>, nextContext: any): void {
@@ -79,12 +79,12 @@ export class BucketPage extends React.Component<Props, State> {
 
   handleCloseModal = () => {
     console.log("handling closing the modal");
-    this.setState({modalOpen: false})
+    this.setState({settingsModalOpen: false})
   };
 
   handleOpenModal = () => {
     console.log("handling opening the modal");
-    this.setState({ modalOpen: true });
+    this.setState({ settingsModalOpen: true });
   };
 
   handleNewQuestionTextUpdate = (event: ChangeEvent<HTMLInputElement>) => {
@@ -122,7 +122,7 @@ export class BucketPage extends React.Component<Props, State> {
 
 
   setPermissions = (permissions: SetPermissionsRequest, bucket_uuid: Uuid) => {
-    const user_uuid = permissions.target_user_uuid;
+    // const user_uuid = permissions.target_user_uuid;
     const url = `/api/bucket/${bucket_uuid}/user`;
     const body = JSON.stringify(permissions);
     const options = {
@@ -363,7 +363,7 @@ export class BucketPage extends React.Component<Props, State> {
         {
           (bucket !== null && permissions !== null) &&
           <BucketManagementModalComponent
-            open={this.state.modalOpen}
+            open={this.state.settingsModalOpen}
             handleClose={this.handleCloseModal}
             bucket={bucket as Bucket}
             permissions={permissions as BucketUserPermissions}

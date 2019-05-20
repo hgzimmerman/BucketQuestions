@@ -21,9 +21,13 @@ use log::warn;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::fmt::{self, Debug, Display, Error, Formatter};
+use strum_macros::AsRefStr;
+use std::error::Error as StdError;
+
+
 
 /// Enumeration of all errors that can occur while authenticating.
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, AsRefStr)]
 pub enum AuthError {
     /// Used to indicate that the signature does not match the hashed contents + secret
     IllegalToken,
@@ -41,6 +45,12 @@ pub enum AuthError {
     JwtDecodeError,
     /// Could not encode the JWT.
     JwtEncodeError,
+}
+
+impl StdError for AuthError {
+    fn cause(&self) -> Option<&StdError> {
+        None
+    }
 }
 
 impl Display for AuthError {
@@ -271,8 +281,7 @@ impl Debug for Secret {
             ),
         };
         f.debug_struct("Secret")
-            .field("secret", &format!("{}[REDACTED]", first_five_letters))
-            .field("(secret_length)", &format!("{}", length))
+            .field("secret", &format!("{}[REDACTED] - length({})", first_five_letters, length))
             .finish()
     }
 }
