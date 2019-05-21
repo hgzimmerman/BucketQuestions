@@ -47,6 +47,7 @@ pub mod util {
         setup_pool_random_db, Cleanup
     };
     use std::sync::{Arc, Mutex};
+    use std::path::Path;
 
     const MIGRATIONS_DIRECTORY: &str = "../db/migrations";
 
@@ -118,7 +119,7 @@ pub mod util {
         let (pool, cleanup) = setup_pool_random_db(
             admin_conn,
             "postgres://hzimmerman:password@localhost",
-            MIGRATIONS_DIRECTORY,
+            Path::new(MIGRATIONS_DIRECTORY),
         );
         let conn = pool.get().unwrap();
         let conn: BoxedRepository = Box::new(conn);
@@ -139,7 +140,7 @@ pub mod util {
         let (pool, _cleanup) = setup_pool_random_db(
             admin_conn,
             "postgres://hzimmerman:password@localhost",
-            MIGRATIONS_DIRECTORY,
+            Path::new(MIGRATIONS_DIRECTORY),
         );
         let conn = pool.get().unwrap();
         let conn: BoxedRepository = Box::new(conn);
