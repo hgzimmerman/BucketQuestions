@@ -120,7 +120,7 @@ pub mod util {
             admin_conn,
             "postgres://hzimmerman:password@localhost",
             Path::new(MIGRATIONS_DIRECTORY),
-        );
+        ).expect("Couldn't setup the database");
         let conn = pool.get().unwrap();
         let conn: BoxedRepository = Box::new(conn);
         let fixture = Fix::generate(&conn);
@@ -141,7 +141,7 @@ pub mod util {
             admin_conn,
             "postgres://hzimmerman:password@localhost",
             Path::new(MIGRATIONS_DIRECTORY),
-        );
+        ).expect("Couldn't setup the database");
         let conn = pool.get().unwrap();
         let conn: BoxedRepository = Box::new(conn);
         let fixture = Fix::generate(&conn);
