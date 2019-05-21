@@ -36,7 +36,7 @@ oauth2 = "2.0.0-beta.2"
 url = "1.7.2"
 base64 = "0.10.1"
 slug = "0.1.4"
-diesel_reset = {path="../diesel_reset"}
+diesel_test_setup = {path="../diesel_test_setup"}
 strum = "0.15.0"
 strum_macros = "0.15.0"
 

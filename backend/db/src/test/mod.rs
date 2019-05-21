@@ -43,7 +43,7 @@ pub mod util {
     use super::*;
     use crate::{fake::FakeDatabase, BoxedRepository, RepositoryProvider};
     use diesel::PgConnection;
-    use diesel_reset::setup::{
+    use diesel_test_setup::setup::{
         setup_pool_random_db, Cleanup
     };
     use std::sync::{Arc, Mutex};
