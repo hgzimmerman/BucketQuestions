@@ -13,6 +13,7 @@ fn create_relation() {
             set_public_permission: false,
             set_drawing_permission: false,
             set_exclusive_permission: false,
+            kick_permission: false,
             grant_permissions_permission: false,
         };
         db.add_user_to_bucket(new_relation)
@@ -29,6 +30,7 @@ fn cant_create_duplicate_relation() {
             set_public_permission: false,
             set_drawing_permission: false,
             set_exclusive_permission: false,
+            kick_permission: false,
             grant_permissions_permission: false,
         };
         db.add_user_to_bucket(new_relation)
@@ -66,6 +68,7 @@ fn set_permissions() {
             set_public_permission: None,
             set_drawing_permission: None,
             set_exclusive_permission: None,
+            kick_permission: None,
             grant_permissions_permission: Some(false),
         };
 
@@ -87,6 +90,7 @@ fn set_empty_permissions() {
             set_public_permission: None,
             set_drawing_permission: None,
             set_exclusive_permission: None,
+            kick_permission: None,
             grant_permissions_permission: None,
         };
         let _relation = db

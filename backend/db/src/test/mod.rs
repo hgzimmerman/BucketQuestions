@@ -109,7 +109,7 @@ pub mod util {
     /// Sets up a fixture for a database-backed repository.
     /// It will create the database from scratch before the test runs.
     /// It will drop the database once the test completes.
-    pub fn setup_database3<Fix>() -> (Fix, BoxedRepository, Cleanup)
+    pub fn setup_database3<Fix>() -> (Fix, BoxedRepository, Cleanup<PgConnection>)
     where
         Fix: Fixture,
     {
