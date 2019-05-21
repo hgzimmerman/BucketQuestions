@@ -1,0 +1,3 @@
+[submodule "backend/diesel_test_setup"]
+	path = backend/diesel_test_setup
+	url = git@github.com:hgzimmerman/diesel_test_setup.git
