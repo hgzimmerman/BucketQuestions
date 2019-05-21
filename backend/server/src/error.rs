@@ -98,7 +98,7 @@ impl StdError for Error {
 }
 
 impl Error {
-    fn as_error_response(&self) -> (ErrorResponse, StatusCode) {
+    fn as_error_response(&self) -> ErrorResponse {
         info!("ERROR: {:?} | message: {}", self, self);
         let message = self.to_string();
 
@@ -112,12 +112,12 @@ impl Error {
             canonical_reason: code.canonical_reason().unwrap_or_default().to_string(),
             error_code: code.as_u16(),
         };
-        (error_response, code)
+        error_response
     }
 }
 
 /// Converts the auth error into an ErrorResponse
-fn auth_error_as_error_response(auth_error: &AuthError) -> (ErrorResponse, StatusCode) {
+fn auth_error_as_error_response(auth_error: &AuthError) -> ErrorResponse {
     info!("ERROR: {:?} | message: {}", auth_error, auth_error);
 
     let message = auth_error.to_string();
@@ -131,7 +131,7 @@ fn auth_error_as_error_response(auth_error: &AuthError) -> (ErrorResponse, Statu
         canonical_reason: code.canonical_reason().unwrap_or_default().to_string(),
         error_code: code.as_u16(),
     };
-    (error_response, code)
+    error_response
 }
 
 fn auth_error_code(auth_error: &AuthError) -> StatusCode {
@@ -159,60 +159,41 @@ fn auth_error_code(auth_error: &AuthError) -> StatusCode {
 /// * err - A `Rejection` that will be rewritten into an `ErrorResponse`.
 ///
 pub fn customize_error(err: Rejection) -> Result<impl Reply, Rejection> {
-    // Flatten for Option isn't stabilized yet. So here is a stand-in impl.
-    trait Flatten<T> {
-        fn flatten2(self) -> Option<T>;
-    }
 
-    impl<T> Flatten<T> for Option<Option<T>> {
-        fn flatten2(self) -> Option<T> {
-            match self {
-                None => None,
-                Some(v) => v,
-            }
-        }
-    }
-
-    let (error_response, code) = err.find_cause::<Error>()
+    let error_response = err.find_cause::<Error>()
         .map(|cause: &Error| {
             cause.as_error_response()
         })
-//        .flatten2()
         .or_else(|| {
             err.find_cause::<AuthError>()
                 .map(|cause: &AuthError| {
                     auth_error_as_error_response(&cause)
                 })
-//                .flatten2()
         })
         .or_else(|| {
             err.find_cause::<diesel::result::Error>()
                 .map( |_cause: &diesel::result::Error| {
                     let code = StatusCode::INTERNAL_SERVER_ERROR;
-                    (
-                        ErrorResponse {
-                            tag: "DatabaseError".to_string(),
-                            message: "Some aspect of database interaction failed".to_string(), // TODO make this specific
-                            canonical_reason: code.canonical_reason().unwrap_or_default().to_string(),
-                            error_code: code.as_u16(),
-                        },
-                        code
-                    )
+                    ErrorResponse {
+                        tag: "DatabaseError".to_string(),
+                        message: "Some aspect of database interaction failed".to_string(), // TODO make this specific
+                        canonical_reason: code.canonical_reason().unwrap_or_default().to_string(),
+                        error_code: code.as_u16(),
+                    }
                 })
         })
         .or_else(|| {
             // Fall back to just matching on the status given by the default warp impl.
             match err.status() {
                 c @ StatusCode::METHOD_NOT_ALLOWED => {
-                    Some((
+                    Some(
                         ErrorResponse {
                             tag: "MethodNotAllowed".to_string(),
                             message: "Http method not allowed".to_string(),
                             canonical_reason: c.canonical_reason().unwrap_or_default().to_string(),
                             error_code: c.as_u16(),
-                        },
-                        c
-                    ))
+                        }
+                    )
                 }
                 StatusCode::NOT_FOUND => {
                     Some(Error::NotFound {
@@ -226,18 +207,16 @@ pub fn customize_error(err: Rejection) -> Result<impl Reply, Rejection> {
         .unwrap_or_else(|| {
             let status_code = StatusCode::INTERNAL_SERVER_ERROR;
             error!("UNHANDLED ERROR: {:#?}", err);
-            (
-                ErrorResponse {
-                    tag: "Unhandled".to_string(),
-                    message: "Unhandled error".to_string(),
-                    canonical_reason: status_code.canonical_reason().unwrap_or_default().to_string(),
-                    error_code: status_code.as_u16(),
-                },
-                status_code
-            )
+            ErrorResponse {
+                tag: "Unhandled".to_string(),
+                message: "Unhandled error".to_string(),
+                canonical_reason: status_code.canonical_reason().unwrap_or_default().to_string(),
+                error_code: status_code.as_u16(),
+            }
         });
 
-
+    // Expecting is safe here because all error responses came from status codes in the first place.
+    let code = StatusCode::from_u16(error_response.error_code).expect("Error code did not come from a status code.");
     let json = warp::reply::json(&error_response);
     Ok(warp::reply::with_status(json, code))
 }
