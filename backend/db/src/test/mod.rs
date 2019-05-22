@@ -44,14 +44,14 @@ pub mod util {
     use crate::{fake::FakeDatabase, BoxedRepository, RepositoryProvider};
     use diesel::PgConnection;
     use diesel_test_setup::setup::{
-        setup_pool_random_db, Cleanup
+        setup_unique_db_pool
     };
+    use diesel_test_setup::Cleanup;
     use std::sync::{Arc, Mutex};
-    use std::path::Path;
 
-    const MIGRATIONS_DIRECTORY: &str = "../db/migrations";
+//    const MIGRATIONS_DIRECTORY: &str = "../db/migrations";
 
-    const DROP_DATABASE_URL: &str = env!("DROP_DATABASE_URL"); // TODO, I don't think, outside of tests, that any env var should be compiled into this lib.
+    const DROP_DATABASE_URL: &str = env!("DROP_DATABASE_URL");
 
     /// Execute a test based on what testing environment you want.
     pub fn execute_test<Fix, Fun>(f: Fun)
@@ -116,10 +116,9 @@ pub mod util {
     {
         use diesel::Connection;
         let admin_conn = PgConnection::establish(DROP_DATABASE_URL).unwrap();
-        let (pool, cleanup) = setup_pool_random_db(
+        let (pool, cleanup) = setup_unique_db_pool(
             admin_conn,
             "postgres://hzimmerman:password@localhost",
-            Path::new(MIGRATIONS_DIRECTORY),
         ).expect("Couldn't setup the database");
         let conn = pool.get().unwrap();
         let conn: BoxedRepository = Box::new(conn);
@@ -137,10 +136,9 @@ pub mod util {
     {
         use diesel::Connection;
         let admin_conn = PgConnection::establish(DROP_DATABASE_URL).unwrap();
-        let (pool, _cleanup) = setup_pool_random_db(
+        let (pool, _cleanup) = setup_unique_db_pool(
             admin_conn,
             "postgres://hzimmerman:password@localhost",
-            Path::new(MIGRATIONS_DIRECTORY),
         ).expect("Couldn't setup the database");
         let conn = pool.get().unwrap();
         let conn: BoxedRepository = Box::new(conn);
