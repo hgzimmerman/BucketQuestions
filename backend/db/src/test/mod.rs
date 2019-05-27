@@ -20,6 +20,7 @@ pub enum TestType {
     /// Both types of tests will run
     Both,
 }
+
 impl TestType {
     /// Gets the test type from an environment variable
     pub fn get_test_type_from_env() -> Self {
@@ -43,13 +44,9 @@ pub mod util {
     use super::*;
     use crate::{fake::FakeDatabase, BoxedRepository, RepositoryProvider};
     use diesel::PgConnection;
-    use diesel_test_setup::setup::{
-        setup_unique_db_pool
-    };
-    use diesel_test_setup::Cleanup;
+    use diesel_test_setup::{Cleanup, TestDatabaseBuilder};
     use std::sync::{Arc, Mutex};
 
-//    const MIGRATIONS_DIRECTORY: &str = "../db/migrations";
 
     const DROP_DATABASE_URL: &str = env!("DROP_DATABASE_URL");
 
@@ -116,10 +113,15 @@ pub mod util {
     {
         use diesel::Connection;
         let admin_conn = PgConnection::establish(DROP_DATABASE_URL).unwrap();
-        let (pool, cleanup) = setup_unique_db_pool(
+        let (pool, cleanup) = TestDatabaseBuilder::new(
             admin_conn,
             "postgres://hzimmerman:password@localhost",
-        ).expect("Couldn't setup the database");
+        )
+            .db_name_prefix("test_db")
+            .setup_pool()
+            .expect("Couldn't setup the database")
+            .into_tuple();
+
         let conn = pool.get().unwrap();
         let conn: BoxedRepository = Box::new(conn);
         let fixture = Fix::generate(&conn);
@@ -136,10 +138,14 @@ pub mod util {
     {
         use diesel::Connection;
         let admin_conn = PgConnection::establish(DROP_DATABASE_URL).unwrap();
-        let (pool, _cleanup) = setup_unique_db_pool(
+        let (pool, _cleanup) = TestDatabaseBuilder::new(
             admin_conn,
             "postgres://hzimmerman:password@localhost",
-        ).expect("Couldn't setup the database");
+        )
+            .db_name_prefix("test_db")
+            .setup_pool()
+            .expect("Couldn't setup the database")
+            .into_tuple();
         let conn = pool.get().unwrap();
         let conn: BoxedRepository = Box::new(conn);
         let fixture = Fix::generate(&conn);
