@@ -11,7 +11,6 @@ use yew::services::fetch::Response;
 use serde::Deserialize;
 use serde_json;
 use yew_router::prelude::*;
-//use yew_router::Route;
 use wire::user::JwtPayload;
 use super::user;
 use chrono::{Duration};
@@ -24,6 +23,14 @@ use yew_router::agent::RouteRequest;
 
 use yew::callback::Callback;
 
+
+// TODO:
+// Get rid of the agent. Because it just stores the tasks (and can't send them), it won't interoperate well with the FetchState and Fetch component.
+// Use the Networking meta service instead.
+// Make sure that it handles auth/reauth. (IT DOES)
+// Make it use the proper Serialization methods instead of just defering to running serde_json on everything.
+
+
 use wire::user::BEARER;
 #[derive(Debug)]
 pub enum Auth {
@@ -32,7 +39,7 @@ pub enum Auth {
 }
 
 /// Not all are included, but isn't intended to be exhaustive.
-pub enum HttpMethod {
+pub enum HttpMethod { // TODO consider making this Generic over T: Serialize, and ditching the String
     Get,
     Post(String),
     Put(String),
@@ -46,6 +53,7 @@ pub trait FetchRequest: Serialize + DeserializeOwned {
     fn resolve_body_and_method(&self) -> HttpMethod;
 
     fn resolve_url(&self) -> String {
+        // TODO, make this better
         let api_base: &str = if cfg!(feature = "development") {
             "http://localhost:8001/api"
         } else {
@@ -116,7 +124,7 @@ pub enum Msg<W> {
 // ======== Use of the agent is discouraged. Just use the service instead. ==========
 //
 /// An agent that facilitates sending network requests as well as managing authentication and route redirection.
-struct FetchAgent<T, W>
+struct FetchAgent<T, W> // TODO some refactoring to remove this t,w
     where T: FetchRequest + Serialize + for<'de> Deserialize<'de> + 'static,
         W: for<'de> Deserialize<'de> + Serialize + 'static
 {
@@ -289,7 +297,7 @@ impl FetchRequest for Reauth {
     }
 }
 
-fn refresh_jwt(jwt_string: &str, fetch_service: &mut FetchService, fetch_task_collection: &mut Vec<FetchTask>) {
+fn refresh_jwt(jwt_string: &str, fetch_service: &mut FetchService, fetch_task_collection: &mut Vec<FetchTask>) { // TODO remove the fetch_task_collection, just return the FetchTask.
     info!("JWT is being refreshed, this will extend the length of login session's validity.");
 
     let closure = move |response: Response<Result<String, Error>>| {
@@ -329,7 +337,7 @@ fn refresh_jwt(jwt_string: &str, fetch_service: &mut FetchService, fetch_task_co
 }
 
 /// If a specific amount of time has elapsed since the jwt has been issued, then refresh the jwt.
-fn refresh_jwt_if_needed(fetch_service: &mut FetchService, jwt_string: &str, fetch_task_collection: &mut Vec<FetchTask>)  {
+fn refresh_jwt_if_needed(fetch_service: &mut FetchService, jwt_string: &str, fetch_task_collection: &mut Vec<FetchTask>)  { // TODO remove the fetch_task_collection, just return the fetch task.
         // The stored jwt may be malformed 
         // By sending a default jwt, it will fail the reauth, logging the user out. This path should never be needed, but would fail in a safe manner.
         let jwt: JwtPayload<Uuid> = user::extract_payload_from_jwt(jwt_string).unwrap(); // TODO handle error here
@@ -353,7 +361,7 @@ pub struct Networking {
     /// Gets the JWT
     storage_service: StorageService,
     /// Used to hold on to fetch tasks.
-    fetch_task_collection: Vec<FetchTask>,
+    fetch_task_collection: Vec<FetchTask>, // TODO get rid of the fetch tasks.
     router: RouteSenderBridge,
 }
 use std::fmt::Debug;

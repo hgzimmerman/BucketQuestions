@@ -8,12 +8,13 @@ edition = "2018"
 
 [dependencies]
 yew = { git = "https://github.com/yewstack/yew", branch="master" }
-yew_router = { git = "https://github.com/yewstack/yew_router", branch="master" } # TODO, this needs to use yew master
+yew_router = { git = "https://github.com/yewstack/yew_router", branch="next" }
 yewtil = {git = "https://github.com/hgzimmerman/yewtil", branch="next"}
 yew_css = {git = "https://github.com/hgzimmerman/yew_css", branch="master"}
 web_logger = "0.2.0"
 wire = {path = "../wire"}
 serde = "1.0.101"
+
 failure = "0.1.5"
 log = "0.4.8"
 chrono = "0.4.9"

@@ -228,7 +228,8 @@ impl Agent for LoginAgent
                         LoginResponse::LoggedIn(jwt)
                     } else {
                         error!("Could not convert jwt string to usable JWT type: {}", jwt_string);
-                        LoginResponse::LoggedIn(JwtPayload::default())
+//                        LoginResponse::LoggedIn(JwtPayload::default())
+                        panic!("No default jwt payload...")
                     }
                 } else {
                     LoginResponse::LoggedOut
