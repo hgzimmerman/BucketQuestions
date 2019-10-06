@@ -92,7 +92,7 @@ impl Display for Error {
 }
 
 impl StdError for Error {
-    fn cause(&self) -> Option<&StdError> {
+    fn cause(&self) -> Option<&dyn StdError> {
         None
     }
 }
@@ -103,7 +103,7 @@ impl Error {
         let message = self.to_string();
 
         let code: StatusCode = self.error_code();
-        let tag: &AsRef<str> = &self;
+        let tag: &dyn AsRef<str> = &self;
         let tag: String = tag.as_ref().to_string();
 
         let error_response = ErrorResponse {
@@ -122,7 +122,7 @@ fn auth_error_as_error_response(auth_error: &AuthError) -> ErrorResponse {
 
     let message = auth_error.to_string();
     let code: StatusCode = auth_error_code(&auth_error);
-    let tag: &AsRef<str> = &auth_error;
+    let tag: &dyn AsRef<str> = &auth_error;
     let tag: String = tag.as_ref().to_string();
 
     let error_response = ErrorResponse {

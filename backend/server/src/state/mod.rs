@@ -113,7 +113,7 @@ impl State {
     {
         let r = self.repository_provider.clone();
         warp::any().and_then(
-            move || -> Result<Box<Repository + Send + 'static>, Rejection> {
+            move || -> Result<Box<dyn Repository + Send + 'static>, Rejection> {
                 r.get_repo().map_err(|_| {
                     log::error!("Pool exhausted: Could not get database connection.");
                     Error::DatabaseUnavailable.reject()

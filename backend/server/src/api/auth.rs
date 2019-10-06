@@ -64,7 +64,7 @@ pub fn auth_api(state: &State) -> BoxedFilter<(impl Reply,)> {
     let get_link = path!("link")
         .and(warp::get2())
         .and(state.google_client())
-        .map(|google_client: BasicClient| {
+        .map(|google_client: BasicClient| -> LinkResponse {
             //            let redirect_url = url::Url::parse("http://localhost:8080/api/auth/redirect").unwrap();
             let link = get_google_login_link(google_client);
             info!("Generating link: {}", link);
@@ -82,8 +82,10 @@ pub fn auth_api(state: &State) -> BoxedFilter<(impl Reply,)> {
     let redirect = path!("redirect")
         .and(warp::get2())
         .and(query())
-        .map(|query_params: OAuthRedirectQueryParams| query_params.code)
-        .map(move |token| create_token_request(token, redirect_url.clone()))
+        .map(|query_params: OAuthRedirectQueryParams| -> String {query_params.code})
+        .map(move |token| -> Result<Request<Body>, Error> {
+            create_token_request(token, redirect_url.clone())
+        })
         .and_then(crate::util::reject)
         .and(state.https_client())
         .and_then(|request, client| {
@@ -100,7 +102,7 @@ pub fn auth_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .and_then(crate::util::reject)
         .and(state.secret())
         .and_then(create_jwt)
-        .map(|jwt: String| login_template_render(&jwt, "/"))
+        .map(|jwt: String| -> String {login_template_render(&jwt, "/")})
         .with(warp::reply::with::header("content-type", "text/html"));
 
     path(AUTH_PATH).and(get_link.or(redirect)).boxed()
