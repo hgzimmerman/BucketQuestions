@@ -12,12 +12,12 @@
 
 mod api;
 mod config;
+mod conversions;
 mod error;
 mod server_auth;
 mod state;
 mod static_files;
 mod util;
-mod conversions;
 
 pub use config::Config;
 

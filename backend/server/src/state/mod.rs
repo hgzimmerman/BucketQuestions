@@ -3,11 +3,13 @@ pub mod state_config;
 #[cfg(test)]
 pub mod test_util;
 
+use crate::config::RepositoryType;
 use crate::{
     error::Error, server_auth::create_google_oauth_client, state::state_config::StateConfig,
 };
 use apply::Apply;
 use authorization::Secret;
+use db::fake::FakeDatabase;
 use db::{Repository, RepositoryProvider};
 use hyper::{
     client::{connect::dns::GaiResolver, HttpConnector},
@@ -17,15 +19,13 @@ use hyper_tls::HttpsConnector;
 use oauth2::basic::BasicClient;
 use pool::{init_pool, PoolConfig, DATABASE_URL};
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
+use std::sync::{Arc, Mutex};
 use std::{
     fmt::{Debug, Formatter},
     path::PathBuf,
 };
 use url::Url;
 use warp::{Filter, Rejection};
-use crate::config::RepositoryType;
-use db::fake::FakeDatabase;
-use std::sync::{Mutex, Arc};
 
 /// Simplified type for representing a HttpClient.
 pub type HttpsClient = Client<HttpsConnector<HttpConnector<GaiResolver>>, Body>;
@@ -89,10 +89,13 @@ impl State {
 
         let root = conf.server_lib_root.unwrap_or_else(|| PathBuf::from("./"));
 
-
         let repository_provider = match conf.repository {
-            RepositoryType::Fake => RepositoryProvider::Fake(Arc::new(Mutex::new(FakeDatabase::default()))),
-            RepositoryType::Database => RepositoryProvider::Pool(init_pool(DATABASE_URL, pool_conf))
+            RepositoryType::Fake => {
+                RepositoryProvider::Fake(Arc::new(Mutex::new(FakeDatabase::default())))
+            }
+            RepositoryType::Database => {
+                RepositoryProvider::Pool(init_pool(DATABASE_URL, pool_conf))
+            }
         };
 
         State {

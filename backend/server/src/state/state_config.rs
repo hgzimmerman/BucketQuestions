@@ -1,8 +1,8 @@
+use crate::config::RepositoryType;
+use crate::Config;
 use authorization::Secret;
 use std::path::PathBuf;
 use url::Url;
-use crate::config::RepositoryType;
-use crate::Config;
 
 /// Configuration object for creating the state.
 ///
@@ -13,7 +13,7 @@ pub struct StateConfig {
     pub max_pool_size: Option<u32>,
     pub server_lib_root: Option<PathBuf>,
     pub environment: RunningEnvironment,
-    pub repository: RepositoryType
+    pub repository: RepositoryType,
 }
 
 impl From<Config> for StateConfig {
@@ -23,11 +23,10 @@ impl From<Config> for StateConfig {
             max_pool_size: config.max_pool_size,
             server_lib_root: config.server_lib_root,
             environment: config.running_environment,
-            repository: config.repository
+            repository: config.repository,
         }
     }
 }
-
 
 /// Where is the program running
 #[derive(Debug, Clone)]

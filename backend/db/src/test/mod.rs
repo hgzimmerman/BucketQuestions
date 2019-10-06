@@ -47,7 +47,6 @@ pub mod util {
     use diesel_test_setup::{Cleanup, TestDatabaseBuilder};
     use std::sync::{Arc, Mutex};
 
-
     const DROP_DATABASE_URL: &str = env!("DROP_DATABASE_URL");
 
     /// Execute a test based on what testing environment you want.
@@ -113,22 +112,18 @@ pub mod util {
     {
         use diesel::Connection;
         let admin_conn = PgConnection::establish(DROP_DATABASE_URL).unwrap();
-        let (pool, cleanup) = TestDatabaseBuilder::new(
-            admin_conn,
-            "postgres://hzimmerman:password@localhost",
-        )
-            .db_name_prefix("test_db")
-            .setup_pool()
-            .expect("Couldn't setup the database")
-            .into_tuple();
+        let (pool, cleanup) =
+            TestDatabaseBuilder::new(admin_conn, "postgres://hzimmerman:password@localhost")
+                .db_name_prefix("test_db")
+                .setup_pool()
+                .expect("Couldn't setup the database")
+                .into_tuple();
 
         let conn = pool.get().unwrap();
         let conn: BoxedRepository = Box::new(conn);
         let fixture = Fix::generate(&conn);
         (fixture, conn, cleanup)
     }
-
-
 
     /// sets up a pool and executes a provided test that utilizes the pool
     pub fn execute_pool_test2<Fun, Fix>(mut test_function: Fun)
@@ -138,14 +133,12 @@ pub mod util {
     {
         use diesel::Connection;
         let admin_conn = PgConnection::establish(DROP_DATABASE_URL).unwrap();
-        let (pool, _cleanup) = TestDatabaseBuilder::new(
-            admin_conn,
-            "postgres://hzimmerman:password@localhost",
-        )
-            .db_name_prefix("test_db")
-            .setup_pool()
-            .expect("Couldn't setup the database")
-            .into_tuple();
+        let (pool, _cleanup) =
+            TestDatabaseBuilder::new(admin_conn, "postgres://hzimmerman:password@localhost")
+                .db_name_prefix("test_db")
+                .setup_pool()
+                .expect("Couldn't setup the database")
+                .into_tuple();
         let conn = pool.get().unwrap();
         let conn: BoxedRepository = Box::new(conn);
         let fixture = Fix::generate(&conn);

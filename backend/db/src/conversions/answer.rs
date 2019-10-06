@@ -1,7 +1,7 @@
 //! Answer conversions
 
-use wire;
 use crate::answer::db_types::{Answer, NewAnswer};
+use wire;
 
 impl Into<wire::answer::Answer> for Answer {
     fn into(self) -> wire::answer::Answer {
@@ -12,7 +12,7 @@ impl Into<wire::answer::Answer> for Answer {
             publicly_visible: self.publicly_visible,
             answer_text: self.answer_text,
             updated_at: self.updated_at,
-            created_at: self.created_at
+            created_at: self.created_at,
         }
     }
 }
@@ -26,7 +26,7 @@ impl From<wire::answer::Answer> for Answer {
             publicly_visible: answer.publicly_visible,
             answer_text: answer.answer_text,
             updated_at: answer.updated_at,
-            created_at: answer.created_at
+            created_at: answer.created_at,
         }
     }
 }
@@ -37,7 +37,7 @@ impl Into<wire::answer::NewAnswer> for NewAnswer {
             user_uuid: self.user_uuid,
             question_uuid: self.question_uuid,
             publicly_visible: self.publicly_visible,
-            answer_text: self.answer_text
+            answer_text: self.answer_text,
         }
     }
 }
@@ -48,8 +48,7 @@ impl From<wire::answer::NewAnswer> for NewAnswer {
             user_uuid: new_answer.user_uuid,
             question_uuid: new_answer.question_uuid,
             publicly_visible: new_answer.publicly_visible,
-            answer_text: new_answer.answer_text
+            answer_text: new_answer.answer_text,
         }
-
     }
 }

@@ -6,4 +6,3 @@ mod bucket_user_relation;
 mod favorite_question;
 mod question;
 mod user;
-

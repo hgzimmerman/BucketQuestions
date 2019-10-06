@@ -55,37 +55,35 @@ impl Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let description: String = match self {
             Error::DatabaseUnavailable => {
-                "Could not acquire a connection to the database, the connection pool may be overloaded with requests.".to_string()
+                "Could not acquire a connection to the database, the connection pool may be overloaded with requests."
+                    .to_string()
             }
             Error::DatabaseError(e) => e.to_string(),
             Error::PreconditionNotMet(e) => e.to_string(),
-            Error::BadRequest(s)=> s.to_string(),
+            Error::BadRequest(s) => s.to_string(),
             Error::InternalServerError(s) => {
                 if let Some(e) = s {
                     e.clone()
                 } else {
                     "Internal server error encountered.".to_string()
                 }
-            },
-            Error::DependentConnectionFailed(error) => {
-                match error {
-                    DependentConnectionError::Context(reason) => {
-                        format!("An internal request needed to serve the request failed. With reason: '{}'", reason)
-                    },
-                    DependentConnectionError::Url(uri) => {
-                        format!("An internal request needed to serve the request failed. Dependent url: '{}'", uri)
-                    },
-                    DependentConnectionError::UrlAndContext(uri, reason) => {
-                        format!("An internal request needed to serve the request failed. Dependent url: {}. With reason: '{}'", uri, reason)
-                    }
-                }
-            },
-            Error::NotFound { type_name } => {
-                format!("The resource ({}) you requested could not be found.", type_name)
             }
-            Error::NotAuthorized { reason } => {
-                format!("You are forbidden from accessing this resource. ({})", reason)
-            }
+            Error::DependentConnectionFailed(error) => match error {
+                DependentConnectionError::Context(reason) => format!(
+                    "An internal request needed to serve the request failed. With reason: '{}'",
+                    reason
+                ),
+                DependentConnectionError::Url(uri) => format!(
+                    "An internal request needed to serve the request failed. Dependent url: '{}'",
+                    uri
+                ),
+                DependentConnectionError::UrlAndContext(uri, reason) => format!(
+                    "An internal request needed to serve the request failed. Dependent url: {}. With reason: '{}'",
+                    uri, reason
+                ),
+            },
+            Error::NotFound { type_name } => format!("The resource ({}) you requested could not be found.", type_name),
+            Error::NotAuthorized { reason } => format!("You are forbidden from accessing this resource. ({})", reason),
         };
         write!(f, "{}", description)
     }
@@ -159,20 +157,16 @@ fn auth_error_code(auth_error: &AuthError) -> StatusCode {
 /// * err - A `Rejection` that will be rewritten into an `ErrorResponse`.
 ///
 pub fn customize_error(err: Rejection) -> Result<impl Reply, Rejection> {
-
-    let error_response = err.find_cause::<Error>()
-        .map(|cause: &Error| {
-            cause.as_error_response()
-        })
+    let error_response = err
+        .find_cause::<Error>()
+        .map(|cause: &Error| cause.as_error_response())
         .or_else(|| {
             err.find_cause::<AuthError>()
-                .map(|cause: &AuthError| {
-                    auth_error_as_error_response(&cause)
-                })
+                .map(|cause: &AuthError| auth_error_as_error_response(&cause))
         })
         .or_else(|| {
             err.find_cause::<diesel::result::Error>()
-                .map( |_cause: &diesel::result::Error| {
+                .map(|_cause: &diesel::result::Error| {
                     let code = StatusCode::INTERNAL_SERVER_ERROR;
                     ErrorResponse {
                         tag: "DatabaseError".to_string(),
@@ -185,23 +179,19 @@ pub fn customize_error(err: Rejection) -> Result<impl Reply, Rejection> {
         .or_else(|| {
             // Fall back to just matching on the status given by the default warp impl.
             match err.status() {
-                c @ StatusCode::METHOD_NOT_ALLOWED => {
-                    Some(
-                        ErrorResponse {
-                            tag: "MethodNotAllowed".to_string(),
-                            message: "Http method not allowed".to_string(),
-                            canonical_reason: c.canonical_reason().unwrap_or_default().to_string(),
-                            error_code: c.as_u16(),
-                        }
-                    )
-                }
-                StatusCode::NOT_FOUND => {
-                    Some(Error::NotFound {
+                c @ StatusCode::METHOD_NOT_ALLOWED => Some(ErrorResponse {
+                    tag: "MethodNotAllowed".to_string(),
+                    message: "Http method not allowed".to_string(),
+                    canonical_reason: c.canonical_reason().unwrap_or_default().to_string(),
+                    error_code: c.as_u16(),
+                }),
+                StatusCode::NOT_FOUND => Some(
+                    Error::NotFound {
                         type_name: "Resource not found".to_string(),
-                    }.as_error_response()
-                    )
-                }
-                _ => None
+                    }
+                    .as_error_response(),
+                ),
+                _ => None,
             }
         })
         .unwrap_or_else(|| {
@@ -210,13 +200,17 @@ pub fn customize_error(err: Rejection) -> Result<impl Reply, Rejection> {
             ErrorResponse {
                 tag: "Unhandled".to_string(),
                 message: "Unhandled error".to_string(),
-                canonical_reason: status_code.canonical_reason().unwrap_or_default().to_string(),
+                canonical_reason: status_code
+                    .canonical_reason()
+                    .unwrap_or_default()
+                    .to_string(),
                 error_code: status_code.as_u16(),
             }
         });
 
     // Expecting is safe here because all error responses came from status codes in the first place.
-    let code = StatusCode::from_u16(error_response.error_code).expect("Error code did not come from a status code.");
+    let code = StatusCode::from_u16(error_response.error_code)
+        .expect("Error code did not come from a status code.");
     let json = warp::reply::json(&error_response);
     Ok(warp::reply::with_status(json, code))
 }

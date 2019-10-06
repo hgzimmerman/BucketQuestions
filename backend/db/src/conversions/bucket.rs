@@ -1,7 +1,7 @@
 //! Bucket conversions
 
+use crate::bucket::db_types::{Bucket, BucketFlagChangeset, NewBucket};
 use wire;
-use crate::bucket::db_types::{Bucket, NewBucket, BucketFlagChangeset};
 
 impl Into<wire::bucket::Bucket> for Bucket {
     fn into(self) -> wire::bucket::Bucket {
@@ -13,7 +13,7 @@ impl Into<wire::bucket::Bucket> for Bucket {
             drawing_enabled: self.drawing_enabled,
             exclusive: self.exclusive,
             updated_at: self.updated_at,
-            created_at: self.created_at
+            created_at: self.created_at,
         }
     }
 }
@@ -28,7 +28,7 @@ impl From<wire::bucket::Bucket> for Bucket {
             drawing_enabled: bucket.drawing_enabled,
             exclusive: bucket.exclusive,
             updated_at: bucket.updated_at,
-            created_at: bucket.created_at
+            created_at: bucket.created_at,
         }
     }
 }
@@ -37,7 +37,7 @@ impl Into<wire::bucket::NewBucket> for NewBucket {
     fn into(self) -> wire::bucket::NewBucket {
         wire::bucket::NewBucket {
             bucket_name: self.bucket_name,
-            bucket_slug: self.bucket_slug
+            bucket_slug: self.bucket_slug,
         }
     }
 }
@@ -46,7 +46,7 @@ impl From<wire::bucket::NewBucket> for NewBucket {
     fn from(new_bucket: wire::bucket::NewBucket) -> Self {
         NewBucket {
             bucket_name: new_bucket.bucket_name,
-            bucket_slug: new_bucket.bucket_slug
+            bucket_slug: new_bucket.bucket_slug,
         }
     }
 }
@@ -57,7 +57,7 @@ impl Into<wire::bucket::BucketFlagChangeset> for BucketFlagChangeset {
             uuid: self.uuid,
             public_viewable: self.public_viewable,
             drawing_enabled: self.drawing_enabled,
-            exclusive: self.exclusive
+            exclusive: self.exclusive,
         }
     }
 }
@@ -68,7 +68,7 @@ impl From<wire::bucket::BucketFlagChangeset> for BucketFlagChangeset {
             uuid: bfc.uuid,
             public_viewable: bfc.public_viewable,
             drawing_enabled: bfc.drawing_enabled,
-            exclusive: bfc.exclusive
+            exclusive: bfc.exclusive,
         }
     }
 }

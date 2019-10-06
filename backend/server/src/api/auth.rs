@@ -15,7 +15,7 @@ use log::{error, info, warn};
 use oauth2::basic::BasicClient;
 use serde::{Deserialize, Serialize};
 use url::Url;
-use warp::{filters::BoxedFilter, path, query::query, Filter, Reply, Rejection};
+use warp::{filters::BoxedFilter, path, query::query, Filter, Rejection, Reply};
 
 /// The path segment for the auth api.
 pub const AUTH_PATH: &str = "auth";
@@ -82,7 +82,7 @@ pub fn auth_api(state: &State) -> BoxedFilter<(impl Reply,)> {
     let redirect = path!("redirect")
         .and(warp::get2())
         .and(query())
-        .map(|query_params: OAuthRedirectQueryParams| -> String {query_params.code})
+        .map(|query_params: OAuthRedirectQueryParams| -> String { query_params.code })
         .map(move |token| -> Result<Request<Body>, Error> {
             create_token_request(token, redirect_url.clone())
         })
@@ -102,7 +102,7 @@ pub fn auth_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .and_then(crate::util::reject)
         .and(state.secret())
         .and_then(create_jwt)
-        .map(|jwt: String| -> String {login_template_render(&jwt, "/")})
+        .map(|jwt: String| -> String { login_template_render(&jwt, "/") })
         .with(warp::reply::with::header("content-type", "text/html"));
 
     path(AUTH_PATH).and(get_link.or(redirect)).boxed()
@@ -176,7 +176,8 @@ fn make_request_for_google_jwt_token(
             response
                 .into_body()
                 .concat2()
-                .map_err(|_| Error::internal_server_error("Could not deserialize body")) // Await the whole body
+                .map_err(|_| Error::internal_server_error("Could not deserialize body"))
+            // Await the whole body
         })
         .and_then(|chunk: Chunk| {
             let v = chunk.to_vec();
@@ -232,7 +233,9 @@ fn get_or_create_user(
 fn create_jwt(user: User, secret: Secret) -> Result<String, Rejection> {
     let lifetime = chrono::Duration::weeks(30);
     let payload: JwtPayload<User> = JwtPayload::new(user, lifetime);
-    payload.encode_jwt_string(&secret).map_err(warp::reject::custom)
+    payload
+        .encode_jwt_string(&secret)
+        .map_err(warp::reject::custom)
 }
 
 /// Login by sending a small html page that inserts the JWT into localstorage

@@ -5,12 +5,10 @@ use diesel::{
     dsl::Find,
     helper_types::Update,
     insertable::Insertable,
-    pg::{PgConnection},
-    query_builder::{
-        AsChangeset, DeleteStatement, InsertStatement, IntoUpdateTarget,
-    },
+    pg::PgConnection,
+    query_builder::{AsChangeset, DeleteStatement, InsertStatement, IntoUpdateTarget},
     query_dsl::{filter_dsl::FindDsl, LoadQuery, RunQueryDsl},
-    query_source::{QuerySource},
+    query_source::QuerySource,
     result::QueryResult,
 };
 use uuid::Uuid;

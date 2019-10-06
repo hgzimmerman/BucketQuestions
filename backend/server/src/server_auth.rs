@@ -107,10 +107,10 @@ pub fn optional_user_filter(s: &State) -> BoxedFilter<(Option<Uuid>,)> {
 #[cfg(test)]
 mod unit {
     use super::*;
+    use crate::config::RepositoryType;
     use crate::state::state_config::{RunningEnvironment, StateConfig};
     use authorization::BEARER;
     use chrono::Duration;
-    use crate::config::RepositoryType;
 
     #[test]
     fn pass_jwt_filter() {
@@ -120,7 +120,7 @@ mod unit {
             max_pool_size: None,
             server_lib_root: None,
             environment: RunningEnvironment::default(),
-            repository: RepositoryType::Fake
+            repository: RepositoryType::Fake,
         };
         let state = State::new(conf);
         let uuid = Uuid::new_v4();
@@ -142,7 +142,7 @@ mod unit {
             max_pool_size: None,
             server_lib_root: None,
             environment: RunningEnvironment::default(),
-            repository: RepositoryType::Fake
+            repository: RepositoryType::Fake,
         };
 
         let state = State::new(conf);
@@ -158,7 +158,7 @@ mod unit {
             max_pool_size: None,
             server_lib_root: None,
             environment: RunningEnvironment::default(),
-            repository: RepositoryType::Fake
+            repository: RepositoryType::Fake,
         };
         let state = State::new(conf);
         let uuid = Uuid::new_v4();
@@ -185,7 +185,7 @@ mod unit {
             max_pool_size: None,
             server_lib_root: None,
             environment: RunningEnvironment::default(),
-            repository: RepositoryType::Fake
+            repository: RepositoryType::Fake,
         };
 
         let state = State::new(conf);
@@ -201,7 +201,7 @@ mod unit {
             max_pool_size: None,
             server_lib_root: None,
             environment: RunningEnvironment::default(),
-            repository: RepositoryType::Fake
+            repository: RepositoryType::Fake,
         };
         let state = State::new(conf);
         let uuid = Uuid::new_v4();
@@ -229,7 +229,7 @@ mod unit {
             max_pool_size: None,
             server_lib_root: None,
             environment: RunningEnvironment::default(),
-            repository: RepositoryType::Fake
+            repository: RepositoryType::Fake,
         };
         let state = State::new(conf);
 

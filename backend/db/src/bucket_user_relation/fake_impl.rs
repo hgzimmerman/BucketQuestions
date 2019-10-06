@@ -116,7 +116,7 @@ impl BucketUserRelationRepository for Arc<Mutex<FakeDatabase>> {
                 set_drawing_permission: r.set_drawing_permission,
                 set_exclusive_permission: r.set_exclusive_permission,
                 grant_permissions_permission: r.grant_permissions_permission,
-                kick_permission: r.kick_permission
+                kick_permission: r.kick_permission,
             })
     }
 

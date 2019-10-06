@@ -20,11 +20,9 @@ use frank_jwt::{decode, encode, Algorithm};
 use log::warn;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use std::error::Error as StdError;
 use std::fmt::{self, Debug, Display, Error, Formatter};
 use strum_macros::AsRefStr;
-use std::error::Error as StdError;
-
-
 
 /// Enumeration of all errors that can occur while authenticating.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, AsRefStr)]
@@ -281,7 +279,10 @@ impl Debug for Secret {
             ),
         };
         f.debug_struct("Secret")
-            .field("secret", &format!("{}[REDACTED] - length({})", first_five_letters, length))
+            .field(
+                "secret",
+                &format!("{}[REDACTED] - length({})", first_five_letters, length),
+            )
             .finish()
     }
 }
@@ -343,5 +344,4 @@ mod test {
         let decoded = JwtPayload::<String>::extract_jwt(header_string, &secret).unwrap();
         assert_eq!(decoded, payload)
     }
-
 }

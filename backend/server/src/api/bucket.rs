@@ -23,7 +23,7 @@ pub const BUCKET_PATH: &str = "bucket";
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct UserUuidQueryParam {
-    pub user_uuid: Uuid
+    pub user_uuid: Uuid,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -240,10 +240,11 @@ fn add_self_to_bucket_handler(
     user_uuid: Uuid,
     conn: BoxedRepository,
 ) -> Result<BucketUserRelation, Error> {
-
     let bucket = conn.get_bucket_by_uuid(bucket_uuid)?;
     if bucket.exclusive {
-        return Err(Error::PreconditionNotMet("Bucket is set to exclusive. Users are not allowed to join.".to_string()));
+        return Err(Error::PreconditionNotMet(
+            "Bucket is set to exclusive. Users are not allowed to join.".to_string(),
+        ));
     }
 
     info!("add_self_to_bucket_handler");
@@ -304,18 +305,24 @@ fn set_bucket_flags_handler(
     conn.change_bucket_flags(changeset).map_err(Error::from)
 }
 
-
-fn remove_user_from_bucket_handler(bucket_uuid: Uuid, account_user_uuid: Uuid, target_user_uuid: UserUuidQueryParam, db: BoxedRepository) -> Result<BucketUserRelation, Error> {
+fn remove_user_from_bucket_handler(
+    bucket_uuid: Uuid,
+    account_user_uuid: Uuid,
+    target_user_uuid: UserUuidQueryParam,
+    db: BoxedRepository,
+) -> Result<BucketUserRelation, Error> {
     info!("remove_user_from_bucket_handler");
 
     let relation = db.get_user_bucket_relation(account_user_uuid, bucket_uuid)?;
 
-
     // Does user have permission to remove user
-    if relation.kick_permission || account_user_uuid == target_user_uuid.user_uuid{
-        db.remove_user_from_bucket(target_user_uuid.user_uuid, bucket_uuid).map_err(Error::from)
+    if relation.kick_permission || account_user_uuid == target_user_uuid.user_uuid {
+        db.remove_user_from_bucket(target_user_uuid.user_uuid, bucket_uuid)
+            .map_err(Error::from)
     } else {
-        Err(Error::PreconditionNotMet("User does not have permission to remove another user from this bucket.".to_string()))
+        Err(Error::PreconditionNotMet(
+            "User does not have permission to remove another user from this bucket.".to_string(),
+        ))
     }
 }
 
@@ -449,7 +456,7 @@ mod tests {
     #[test]
     fn remove_self_from_bucket() {
         execute_test(|fixture: &UserBucketRelationFixture, db: BoxedRepository| {
-           let new_relation = NewBucketUserRelation {
+            let new_relation = NewBucketUserRelation {
                 user_uuid: fixture.user2.uuid,
                 bucket_uuid: fixture.bucket.uuid,
                 set_public_permission: false,
@@ -458,13 +465,14 @@ mod tests {
                 kick_permission: false,
                 grant_permissions_permission: false,
             };
-            db.add_user_to_bucket(new_relation).expect("Should add user to bucket");
+            db.add_user_to_bucket(new_relation)
+                .expect("Should add user to bucket");
 
             let query = UserUuidQueryParam {
-                user_uuid: fixture.user2.uuid
+                user_uuid: fixture.user2.uuid,
             };
 
-            remove_user_from_bucket_handler(fixture.bucket.uuid, fixture.user2.uuid, query,  db)
+            remove_user_from_bucket_handler(fixture.bucket.uuid, fixture.user2.uuid, query, db)
                 .expect("User should be removed");
         })
     }
@@ -472,7 +480,7 @@ mod tests {
     #[test]
     fn remove_other_from_bucket() {
         execute_test(|fixture: &UserBucketRelationFixture, db: BoxedRepository| {
-           let new_relation = NewBucketUserRelation {
+            let new_relation = NewBucketUserRelation {
                 user_uuid: fixture.user2.uuid,
                 bucket_uuid: fixture.bucket.uuid,
                 set_public_permission: false,
@@ -481,14 +489,15 @@ mod tests {
                 kick_permission: false,
                 grant_permissions_permission: false,
             };
-            db.add_user_to_bucket(new_relation).expect("Should add user to bucket");
+            db.add_user_to_bucket(new_relation)
+                .expect("Should add user to bucket");
 
             let query = UserUuidQueryParam {
-                user_uuid: fixture.user2.uuid
+                user_uuid: fixture.user2.uuid,
             };
 
             // User 1, who has permissions, should remove user 2.
-            remove_user_from_bucket_handler(fixture.bucket.uuid, fixture.user1.uuid, query,  db)
+            remove_user_from_bucket_handler(fixture.bucket.uuid, fixture.user1.uuid, query, db)
                 .expect("User should be removed");
         })
     }
@@ -496,7 +505,7 @@ mod tests {
     #[test]
     fn cant_remove_other_from_bucket() {
         execute_test(|fixture: &UserBucketRelationFixture, db: BoxedRepository| {
-           let new_relation = NewBucketUserRelation {
+            let new_relation = NewBucketUserRelation {
                 user_uuid: fixture.user2.uuid,
                 bucket_uuid: fixture.bucket.uuid,
                 set_public_permission: false,
@@ -505,14 +514,15 @@ mod tests {
                 kick_permission: false,
                 grant_permissions_permission: false,
             };
-            db.add_user_to_bucket(new_relation).expect("Should add user to bucket");
+            db.add_user_to_bucket(new_relation)
+                .expect("Should add user to bucket");
 
             let query = UserUuidQueryParam {
-                user_uuid: fixture.user1.uuid
+                user_uuid: fixture.user1.uuid,
             };
 
             // User 2, who does not have kick permissions, should not be able to remove user 1.
-            remove_user_from_bucket_handler(fixture.bucket.uuid, fixture.user2.uuid, query,  db)
+            remove_user_from_bucket_handler(fixture.bucket.uuid, fixture.user2.uuid, query, db)
                 .expect_err("User should not be removed.");
         })
     }

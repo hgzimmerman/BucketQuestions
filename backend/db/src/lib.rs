@@ -17,19 +17,19 @@ extern crate diesel;
 pub mod answer;
 pub mod bucket;
 pub mod bucket_user_relation;
-pub mod favorite_question;
+mod conversions;
 pub mod fake;
+pub mod favorite_question;
 pub mod question;
 mod schema;
 pub mod test;
 pub mod user;
 mod util;
-mod conversions;
 
 use crate::{
     answer::interface::AnswerRepository, bucket::interface::BucketRepository,
-    bucket_user_relation::interface::BucketUserRelationRepository,
-    favorite_question::interface::FavoriteQuestionRelationRepository, fake::FakeDatabase,
+    bucket_user_relation::interface::BucketUserRelationRepository, fake::FakeDatabase,
+    favorite_question::interface::FavoriteQuestionRelationRepository,
     question::interface::QuestionRepository, user::interface::UserRepository,
 };
 use diesel::PgConnection;

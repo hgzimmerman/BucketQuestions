@@ -15,7 +15,7 @@ const DEFAULT_PORT: u16 = 8080;
 #[derive(Clone, Copy, Debug)]
 pub enum RepositoryType {
     Fake,
-    Database
+    Database,
 }
 
 impl Default for RepositoryType {
@@ -44,7 +44,7 @@ pub struct Config {
     /// This can determine a multitude of things, but is currently mostly related to the redirection url used in logins.
     pub running_environment: RunningEnvironment,
     /// Determines which data store will be used by the server.
-    pub repository: RepositoryType
+    pub repository: RepositoryType,
 }
 
 impl Config {
@@ -165,7 +165,7 @@ impl Config {
                     max_pool_size,
                     server_lib_root,
                     running_environment,
-                    repository
+                    repository,
                 }
             }
             Err(error) => {

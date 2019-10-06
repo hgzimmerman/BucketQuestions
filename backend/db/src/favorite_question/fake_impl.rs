@@ -1,11 +1,11 @@
 //! Mock impl
 
 use crate::{
+    fake::{DummyDbErrorInfo, FakeDatabase},
     favorite_question::{
         db_types::{FavoriteQuestionRelation, NewFavoriteQuestionRelation},
         interface::FavoriteQuestionRelationRepository,
     },
-    fake::{DummyDbErrorInfo, FakeDatabase},
     question::db_types::Question,
 };
 use diesel::result::{DatabaseErrorKind, Error};

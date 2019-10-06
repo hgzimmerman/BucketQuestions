@@ -1,7 +1,9 @@
 //! Bucket-User relation conversions
 
+use crate::bucket_user_relation::db_types::{
+    BucketUserPermissionsChangeset, BucketUserRelation, NewBucketUserRelation,
+};
 use wire;
-use crate::bucket_user_relation::db_types::{BucketUserRelation, NewBucketUserRelation, BucketUserPermissionsChangeset};
 
 impl Into<wire::bucket_user_relation::BucketUserRelation> for BucketUserRelation {
     fn into(self) -> wire::bucket_user_relation::BucketUserRelation {
@@ -14,7 +16,7 @@ impl Into<wire::bucket_user_relation::BucketUserRelation> for BucketUserRelation
             kick_permission: self.kick_permission,
             grant_permissions_permission: self.grant_permissions_permission,
             updated_at: self.updated_at,
-            created_at: self.created_at
+            created_at: self.created_at,
         }
     }
 }
@@ -30,7 +32,7 @@ impl From<wire::bucket_user_relation::BucketUserRelation> for BucketUserRelation
             kick_permission: bur.kick_permission,
             grant_permissions_permission: bur.grant_permissions_permission,
             updated_at: bur.updated_at,
-            created_at: bur.created_at
+            created_at: bur.created_at,
         }
     }
 }
@@ -44,7 +46,7 @@ impl Into<wire::bucket_user_relation::NewBucketUserRelation> for NewBucketUserRe
             set_drawing_permission: self.set_drawing_permission,
             set_exclusive_permission: self.set_exclusive_permission,
             kick_permission: self.kick_permission,
-            grant_permissions_permission: self.grant_permissions_permission
+            grant_permissions_permission: self.grant_permissions_permission,
         }
     }
 }
@@ -58,13 +60,14 @@ impl From<wire::bucket_user_relation::NewBucketUserRelation> for NewBucketUserRe
             set_drawing_permission: bur.set_drawing_permission,
             set_exclusive_permission: bur.set_exclusive_permission,
             kick_permission: bur.kick_permission,
-            grant_permissions_permission: bur.grant_permissions_permission
+            grant_permissions_permission: bur.grant_permissions_permission,
         }
     }
 }
 
-
-impl Into<wire::bucket_user_relation::BucketUserPermissionsChangeset> for BucketUserPermissionsChangeset {
+impl Into<wire::bucket_user_relation::BucketUserPermissionsChangeset>
+    for BucketUserPermissionsChangeset
+{
     fn into(self) -> wire::bucket_user_relation::BucketUserPermissionsChangeset {
         wire::bucket_user_relation::BucketUserPermissionsChangeset {
             user_uuid: self.user_uuid,
@@ -73,12 +76,14 @@ impl Into<wire::bucket_user_relation::BucketUserPermissionsChangeset> for Bucket
             set_drawing_permission: self.set_drawing_permission,
             set_exclusive_permission: self.set_exclusive_permission,
             kick_permission: self.kick_permission,
-            grant_permissions_permission: self.grant_permissions_permission
+            grant_permissions_permission: self.grant_permissions_permission,
         }
     }
 }
 
-impl From<wire::bucket_user_relation::BucketUserPermissionsChangeset> for BucketUserPermissionsChangeset {
+impl From<wire::bucket_user_relation::BucketUserPermissionsChangeset>
+    for BucketUserPermissionsChangeset
+{
     fn from(bupc: wire::bucket_user_relation::BucketUserPermissionsChangeset) -> Self {
         BucketUserPermissionsChangeset {
             user_uuid: bupc.user_uuid,
@@ -87,7 +92,7 @@ impl From<wire::bucket_user_relation::BucketUserPermissionsChangeset> for Bucket
             set_drawing_permission: bupc.set_drawing_permission,
             set_exclusive_permission: bupc.set_exclusive_permission,
             kick_permission: bupc.kick_permission,
-            grant_permissions_permission: bupc.grant_permissions_permission
+            grant_permissions_permission: bupc.grant_permissions_permission,
         }
     }
 }
