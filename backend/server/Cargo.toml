@@ -39,6 +39,7 @@ slug = "0.1.4"
 diesel_test_setup = {path="../diesel_test_setup"}
 strum = "0.15.0"
 strum_macros = "0.15.0"
+wire = {path = "../../wire"}
 
 
 [dev-dependencies]
