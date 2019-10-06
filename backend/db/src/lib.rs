@@ -24,6 +24,7 @@ mod schema;
 pub mod test;
 pub mod user;
 mod util;
+mod conversions;
 
 use crate::{
     answer::interface::AnswerRepository, bucket::interface::BucketRepository,
