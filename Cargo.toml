@@ -1,0 +1,10 @@
+[workspace]
+members = [
+    "backend/db",
+    "backend/server",
+    "backend/diesel_test_setup",
+    "backend/pool",
+    "backend/auth",
+    "wire",
+    "yew_frontend"
+]

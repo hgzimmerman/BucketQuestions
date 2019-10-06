@@ -1,0 +1,531 @@
+body {
+    padding: 0;
+    margin: 0;
+    font-family: sans-serif;
+    overflow: hidden;
+}
+
+/*.block {*/
+/*    display: block;*/
+/*    height: 100%;*/
+/*}*/
+
+/*.main-container {*/
+/*    margin: 0;*/
+/*    min-height: 100%;*/
+/*    height: 100%;*/
+/*    width: 100%;*/
+/*    position: fixed;*/
+
+/*    display: flex;*/
+/*    flex-direction: column;*/
+
+/*    !*min-height: inherit;*!*/
+/*    overflow: hidden;*/
+/*}*/
+
+/*.main-content {*/
+/*    flex: 1;*/
+/*    overflow-y: hidden;*/
+/*}*/
+
+/*.no-scroll {*/
+/*    overflow-y: hidden;*/
+/*}*/
+
+/*.scrollable {*/
+/*    overflow-y: auto;*/
+/*}*/
+
+
+/*.bordered {*/
+/*    border: solid 1px black;*/
+/*}*/
+
+/*.border-bottom {*/
+/*    border-bottom: solid 1px black;*/
+/*}*/
+
+/*.bolded {*/
+/*    font-weight: bold;*/
+/*}*/
+
+/*.box-shadow {*/
+/*    box-shadow: 10px 10px darkgray;*/
+/*}*/
+
+/*!* Util visibility*!*/
+
+
+/*!* Util *!*/
+
+/*.flexbox {*/
+/*    display: flex;*/
+/*}*/
+
+/*.flexbox-horiz {*/
+/*    display: flex;*/
+/*    flex-direction: row;*/
+/*}*/
+/*.flexbox-horiz-reverse {*/
+/*    display: flex;*/
+/*    flex-direction: row-reverse;*/
+/*}*/
+
+/*.flexbox-vert {*/
+/*    display: flex;*/
+/*    flex-direction: column;*/
+/*}*/
+/*.flexbox-horiz-wrap {*/
+/*    display: flex;*/
+/*    flex-direction: row;*/
+/*    flex-wrap: wrap;*/
+/*}*/
+
+/*.flexbox-center {*/
+/*    display: flex;*/
+/*    align-items: safe center;*/
+/*    justify-content: safe center;*/
+/*    !*height: 100%;*!*/
+/*    !*width: 100%;*!*/
+/*}*/
+
+/*.flexbox-test {*/
+/*    display: flex;*/
+/*    height: 100%;*/
+/*    width: 100%;*/
+/*    justify-content: stretch;*/
+/*}*/
+
+/*.flexbox-expand {*/
+/*    flex: 1;*/
+/*}*/
+
+/*.flexbox-space-between {*/
+/*    justify-content: space-between;*/
+/*}*/
+
+
+/*!**/
+/*While this itself does not use any flexbox-specific features,*/
+/*It does require the parent to be "display: flex".*/
+/**!*/
+/*.flexbox-center-item {*/
+/*    margin: auto*/
+/*}*/
+
+/*.flexbox-center-vert {*/
+/*    display: flex; !*Ok if redundant*!*/
+/*    align-items: center;*/
+/*}*/
+
+/*.flexbox-center-horiz {*/
+/*    display: flex;*/
+/*    justify-content: center;*/
+/*}*/
+
+/*.flexbox-child-grow {*/
+/*    flex-grow: 1;*/
+/*}*/
+
+/*.full-height {*/
+/*    height: 100%*/
+/*}*/
+/*.full-width {*/
+/*    width: 100%*/
+/*}*/
+
+/*.margin-left {*/
+/*    margin-left: 10px;*/
+/*}*/
+/*.margin-right {*/
+/*    margin-right: 10px;*/
+/*}*/
+
+/*.padding-left {*/
+/*    padding-left: 10px;*/
+/*}*/
+/*.padding-right {*/
+/*    padding-right: 10px;*/
+/*}*/
+
+/*.margin-default {*/
+/*    margin: 10px;*/
+/*}*/
+/*.padding-default {*/
+/*    padding: 10px;*/
+/*}*/
+
+/*!* Misc *!*/
+
+/*.meta-loading-container {*/
+/*    width: 100%;*/
+/*    height: 100%;*/
+/*}*/
+/*!* Container for content and loading overlay *!*/
+/*.loading-container {*/
+/*    !*width: auto;*!*/
+/*    !*height: auto;*!*/
+/*    width: 100%;*/
+/*    height: 100%;*/
+/*    position: relative;*/
+/*}*/
+
+/*!* The overlay that sits on top of the content while something is uploaded. *!*/
+/*.loading-overlay {*/
+/*    position: absolute;*/
+/*    width: 100%;*/
+/*    height: 100%;*/
+/*    z-index: 10;*/
+/*    background-color: #aaaaaa88*/
+/*}*/
+
+/*.small-text {*/
+/*    font-size: small;*/
+/*}*/
+
+/*.small-link {*/
+/*    font-size: small;*/
+/*    color: #0000EE;*/
+/*}*/
+/*.small-link:hover {*/
+/*    cursor: pointer;*/
+/*}*/
+
+/*.link {*/
+/*    color: #0000EE;*/
+/*}*/
+/*.link:hover {*/
+/*    cursor: pointer;*/
+/*}*/
+
+/*button {*/
+/*   display: inline-block;*/
+/*   padding: 6px 12px;*/
+/*   margin-bottom: 0;*/
+/*   font-size: 14px;*/
+/*   font-weight: 400;*/
+/*   line-height: 1.42857143;*/
+/*   text-align: center;*/
+/*   white-space: nowrap;*/
+/*   vertical-align: middle;*/
+/*   -ms-touch-action: manipulation;*/
+/*   touch-action: manipulation;*/
+/*   cursor: pointer;*/
+/*   -webkit-user-select: none;*/
+/*   -moz-user-select: none;*/
+/*   -ms-user-select: none;*/
+/*   user-select: none;*/
+/*   background-image: none;*/
+/*   border: 1px solid transparent;*/
+/*}*/
+
+/*!*firefox remove stupid inner border*!*/
+/*button::-moz-focus-inner { border: 0; }*/
+
+/*.list-background {*/
+/*    background-color: oldlace;*/
+/*}*/
+
+/*!* Header *!*/
+/*.header {*/
+/*    width: 100%;*/
+/*    min-height: 40px;*/
+/*    background-color: orangered;*/
+/*    font-size: 20px;*/
+/*    flex: 0;*/
+/*    display: flex;*/
+/*    flex-direction: row;*/
+/*    justify-content: space-between;*/
+/*    align-items: center; !* Vertically center the content*!*/
+/*}*/
+
+/*.nav-title {*/
+/*    margin-left: 10px;*/
+/*    flex: 1;*/
+/*}*/
+
+/*.nav-links {*/
+/*    !*flex: 0;*!*/
+/*}*/
+
+/*.nav-link {*/
+/*    font-size: 18px;*/
+/*    margin: 5px 5px 5px 10px;*/
+/*    color: blue;*/
+/*}*/
+/*.nav-link:hover {*/
+/*    cursor: pointer;*/
+/*}*/
+
+/*!* Login *!*/
+/*.login-card {*/
+/*    min-width: 300px;*/
+/*    width: 450px;*/
+/*    min-height: 400px;*/
+/*    background-color: lightgray;*/
+/*    box-shadow: 10px 10px darkgray;*/
+/*    padding: 20px;*/
+/*}*/
+
+/*!* Forum *!*/
+
+/*.forum-list {*/
+/*    list-style-type: none;*/
+/*    padding: 0;*/
+/*    margin: 0px;*/
+/*    width: 100%;*/
+/*    background-color: gray;*/
+/*    min-height: min-content;*/
+/*    !*border-left: solid 1px black;*/
+/*    border-right: solid 1px black; *!*/
+/*}*/
+
+/*.forum-list-element {*/
+/*    padding: 10px;*/
+/*    border-top: solid 1px black;*/
+/*    border-right: solid 1px black;*/
+/*    border-left: solid 1px black;*/
+/*    background-color: lightgray;*/
+/*    transition: all .3s ease-out;*/
+/*}*/
+/*.list-element-selected {*/
+/*    background-color: white;*/
+/*}*/
+
+/*.forum-list-element:last-child {*/
+/*    border-bottom: solid 1px black;*/
+/*}*/
+
+/*.forum-list-element:hover{*/
+/*   box-shadow: 0 3px 3px gray;*/
+/*   position: relative;*/
+/*}*/
+
+/*.forum-list-width {*/
+/*    width: 400px*/
+/*}*/
+
+/*.title-bar {*/
+/*    width: 100%;*/
+/*    background-color: gray;*/
+/*    font-size: 18pt;*/
+/*    height: 40px;*/
+/*    min-height: 40px;*/
+/*    padding-left: 10px;*/
+/*    padding-right: 10px;*/
+/*}*/
+
+
+
+/*.forum-title-span {*/
+/*    padding: 10px;*/
+/*}*/
+
+/*.forum-link {*/
+/*   font-size: 18pt;*/
+/*   display: inline-block;*/
+/*}*/
+
+
+/*.vertical-flexbox {*/
+/*    height: 100%;*/
+/*    width: 100%;*/
+/*    display: flex;*/
+/*    flex-direction: column;*/
+/*    background: sepia;*/
+/*}*/
+
+/*.post-card {*/
+/*    min-height: 35px;*/
+/*    border-radius: 4px;*/
+/*    background-color: seashell;*/
+/*    padding: 10px;*/
+/*}*/
+
+/*.post-info {*/
+/*    font-size: small;*/
+/*}*/
+
+/*.post-left-pad {*/
+/*    margin-left: 10px;*/
+/*}*/
+
+/*.centered {*/
+/*    width: 70%;*/
+/*    height: 100%;*/
+/*    align-self: center;*/
+/*}*/
+
+
+/*!* Markdown *!*/
+
+/*.edit-markdown-toggle-box {*/
+/*    border-radius: 4px;*/
+/*    background-color: sepia;*/
+/*    display: flex;*/
+/*    flex-direction: column;*/
+/*    border: 2px solid gray;*/
+/*}*/
+
+/*.markdown-textarea {*/
+/*    width: 100%;*/
+/*    max-width: 100%;*/
+/*    min-height: 200px;*/
+/*    min-width: 100%;*/
+/*    !*margin: 10px;*!*/
+/*    !*margin: 0;*!*/
+/*}*/
+/*.form-control {*/
+/*    display: block;*/
+/*    width: 100%; !* control this by making it 100% but adding another another class that sets it to auto *!*/
+/*    height: 34px;*/
+/*    padding: 6px 12px;*/
+/*    font-size: 14px;*/
+/*    line-height: 1.42857143;*/
+/*    color: #555;*/
+/*    background-color: #fff;*/
+/*    background-image: none;*/
+/*    border: 1px solid #bbb;*/
+/*    box-sizing: border-box;*/
+/*}*/
+/*.form-control-start {*/
+/*    display: block;*/
+/*    width: 34px;*/
+/*    min-width: 34px;*/
+/*    height: 34px;*/
+/*    padding: 6px 12px;*/
+/*    font-size: 14px;*/
+/*    background: #fff none;*/
+/*    border-left: 1px solid #bbb;*/
+/*    border-top: 1px solid #bbb;*/
+/*    border-bottom: 1px solid #bbb;*/
+/*    box-sizing: border-box;*/
+/*}*/
+
+/*.form-control {*/
+/*    border-color: #5f9bd0;*/
+/*    outline: 0;*/
+/*    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.3);*/
+/*    box-shadow: inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.3);*/
+/*}*/
+
+/*.form-error-message {*/
+/*    position: absolute;*/
+/*    display: block;*/
+/*    !*left: 34px;*!*/
+/*    top:-30px;*/
+/*    !*width: calc(100% - 34px);*!*/
+/*    width:100%;*/
+/*    padding: 6px 12px;*/
+/*    font-size: 14px;*/
+/*    background: #ff8684 none;*/
+/*    border-left: 1px solid #bbb;*/
+/*    border-top: 1px solid #bbb;*/
+/*    border-right: 1px solid #bbb;*/
+/*    box-sizing: border-box;*/
+/*}*/
+
+/*.input-group {*/
+/*    position: relative;*/
+/*    display: -webkit-box;*/
+/*    display: -ms-flexbox;*/
+/*    display: flex;*/
+/*    !*-ms-flex-wrap: wrap;*!*/
+/*    !*flex-wrap: wrap;*!*/
+/*    -webkit-box-align: stretch;*/
+/*    -ms-flex-align: stretch;*/
+/*    align-items: stretch;*/
+/*    width: 100%;*/
+/*}*/
+
+/*.input-and-error-container {*/
+/*    margin-top: 34px;*/
+/*    position: relative;*/
+/*}*/
+
+/*.edit-markdown-bar {*/
+/*    background-color: lightgray;*/
+/*    flex: 0;*/
+/*}*/
+
+/*.view-markdown-content {*/
+/*    flex: 1;*/
+/*    margin: 10px;*/
+/*}*/
+
+/*.markdown-min-height {*/
+/*    min-height: 200px;*/
+/*}*/
+
+/*.edit-markdown-side-by-side-wrapper {*/
+/*    height: 100%;*/
+/*    display: flex;*/
+/*    flex-direction: row;*/
+/*}*/
+/*.edit-markdown-half {*/
+/*    flex: 1;*/
+/*    height: 100%;*/
+/*    padding: 20px; !*Is there a better way here?*!*/
+/*}*/
+
+/*.border-right {*/
+/*    border-right: 2px solid black;*/
+/*}*/
+
+/*!*Bucket*!*/
+/*.approved-bucket-card {*/
+/*    min-height: 150px;*/
+/*    min-width: 200px;*/
+/*    background: aquamarine;*/
+/*}*/
+
+/*.public-bucket-card {*/
+/*    min-height: 150px;*/
+/*    min-width: 200px;*/
+/*    background: cornflowerblue;*/
+/*}*/
+
+/*.bucket-card:hover {*/
+/*    cursor: pointer;*/
+/*}*/
+
+/*.question-card {*/
+/*    min-height: 200px;*/
+/*    min-width: 350px;*/
+/*    width: 90%;*/
+/*    height: 90%;*/
+/*}*/
+
+/*.questions-container {*/
+/*    flex: 3;*/
+/*}*/
+/*.answers-container {*/
+/*    flex: 2;*/
+/*}*/
+
+/*.new-question-card {*/
+/*    background-color: lightsalmon;*/
+/*}*/
+/*.active-question-card {*/
+/*    background-color: lightskyblue;*/
+/*}*/
+/*.question-list {*/
+/*    background-color: gainsboro;*/
+/*}*/
+
+
+/*.light-gray {*/
+/*    background-color: lightgray;*/
+/*}*/
+
+/*.bucket-action-pane {*/
+/*    position: absolute;*/
+/*    top: 40px;*/
+/*    width: 250px;*/
+/*    right: 0; !* Align right *!*/
+/*    border: 1px solid black;*/
+/*    min-height: 200px;*/
+/*    background-color: white;*/
+/*    font-size: medium;*/
+/*}*/

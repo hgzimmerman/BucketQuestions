@@ -1,0 +1,5 @@
+.navbar {
+    height: 44px;
+    background-color: gray;
+    display: flex;
+}
