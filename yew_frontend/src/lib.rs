@@ -1,5 +1,7 @@
 use yew::prelude::*;
 
+mod common;
+
 mod components;
 mod services;
 mod agents;

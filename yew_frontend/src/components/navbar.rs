@@ -46,7 +46,7 @@ impl Component for Navbar {
     }
 
     fn view(&self) -> Html<Self> {
-        CSS.with(|css| {
+        CSS.with(|css| -> Html<Self> {
             html! {
                 <nav class=&css["navbar"]>
                     <h3>{&self.props.title} </h3>

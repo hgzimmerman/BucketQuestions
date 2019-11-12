@@ -30,6 +30,17 @@ use yew::callback::Callback;
 // Make sure that it handles auth/reauth. (IT DOES)
 // Make it use the proper Serialization methods instead of just defering to running serde_json on everything.
 
+// TODO:
+// But wait, How can I queue up multiple requests (reauth) if I don't have a local execution context (component or agent).
+// Doing it in the component is a huge ergonomic problem.
+// But doing it in an agent is also bad, because fetch tasks can't be sent to dependent components to be stored in their fetch state because they aren't serializable.
+
+// So the likely outcome is that the agent stays, it keeps its list of fetch tasks. Ideally it loses its type parameters.
+// If not, then it can switch to a job reach, and have instances for many different request types.
+// The fetch state enum can accept an Option<FetchTask> for the fetching.
+
+// Wow, modeling this with async futures would be much better than handling this with callbacks...
+
 
 use wire::user::BEARER;
 #[derive(Debug)]
@@ -150,7 +161,6 @@ impl <T, W> Agent for FetchAgent<T, W>
 
     fn create(link: AgentLink<Self>) -> Self {
         let callback = link.send_back(|_: RouteInfo| Msg::NoOp);
-//        let router = Router::new(callback);
         let router = RouteAgentBridge::new(callback);
 
         FetchAgent {
@@ -378,6 +388,7 @@ use yew_router::agent::RouteSenderBridge;
 use uuid::Uuid;
 
 
+/// TODO deprecate this.
 pub fn to_body(r: &impl Serialize) -> String {
     serde_json::to_string(r).unwrap()
 }
