@@ -1,5 +1,6 @@
 .navbar {
-    height: 44px;
+    min-height: 44px;
+    max-height: 44px;
+    flex: 1;
     background-color: gray;
-    display: flex;
 }

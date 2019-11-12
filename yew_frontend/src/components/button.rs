@@ -10,14 +10,14 @@ pub struct PureButton {
     #[props(required)]
     pub callback: Callback<()>,
     pub text: String,
-//    pub classes: Classes
+    pub classes: Classes
 }
 
 impl PureComponent for PureButton {
     fn render(&self) -> VNode<Pure<Self>> {
         html! {
             <button
-//                classes = self.classes
+                classes = self.classes
                 onclick=|_| ()>
                 { &self.text }
             </button>

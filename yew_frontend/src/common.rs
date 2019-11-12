@@ -8,33 +8,33 @@ use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, RequestMode, Response, Window};
 
 // TODO add remaining HTTP methods.
-pub enum MethodData<'a, T> {
+pub enum MethodBody<'a, T> {
     Get,
     Delete,
     Post(&'a T),
     Put(&'a T)
 }
 
-impl <'a, T> MethodData<'a, T> {
-    pub fn method_name(&self) -> &'static str {
+impl <'a, T> MethodBody<'a, T> {
+    pub fn as_method(&self) -> &'static str {
         match self {
-            MethodData::Get => "GET",
-            MethodData::Delete => "DELETE",
-            MethodData::Post(_) => "POST",
-            MethodData::Put(_) => "PUT"
+            MethodBody::Get => "GET",
+            MethodBody::Delete => "DELETE",
+            MethodBody::Post(_) => "POST",
+            MethodBody::Put(_) => "PUT"
         }
     }
 
 
 }
 
-impl <'a, T: Serialize> MethodData<'a, T> {
+impl <'a, T: Serialize> MethodBody<'a, T> {
     pub fn as_body(&self) -> Result<Option<JsValue>, FetchError> {
         let body: Option<String> = match self {
-            MethodData::Get
-            | MethodData::Delete => None,
-            MethodData::Put(data)
-            | MethodData::Post(data) => {
+            MethodBody::Get
+            | MethodBody::Delete => None,
+            MethodBody::Put(data)
+            | MethodBody::Post(data) => {
                 let body = serde_json::to_string(data)
                     .map_err(|_| FetchError::CouldNotSerializeRequestBody)?;
                 Some(body)
@@ -57,13 +57,12 @@ pub enum FetchError {
 }
 
 pub trait FetchRequest {
-    type UrlProvider;
-    type RequestData: Serialize;
+    type RequestType: Serialize;
     type ResponseType: DeserializeOwned;
 
     fn url(&self) -> String;
 
-    fn method(&self) -> MethodData<Self::RequestData>;
+    fn method(&self) -> MethodBody<Self::RequestType>;
 
     fn headers(&self) -> Vec<(String, String)>;
 
@@ -71,13 +70,14 @@ pub trait FetchRequest {
 
 pub async fn fetch_resource<T: FetchRequest>(request: &T) -> Result<T::ResponseType, FetchError> {
     let method = request.method();
+    let headers = request.headers();
 
     // configure options for the request
     let mut opts = RequestInit::new();
-    opts.method(method.method_name());
+    opts.method(method.as_method());
     opts.body(method.as_body()?.as_ref());
 
-    opts.mode(RequestMode::Cors); // TODO make a thing for this
+    opts.mode(RequestMode::Cors); // TODO make a thing for this, but its a fine default for the moment
 
     // Create the request
     let request = Request::new_with_str_and_init(
@@ -87,6 +87,7 @@ pub async fn fetch_resource<T: FetchRequest>(request: &T) -> Result<T::ResponseT
         .map_err(|_| FetchError::CouldNotCreateRequest)?;
 
 
+    // Send the request, resolving it to a response.
     let window: Window = web_sys::window().unwrap();
     let resp_value = JsFuture::from(window.fetch_with_request(&request))
         .await
@@ -94,6 +95,7 @@ pub async fn fetch_resource<T: FetchRequest>(request: &T) -> Result<T::ResponseT
     debug_assert!(resp_value.is_instance_of::<Response>());
     let resp: Response = resp_value.dyn_into().unwrap();
 
+    // Process the response
     let text = JsFuture::from(resp.text().map_err(|_| FetchError::TextNotAvailable)?)
         .await
         .map_err(|_| FetchError::TextNotAvailable)?;
