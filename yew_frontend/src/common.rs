@@ -23,7 +23,7 @@ impl <T> Default for FetchState<T> {
 }
 
 impl <T> FetchState<T> {
-    pub fn get_success(&self) -> Option<&T> {
+    pub fn success(&self) -> Option<&T> {
         match self {
             FetchState::Success(value) => Some(value),
             _ => None
@@ -35,6 +35,15 @@ impl <T> FetchState<T> {
             value
         } else {
             panic!("Could not unwrap value of FetchState");
+        }
+    }
+
+    pub fn map<U, F: Fn(T)-> U>(self, f: F ) -> FetchState<U> {
+        match self {
+            FetchState::NotFetching => FetchState::NotFetching,
+            FetchState::Fetching => FetchState::NotFetching,
+            FetchState::Success(t) => FetchState::Success(f(t)),
+            FetchState::Failed(e) => FetchState::Failed(e)
         }
     }
 
@@ -155,3 +164,12 @@ pub async fn fetch_resource<T: FetchRequest>(request: &T) -> Result<T::ResponseT
 
     Ok(deserialized)
 }
+
+/// Performs a fetch and then resolves the fetch to a message
+pub async fn fetch_to_msg<T: FetchRequest, Msg>(request: &T, success: impl Fn(T::ResponseType) -> Msg, failure: impl Fn(FetchError) -> Msg) -> Msg {
+    fetch_resource(request)
+        .await
+        .map(success)
+        .unwrap_or_else(failure)
+}
+

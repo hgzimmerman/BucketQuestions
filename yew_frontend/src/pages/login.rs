@@ -85,23 +85,23 @@ impl Component for LoginPage {
 
 impl LoginPage {
     fn css_view(&self, css: &Css) -> Html<Self> {
-        full_height_scrollable(centered(
+//        full_height_scrollable(centered(
             match &self.google_oauth_link {
                 FetchState::NotFetching
                 | FetchState::Fetching => html! {
                     <Button
                         callback = |_| Msg::NoOp
-                        text= "Google Oauth"
+                        text= "Login"
                     />
                 },
                 FetchState::Success(_) => html! {
                     <Button
                         callback = |_| Msg::GoToGoogleOauthPage
-                        text= "Google Oauth"
+                        text= "Login"
                     />
                 },
                 FetchState::Failed(_err) => html!{}
             }
-        ))
+//        ))
     }
 }

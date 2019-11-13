@@ -18,12 +18,16 @@ use crate::pages::login::LoginPage;
 use crate::pages::index::IndexPage;
 
 use yew_router::prelude::{RouterButton, Route};
-use crate::common::{FetchState, fetch_resource, FetchError};
+use crate::common::{FetchState, fetch_resource, FetchError, fetch_to_msg};
 
 use wire::user::User;
 use crate::requests::GetUser;
 use crate::Msg::GotUserFailed;
 use yewtil::NeqAssign;
+use yewtil::ptr::Mrc;
+use crate::pages::login_or_user_panel::LoginUserPanel;
+use crate::components::navbar::navbar;
+use crate::common::FetchState::Fetching;
 
 
 #[wasm_bindgen]
@@ -48,7 +52,8 @@ pub struct Model {
 
 pub enum Msg {
     GotUser(User),
-    GotUserFailed(FetchError)
+    GotUserFailed(FetchError),
+    LogUserOut
 }
 
 impl Component for Model {
@@ -63,13 +68,7 @@ impl Component for Model {
     }
 
     fn mounted(&mut self) -> ShouldRender {
-        let fetch = async {
-            log::info!("Getting user");
-            fetch_resource(&GetUser)
-                .await
-                .map(Msg::GotUser)
-                .unwrap_or_else(Msg::GotUserFailed)
-        };
+        let fetch = fetch_to_msg(&GetUser, Msg::GotUser, Msg::GotUserFailed);
         self.link.send_future(fetch);
         false
     }
@@ -77,22 +76,24 @@ impl Component for Model {
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             Msg::GotUser(user) => {
-                log::info!("Got user");
+                log::info!("Got user: {:#?}", user);
                 self.user.neq_assign(FetchState::Success(user))
             },
             Msg::GotUserFailed(err) => {
                 log::warn!("Could not get user: {:?}", err);
                 self.user.neq_assign(FetchState::Failed(err))
             }
+            Msg::LogUserOut => {
+                crate::auth::clear_jwt();
+                self.user.neq_assign(FetchState::NotFetching)
+            }
         }
     }
 
     fn view(&self) -> Html<Self> {
-//        let user = self.render_user();
-
         html!{
         <>
-            <Navbar>
+            {navbar(html!{<>
                 <div style="flex-grow: 1">
                     <RouterLink
                         link = Route::from(AppRoute::Index).route
@@ -100,12 +101,9 @@ impl Component for Model {
                     />
                 </div>
                 <div>
-                    <RouterButton
-                        link = Route::from(AppRoute::Login).route
-                        text = "Login"
-                    />
+                    <LoginUserPanel user = &self.user callback=|_| Msg::LogUserOut />
                 </div>
-            </Navbar>
+            </>})}
 
             <Router<AppRoute, ()>
                 render = Router::render(|switch: AppRoute| {
@@ -123,14 +121,3 @@ impl Component for Model {
     }
 }
 
-
-impl Model {
-    fn render_user<T: Component>(&self) -> Html<T> {
-         self.user.get_success().map( |user| {
-            return html! {
-                {user.uuid}
-            }
-        })
-             .unwrap_or_default()
-    }
-}

@@ -48,7 +48,7 @@ impl Component for Navbar {
 
     fn view(&self) -> Html<Self> {
         CSS.with(|css| -> Html<Self> {
-            html! {
+            return html! {
                 <nav class=&css["navbar"]>
                     {self.props.children.render()}
                 </nav>
@@ -57,3 +57,14 @@ impl Component for Navbar {
     }
 
 }
+
+pub fn navbar<T: Component>(html: Html<T>) -> Html<T> {
+    CSS.with(|css| -> Html<T> {
+        html! {
+            <nav class=&css["navbar"]>
+                {html}
+            </nav>
+        }
+    })
+}
+

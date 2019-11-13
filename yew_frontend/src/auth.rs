@@ -34,3 +34,7 @@ pub fn get_jwt() -> Option<String> {
     storage::get_item(JWT_KEY)
 }
 
+pub fn is_logged_in() -> bool {
+    get_jwt().is_some()
+}
+
