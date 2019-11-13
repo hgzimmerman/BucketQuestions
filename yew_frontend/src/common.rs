@@ -23,6 +23,13 @@ impl <T> Default for FetchState<T> {
 }
 
 impl <T> FetchState<T> {
+    pub fn get_success(&self) -> Option<&T> {
+        match self {
+            FetchState::Success(value) => Some(value),
+            _ => None
+        }
+    }
+
     pub fn unwrap(self) -> T {
         if let FetchState::Success(value) = self {
             value
@@ -105,13 +112,16 @@ pub trait FetchRequest {
 }
 
 pub async fn fetch_resource<T: FetchRequest>(request: &T) -> Result<T::ResponseType, FetchError> {
+    log::debug!("fetch_resource");
     let method = request.method();
     let headers = request.headers();
+    let headers = JsValue::from_serde(&headers).expect("Convert Headers to Tuple");
 
     // configure options for the request
     let mut opts = RequestInit::new();
     opts.method(method.as_method());
     opts.body(method.as_body()?.as_ref());
+    opts.headers(&headers);
 
     opts.mode(RequestMode::Cors); // TODO make a thing for this, but its a fine default for the moment
 

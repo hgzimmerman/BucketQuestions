@@ -31,4 +31,4 @@ pub struct JwtPayload<T> {
 }
 
 /// Bearer string.
-pub const BEARER: &str = "Bearer ";
+pub const BEARER: &str = "bearer ";

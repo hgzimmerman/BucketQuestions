@@ -25,6 +25,7 @@ pub struct LoginPage {
 }
 
 pub enum Msg {
+    NoOp,
     GoToGoogleOauthPage,
     GotLink(LinkResponse),
     GotLinkFail(FetchError)
@@ -55,6 +56,9 @@ impl Component for LoginPage {
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
+            Msg::NoOp => {
+                false
+            }
             Msg::GoToGoogleOauthPage => {
                 // go to page
                 log::info!("Going to google's oauth page");
@@ -86,7 +90,7 @@ impl LoginPage {
                 FetchState::NotFetching
                 | FetchState::Fetching => html! {
                     <Button
-                        callback = |_| Msg::GoToGoogleOauthPage
+                        callback = |_| Msg::NoOp
                         text= "Google Oauth"
                     />
                 },
