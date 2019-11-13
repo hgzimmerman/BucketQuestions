@@ -17,7 +17,6 @@ pub fn full_height<T: Component>(inner: Html<T>) -> Html<T> {
     })
 }
 
-
 pub fn full_height_scrollable<T: Component>(inner: Html<T>) -> Html<T> {
     CSS.with(|css| -> Html<T> {
         html! {

@@ -41,6 +41,7 @@ impl Component for Navbar {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
+        self.props = props;
         true
 //        self.props.neq_assign(props)
     }

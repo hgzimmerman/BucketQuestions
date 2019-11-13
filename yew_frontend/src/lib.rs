@@ -1,3 +1,4 @@
+#![recursion_limit="256"]
 use yew::prelude::*;
 use wasm_bindgen::prelude::*;
 use yew_router::prelude::*;
@@ -9,6 +10,8 @@ mod services;
 mod agents;
 use components::navbar::Navbar;
 mod pages;
+
+mod requests;
 
 use crate::pages::login::LoginPage;
 use crate::pages::index::IndexPage;
@@ -52,14 +55,18 @@ impl Component for Model {
         html!{
         <>
             <Navbar>
-                <RouterLink
-                    link = Route::from(AppRoute::Index).route
-                    text = "BucketQuestions"
-                />
-                <RouterButton
-                    link = Route::from(AppRoute::Login).route
-                    text = "Login"
-                />
+                <div style="flex-grow: 1">
+                    <RouterLink
+                        link = Route::from(AppRoute::Index).route
+                        text = "BucketQuestions"
+                    />
+                </div>
+                <div>
+                    <RouterButton
+                        link = Route::from(AppRoute::Login).route
+                        text = "Login"
+                    />
+                </div>
             </Navbar>
 
             <Router<AppRoute, ()>

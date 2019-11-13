@@ -7,6 +7,41 @@ use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, RequestMode, Response, Window};
 
+
+#[derive(Clone, PartialEq, Debug)]
+pub enum FetchState<T> {
+    NotFetching,
+    Fetching,
+    Success(T),
+    Failed(FetchError),
+}
+
+impl <T> Default for FetchState<T> {
+    fn default() -> Self {
+        FetchState::NotFetching
+    }
+}
+
+impl <T> FetchState<T> {
+    pub fn unwrap(self) -> T {
+        if let FetchState::Success(value) = self {
+            value
+        } else {
+            panic!("Could not unwrap value of FetchState");
+        }
+    }
+
+    pub fn as_ref(&self) -> FetchState<&T>  {
+        match self {
+            FetchState::NotFetching => FetchState::NotFetching,
+            FetchState::Fetching => FetchState::NotFetching,
+            FetchState::Success(t) => FetchState::Success(t),
+            FetchState::Failed(e) => FetchState::Failed(e.clone())
+        }
+    }
+}
+
+
 // TODO add remaining HTTP methods.
 pub enum MethodBody<'a, T> {
     Get,
@@ -48,11 +83,12 @@ impl <'a, T: Serialize> MethodBody<'a, T> {
 }
 
 // TODO, these can contain much more data.
+#[derive(Debug, PartialEq, Clone)]
 pub enum FetchError {
-    DeserializeError,
+    DeserializeError{error: String, content: String},
     TextNotAvailable,
     CouldNotCreateFetchFuture,
-    CouldNotCreateRequest,
+    CouldNotCreateRequest(JsValue),
     CouldNotSerializeRequestBody
 }
 
@@ -84,7 +120,7 @@ pub async fn fetch_resource<T: FetchRequest>(request: &T) -> Result<T::ResponseT
         &request.url(),
         &opts,
     )
-        .map_err(|_| FetchError::CouldNotCreateRequest)?;
+        .map_err(|e| FetchError::CouldNotCreateRequest(e))?;
 
 
     // Send the request, resolving it to a response.
@@ -103,7 +139,9 @@ pub async fn fetch_resource<T: FetchRequest>(request: &T) -> Result<T::ResponseT
     let text_string = text.as_string().unwrap();
 
     let deserialized = serde_json::from_str(&text_string)
-        .map_err(|_e| FetchError::DeserializeError)?;
+        .map_err(|e| {
+            FetchError::DeserializeError{error: e.to_string(), content: text_string}
+        })?;
 
     Ok(deserialized)
 }
