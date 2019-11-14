@@ -9,30 +9,12 @@ use db::{
     question::db_types::{NewQuestion, Question},
     BoxedRepository,
 };
-use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use warp::{filters::BoxedFilter, path, query, Filter, Reply};
 
 pub const QUESTION_PATH: &str = "question";
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct BucketUuidQueryParam {
-    pub bucket_uuid: Uuid,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct NewQuestionRequest {
-    /// The bucket to which the question belongs.
-    pub bucket_uuid: Uuid,
-    /// The content of the question.
-    pub question_text: String,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct SetArchivedRequest {
-    pub question_uuid: Uuid,
-    pub archived: bool,
-}
+use wire::question::{NewQuestionRequest, BucketUuidQueryParam, SetArchivedRequest};
 
 pub fn question_api(state: &State) -> BoxedFilter<(impl Reply,)> {
     // impl Filter<Extract=(impl Reply,), Error=Rejection> + Clone{
@@ -148,7 +130,7 @@ pub fn question_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .and(user_filter(state))
         .and(state.db())
         .map(
-            |question_uuid: Uuid, user_uuid: Uuid, conn: BoxedRepository| {
+            |question_uuid: Uuid, user_uuid: Uuid, conn: BoxedRepository| -> Result<(), Error> {
                 let relation = NewFavoriteQuestionRelation {
                     user_uuid,
                     question_uuid,
@@ -164,7 +146,7 @@ pub fn question_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .and(user_filter(state))
         .and(state.db())
         .map(
-            |question_uuid: Uuid, user_uuid: Uuid, conn: BoxedRepository| {
+            |question_uuid: Uuid, user_uuid: Uuid, conn: BoxedRepository| -> Result<(), Error> {
                 let relation = NewFavoriteQuestionRelation {
                     user_uuid,
                     question_uuid,
@@ -179,7 +161,7 @@ pub fn question_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .and(warp::get2())
         .and(user_filter(state))
         .and(state.db())
-        .map(|user_uuid: Uuid, conn: BoxedRepository| {
+        .map(|user_uuid: Uuid, conn: BoxedRepository| -> Result<Vec<Question>, Error> {
             conn.get_favorite_questions(user_uuid).map_err(Error::from)
         })
         .and_then(json_or_reject);

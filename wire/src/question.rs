@@ -34,3 +34,24 @@ pub struct NewQuestion {
     /// The content of the question.
     pub question_text: String,
 }
+
+// Request types//
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct BucketUuidQueryParam {
+    pub bucket_uuid: Uuid,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct NewQuestionRequest {
+    /// The bucket to which the question belongs.
+    pub bucket_uuid: Uuid,
+    /// The content of the question.
+    pub question_text: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct SetArchivedRequest {
+    pub question_uuid: Uuid,
+    pub archived: bool,
+}
