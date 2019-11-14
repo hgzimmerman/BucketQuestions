@@ -11,16 +11,8 @@ use db::{
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use warp::{filters::BoxedFilter, path, Filter, Reply};
+use wire::answer::NewAnswerRequest;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct NewAnswerRequest {
-    /// The question to which the answer is responding.
-    pub question_uuid: Uuid,
-    /// Can the outside world see the answer.
-    pub publicly_visible: bool,
-    /// The answer
-    pub answer_text: String,
-}
 
 pub const ANSWER_PATH: &str = "answer";
 pub fn answer_api(state: &State) -> BoxedFilter<(impl Reply,)> {

@@ -32,3 +32,15 @@ pub struct NewAnswer {
     /// The answer
     pub answer_text: String,
 }
+
+//
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NewAnswerRequest {
+    /// The question to which the answer is responding.
+    pub question_uuid: Uuid,
+    /// Can the outside world see the answer.
+    pub publicly_visible: bool,
+    /// The answer
+    pub answer_text: String,
+}
