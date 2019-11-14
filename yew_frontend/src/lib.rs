@@ -6,28 +6,21 @@ use yew_router::prelude::*;
 mod common;
 
 mod components;
-mod services;
-mod agents;
-use components::navbar::Navbar;
 mod pages;
 mod auth;
 
 mod requests;
 
-use crate::pages::login::LoginPage;
 use crate::pages::index::IndexPage;
 
-use yew_router::prelude::{RouterButton, Route};
-use crate::common::{FetchState, fetch_resource, FetchError, fetch_to_msg};
+use yew_router::prelude::{Route};
+use crate::common::{FetchState,  FetchError, fetch_to_msg};
 
 use wire::user::User;
 use crate::requests::GetUser;
-use crate::Msg::GotUserFailed;
 use yewtil::NeqAssign;
-use yewtil::ptr::Mrc;
-use crate::pages::login_or_user_panel::LoginUserPanel;
+use crate::components::login::login_or_user_panel::LoginUserPanel;
 use crate::components::navbar::navbar;
-use crate::common::FetchState::Fetching;
 
 
 #[wasm_bindgen]
@@ -108,7 +101,7 @@ impl Component for Model {
             <Router<AppRoute, ()>
                 render = Router::render(|switch: AppRoute| {
                     match switch {
-                        AppRoute::Login => html!{<LoginPage/>},
+                        AppRoute::Login => panic!(),
                         AppRoute::Index => html!{<IndexPage/>},
                     }
                 })

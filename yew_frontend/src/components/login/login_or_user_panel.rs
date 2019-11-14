@@ -1,11 +1,9 @@
 use crate::common::FetchState;
 use yew::{Component, ComponentLink, Html, html, Properties, ShouldRender, Callback};
-use yew::virtual_dom::VNode;
 use wire::user::User;
-use yewtil::ptr::Mrc;
 use yewtil::NeqAssign;
-use crate::pages::login::LoginPage;
-use crate::pages::user_panel::UserPanel;
+use crate::components::login::login::LoginPage;
+use crate::components::login::user_panel::UserPanel;
 
 pub struct LoginUserPanel {
     props: Props
@@ -26,7 +24,7 @@ impl Component for LoginUserPanel {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(props: Self::Properties, _link: ComponentLink<Self>) -> Self {
         Self {
             props
         }
@@ -43,7 +41,7 @@ impl Component for LoginUserPanel {
     }
 
 
-    fn view(&self) -> VNode<Self> {
+    fn view(&self) -> Html<Self> {
         match self.props.user.clone().success() {
             Some(user) => html!{
                 <UserPanel user = user callback = &self.props.callback />

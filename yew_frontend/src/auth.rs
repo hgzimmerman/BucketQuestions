@@ -1,5 +1,6 @@
 
 
+#[allow(unused)]
 mod storage {
     use web_sys::{Storage, window};
 
@@ -34,6 +35,7 @@ pub fn get_jwt() -> Option<String> {
     storage::get_item(JWT_KEY)
 }
 
+#[allow(unused)]
 pub fn is_logged_in() -> bool {
     get_jwt().is_some()
 }

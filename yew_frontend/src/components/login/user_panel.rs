@@ -1,8 +1,6 @@
 use yew::{Component, ComponentLink, Html, html, Properties, Callback};
 use yew::virtual_dom::VNode;
 use wire::user::User;
-use crate::common::FetchState;
-use yewtil::ptr::{Mrc, Irc};
 use crate::components::button::Button;
 
 
@@ -28,7 +26,7 @@ impl Component for UserPanel {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(props: Self::Properties, _link: ComponentLink<Self>) -> Self {
         Self {
             props,
             open: false

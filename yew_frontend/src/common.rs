@@ -1,6 +1,5 @@
 use serde::Serialize;
 use serde::de::DeserializeOwned;
-use std::future::Future;
 
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
