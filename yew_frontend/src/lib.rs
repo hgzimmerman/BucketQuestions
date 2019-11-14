@@ -17,7 +17,7 @@ use yew_router::prelude::{Route};
 use crate::common::{FetchState,  FetchError, fetch_to_msg};
 
 use wire::user::User;
-use crate::requests::GetUser;
+use crate::requests::auth_and_user::GetUser;
 use yewtil::NeqAssign;
 use crate::components::login::login_or_user_panel::LoginUserPanel;
 use crate::components::navbar::navbar;
