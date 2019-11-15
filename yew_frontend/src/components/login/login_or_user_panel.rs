@@ -45,7 +45,7 @@ impl Component for LoginUserPanel {
 
     fn view(&self) -> Html<Self> {
         if is_logged_in() {
-            match self.props.user.clone().success() {
+            return match self.props.user.clone().success() {
                 Some(user) => html!{
                     <UserPanel user = user callback = &self.props.callback />
                 },
@@ -54,7 +54,7 @@ impl Component for LoginUserPanel {
                 }
             }
         } else {
-            html! {
+            return html! {
                 <LoginButton />
             }
         }

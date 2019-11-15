@@ -80,29 +80,23 @@ impl Component for LoginButton {
 
 impl LoginButton {
     fn css_view(&self, _css: &Css) -> Html<Self> {
-//        full_height_scrollable(centered(
-            match &self.google_oauth_link {
-                FetchState::NotFetching => html! {
-                    <Button
-                        classes = Classes::from("navbar-item is-disabled")
-                        callback = |_| Msg::NoOp
-                    />
-                },
-                FetchState::Fetching => html! {
-                    <Button
-                        classes = Classes::from("navbar-item is-loading")
-                        callback = |_| Msg::NoOp
-                    />
-                },
-                FetchState::Success(_) => html! {
-                    <Button
-                        classes = Classes::from("navbar-item is-primary")
-                        callback = |_| Msg::GoToGoogleOauthPage
-                        text= "Login"
-                    />
-                },
-                FetchState::Failed(_err) => html!{}
-            }
-//        ))
+        match &self.google_oauth_link {
+            FetchState::NotFetching => html! {
+                <a class = "navbar-item" onclick=|_| Msg::NoOp>
+                    {"Login"}
+                </a>
+            },
+            FetchState::Fetching => html! {
+                <a class = "navbar-item" onclick=|_| Msg::NoOp>
+                    {"Login"}
+                </a>
+            },
+            FetchState::Success(_) => html! {
+                <a class = "navbar-item" onclick=|_| Msg::GoToGoogleOauthPage>
+                    {"Login"}
+                </a>
+            },
+            FetchState::Failed(_err) => html!{}
+        }
     }
 }
