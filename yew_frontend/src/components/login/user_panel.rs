@@ -49,9 +49,6 @@ impl Component for UserPanel {
             {
                 self.render_user()
             }
-            {
-                self.render_panel()
-            }
             </>
         }
     }
@@ -63,34 +60,16 @@ impl UserPanel {
         let user_name: &String = &self.props.user.google_name.clone().unwrap_or_else(|| "Logged In".to_string());
 
         return html! {
-
-                <div class="navbar-item has-dropdown is-hoverable">
-                    <a class="navbar-link">
-                        {user_name}
+            <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-link">
+                    {user_name}
+                </a>
+                <div class="navbar-dropdown">
+                    <a class="navbar-item" onclick = |_| Msg::LogOut>
+                        {"Log Out"}
                     </a>
-                    <div class="navbar-dropdown">
-                        <a class="navbar-item" onclick = |_| Msg::LogOut>
-                            {"Log Out"}
-                        </a>
-                    </div>
                 </div>
-//            <a
-//                class = Classes::from("navbar-item")
-//                onclick = |_| Msg::ToggleOpen
-//            >
-//                {user_name}
-//            </a>
+            </div>
         }
-    }
-
-    fn render_panel(&self) -> Html<Self> {
-        if self.open {
-            return html! {
-
-            }
-        } else {
-            return html!{}
-        }
-
     }
 }

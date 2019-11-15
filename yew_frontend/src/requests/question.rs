@@ -2,7 +2,7 @@ use super::*;
 use wire::question::{NewQuestionRequest, Question, SetArchivedRequest};
 use uuid::Uuid;
 
-pub struct CreateQuestion{new_question: NewQuestionRequest}
+pub struct CreateQuestion{pub new_question: NewQuestionRequest}
 
 impl FetchRequest for CreateQuestion {
     type RequestType = NewQuestionRequest;
@@ -21,7 +21,7 @@ impl FetchRequest for CreateQuestion {
     }
 }
 
-pub struct DeleteQuestion { question_uuid: Uuid }
+pub struct DeleteQuestion {pub question_uuid: Uuid }
 
 impl FetchRequest for DeleteQuestion {
     type RequestType = ();
@@ -40,14 +40,13 @@ impl FetchRequest for DeleteQuestion {
     }
 }
 
-pub struct GetRandomQuestion;
-
+pub struct GetRandomQuestion{pub bucket_uuid: Uuid}
 impl FetchRequest for GetRandomQuestion {
     type RequestType = ();
     type ResponseType = Option<Question>;
 
     fn url(&self) -> String {
-       create_url("question/random")
+       create_url(&format!("question/random?bucket_uuid={}", self.bucket_uuid))
     }
 
     fn method(&self) -> MethodBody<Self::RequestType> {
@@ -59,7 +58,7 @@ impl FetchRequest for GetRandomQuestion {
     }
 }
 
-pub struct GetNumberOfQeustionsInTheBucket{bucket_uuid: Uuid}
+pub struct GetNumberOfQeustionsInTheBucket{pub bucket_uuid: Uuid}
 
 impl FetchRequest for GetNumberOfQeustionsInTheBucket {
     type RequestType = ();
@@ -78,7 +77,7 @@ impl FetchRequest for GetNumberOfQeustionsInTheBucket {
     }
 }
 
-pub struct GetEveryQuestionInBucket{bucket_uuid: Uuid}
+pub struct GetEveryQuestionInBucket{pub bucket_uuid: Uuid}
 
 impl FetchRequest for GetEveryQuestionInBucket {
     type RequestType = ();
@@ -97,7 +96,7 @@ impl FetchRequest for GetEveryQuestionInBucket {
     }
 }
 
-pub struct GetEveryQuestionOnFloor{bucket_uuid: Uuid}
+pub struct GetEveryQuestionOnFloor{pub bucket_uuid: Uuid}
 
 impl FetchRequest for GetEveryQuestionOnFloor {
     type RequestType = ();
@@ -116,7 +115,7 @@ impl FetchRequest for GetEveryQuestionOnFloor {
     }
 }
 
-pub struct SetQuestionArchivedState(SetArchivedRequest);
+pub struct SetQuestionArchivedState(pub SetArchivedRequest);
 
 impl FetchRequest for SetQuestionArchivedState {
     type RequestType = SetArchivedRequest;
@@ -135,7 +134,7 @@ impl FetchRequest for SetQuestionArchivedState {
     }
 }
 
-pub struct SetQuestionAsFavorite{question_uuid: Uuid}
+pub struct SetQuestionAsFavorite{pub question_uuid: Uuid}
 
 impl FetchRequest for SetQuestionAsFavorite {
     type RequestType = ();
@@ -155,7 +154,7 @@ impl FetchRequest for SetQuestionAsFavorite {
 }
 
 /// Marks the question as no longer a favorite of the user.
-pub struct RemoveQuestionAsFavorite{question_uuid: Uuid}
+pub struct RemoveQuestionAsFavorite{pub question_uuid: Uuid}
 
 impl FetchRequest for RemoveQuestionAsFavorite {
     type RequestType = ();

@@ -1,7 +1,7 @@
 use super::*;
 use wire::answer::{NewAnswerRequest, Answer};
 
-pub struct CreateAnswer(NewAnswerRequest);
+pub struct CreateAnswer(pub NewAnswerRequest);
 
 impl FetchRequest for CreateAnswer {
     type RequestType = NewAnswerRequest;

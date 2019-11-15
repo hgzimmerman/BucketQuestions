@@ -1,9 +1,11 @@
-use yew::{Component, ComponentLink, html, ShouldRender};
+use yew::{Component, ComponentLink, html, ShouldRender, Html};
 use yew::virtual_dom::VNode;
 use crate::common::{FetchState, fetch_to_msg, FetchError, fetch_to_state_msg};
 use wire::bucket::Bucket;
 use crate::requests::bucket::{GetPublicBuckets, GetParticipatingBuckets, CreateBucket};
 use yewtil::NeqAssign;
+use yew_router::unit_state::{Route, RouterLink};
+use crate::AppRoute;
 
 pub struct IndexPage {
     public_buckets: FetchState<Vec<Bucket>>,
@@ -76,21 +78,76 @@ impl Component for IndexPage {
     }
 
     fn view(&self) -> VNode<Self> {
+        let public_buckets = match &self.public_buckets {
+            FetchState::Success(buckets) => {
+                buckets.iter().map(Self::bucket_card).collect::<Html<Self>>()
+            }
+            FetchState::NotFetching => {
+                html!{}
+            }
+            FetchState::Fetching => {
+                html!{}
+            }
+            FetchState::Failed(e) => {
+                html!{format!("{:?}",e)}
+            }
+        };
+
+        let users_buckets = match &self.users_buckets {
+            FetchState::Success(buckets) => {
+                buckets.iter().map(Self::bucket_card).collect::<Html<Self>>()
+            }
+            FetchState::NotFetching => {
+                html!{}
+            }
+            FetchState::Fetching => {
+                html!{}
+            }
+            FetchState::Failed(e) => {
+                html!{format!("{:?}",e)}
+            }
+        };
+
         html! {
-            <div>
-                <h1> {"Welcome to Bucket Questions!"} </h1>
-                <h2> {"The only site to have both buckets, and questions."} </h2>
-                <h2> {"Some sites have buckets, others have questions, this one has both."} </h2>
+            <div class= "has-background-primary full_height_scrollable">
+                <div class = "container" style="width: 100%">
+                    <div class = "columns">
+                        <div class = "column">
+                            <div class= "container has-background-info has-text-centered">
+                                <label class="has-text-centered is-size-4" >
+                                    {"Public Buckets"}
+                                </label>
+                            </div>
+                            {public_buckets}
+                        </div>
 
-                <div>
-                    <p> {"Your buckets"}</p>
-                    <p> {"No bucket, create one!"} </p>
-                </div>
-
-                <div>
-                    <label> {"Public buckets"}</label>
+                        <div class = "column">
+                            <div class="container has-background-info has-text-centered">
+                                <label class="is-size-4 " >
+                                    {"Private Buckets"}
+                                </label>
+                            </div>
+                            {users_buckets}
+                        </div>
+                    </div>
                 </div>
             </div>
         }
+    }
+}
+
+
+impl IndexPage {
+    fn bucket_card(bucket: &Bucket) -> Html<Self> {
+        html! {
+            <div class = "box">
+                <label class="is-size-5">{&bucket.bucket_name} </label>
+                <RouterLink
+                    link = Route::from(AppRoute::Bucket{slug: bucket.bucket_slug.clone()}).route
+                    text = "Go To"
+                />
+            </div>
+        }
+
     }
 }

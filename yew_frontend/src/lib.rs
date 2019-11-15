@@ -22,7 +22,7 @@ use crate::requests::auth_and_user::GetUser;
 use yewtil::NeqAssign;
 use crate::components::login::login_or_user_panel::LoginUserPanel;
 //use crate::components::navbar::navbar;
-
+use crate::pages::bucket::BucketPage;
 
 #[wasm_bindgen]
 pub fn start_app() {
@@ -32,10 +32,10 @@ pub fn start_app() {
 
 #[derive(Switch, Debug, Clone)]
 pub enum AppRoute {
-    #[to = "/login"]
-    Login,
-    #[to = "/"]
+    #[to = "/!"]
     Index,
+    #[to = "/bucket/{slug}"]
+    Bucket{slug: String}
 }
 
 
@@ -94,25 +94,11 @@ impl Component for Model {
         html!{
         <>
             {self.navbar()}
-//            html!{<>
-//                <div style="flex-grow: 1">
-//                    <RouterLink
-//                        link = Route::from(AppRoute::Index).route
-//                        text = "BucketQuestions"
-//                        classes = "button is-primary"
-//                    />
-//                </div>
-//                <div>
-//                    <LoginUserPanel user = &self.user callback=|_| Msg::LogUserOut />
-//                </div>
-//            </>}
-//        )}
-
             <Router<AppRoute, ()>
                 render = Router::render(|switch: AppRoute| {
                     match switch {
-                        AppRoute::Login => panic!(),
                         AppRoute::Index => html!{<IndexPage/>},
+                        AppRoute::Bucket{slug} => html!{<BucketPage slug = slug />},
                     }
                 })
                 redirect = Router::redirect(|_| {

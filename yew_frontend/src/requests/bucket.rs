@@ -66,7 +66,7 @@ impl FetchRequest for GetParticipatingBuckets {
     }
 }
 
-pub struct GetBucketBySlug{slug: String}
+pub struct GetBucketBySlug{pub slug: String}
 
 impl FetchRequest for GetBucketBySlug {
     type RequestType = ();

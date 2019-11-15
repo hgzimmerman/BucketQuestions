@@ -8,6 +8,21 @@ body {
     flex-direction: column;
 }
 
+.full_height_scrollable {
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+
+.full_height {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
 /*.block {*/
 /*    display: block;*/
 /*    height: 100%;*/
