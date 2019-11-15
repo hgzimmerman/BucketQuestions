@@ -84,19 +84,19 @@ impl LoginButton {
             match &self.google_oauth_link {
                 FetchState::NotFetching => html! {
                     <Button
-                        classes = Classes::from("is-disabled")
+                        classes = Classes::from("navbar-item is-disabled")
                         callback = |_| Msg::NoOp
                     />
                 },
                 FetchState::Fetching => html! {
                     <Button
-                        classes = Classes::from("is-loading")
+                        classes = Classes::from("navbar-item is-loading")
                         callback = |_| Msg::NoOp
                     />
                 },
                 FetchState::Success(_) => html! {
                     <Button
-                        classes = Classes::from("is-primary")
+                        classes = Classes::from("navbar-item is-primary")
                         callback = |_| Msg::GoToGoogleOauthPage
                         text= "Login"
                     />

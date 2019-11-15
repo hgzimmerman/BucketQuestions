@@ -1,4 +1,4 @@
-#![recursion_limit="256"]
+#![recursion_limit="512"]
 use yew::prelude::*;
 use wasm_bindgen::prelude::*;
 use yew_router::prelude::*;
@@ -21,7 +21,7 @@ use wire::user::User;
 use crate::requests::auth_and_user::GetUser;
 use yewtil::NeqAssign;
 use crate::components::login::login_or_user_panel::LoginUserPanel;
-use crate::components::navbar::navbar;
+//use crate::components::navbar::navbar;
 
 
 #[wasm_bindgen]
@@ -41,13 +41,15 @@ pub enum AppRoute {
 
 pub struct Model {
     user: FetchState<User>,
+    burger_open: bool,
     link: ComponentLink<Self>
 }
 
 pub enum Msg {
     GotUser(User),
     GotUserFailed(FetchError),
-    LogUserOut
+    LogUserOut,
+    ToggleBurger
 }
 
 impl Component for Model {
@@ -57,6 +59,7 @@ impl Component for Model {
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
         Model {
             user: Default::default(),
+            burger_open: false,
             link
         }
     }
@@ -80,24 +83,30 @@ impl Component for Model {
                 crate::auth::clear_jwt();
                 self.user.neq_assign(FetchState::NotFetching)
             }
+            Msg::ToggleBurger => {
+                self.burger_open  = !self.burger_open;
+                true
+            }
         }
     }
 
     fn view(&self) -> Html<Self> {
         html!{
         <>
-            {navbar(html!{<>
-                <div style="flex-grow: 1">
-                    <RouterLink
-                        link = Route::from(AppRoute::Index).route
-                        text = "BucketQuestions"
-                        classes = "button is-primary"
-                    />
-                </div>
-                <div>
-                    <LoginUserPanel user = &self.user callback=|_| Msg::LogUserOut />
-                </div>
-            </>})}
+            {self.navbar()}
+//            html!{<>
+//                <div style="flex-grow: 1">
+//                    <RouterLink
+//                        link = Route::from(AppRoute::Index).route
+//                        text = "BucketQuestions"
+//                        classes = "button is-primary"
+//                    />
+//                </div>
+//                <div>
+//                    <LoginUserPanel user = &self.user callback=|_| Msg::LogUserOut />
+//                </div>
+//            </>}
+//        )}
 
             <Router<AppRoute, ()>
                 render = Router::render(|switch: AppRoute| {

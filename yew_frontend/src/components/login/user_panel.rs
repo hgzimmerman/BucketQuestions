@@ -63,11 +63,12 @@ impl UserPanel {
         let user_name: &String = &self.props.user.google_name.clone().unwrap_or_else(|| "Logged In".to_string());
 
         return html! {
-            <Button
-                classes = Classes::from("")
-                callback = |_| Msg::ToggleOpen
-                text = user_name
-            />
+            <a
+                class = Classes::from("navbar-item")
+                onclick = |_| Msg::ToggleOpen
+            >
+                {user_name}
+            </a>
         }
     }
 
