@@ -5,7 +5,7 @@ use yewtil::{Emissive, Pure, PureComponent};
 
 pub type Button = Pure<PureButton>;
 
-#[derive(PartialEq, Properties, Emissive)]
+#[derive(PartialEq, Properties, Emissive, Debug)]
 pub struct PureButton {
     #[props(required)]
     pub callback: Callback<()>,
@@ -17,7 +17,7 @@ impl PureComponent for PureButton {
     fn render(&self) -> VNode<Pure<Self>> {
         html! {
             <button
-                classes = self.classes
+                class = self.classes.clone().extend("button")
                 onclick=|_| ()>
                 { &self.text }
             </button>

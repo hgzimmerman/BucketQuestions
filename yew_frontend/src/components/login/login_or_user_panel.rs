@@ -2,8 +2,10 @@ use crate::common::FetchState;
 use yew::{Component, ComponentLink, Html, html, Properties, ShouldRender, Callback};
 use wire::user::User;
 use yewtil::NeqAssign;
-use crate::components::login::login::LoginPage;
+use crate::components::login::login::LoginButton;
 use crate::components::login::user_panel::UserPanel;
+use crate::auth::is_logged_in;
+use crate::components::button::Button;
 
 pub struct LoginUserPanel {
     props: Props
@@ -17,7 +19,7 @@ pub struct Props {
 }
 
 pub enum Msg {
-
+    NoOp
 }
 
 impl Component for LoginUserPanel {
@@ -32,7 +34,7 @@ impl Component for LoginUserPanel {
 
     fn update(&mut self, msg: Self::Message) -> bool {
         match msg {
-
+            Msg::NoOp => false
         }
     }
 
@@ -42,13 +44,20 @@ impl Component for LoginUserPanel {
 
 
     fn view(&self) -> Html<Self> {
-        match self.props.user.clone().success() {
-            Some(user) => html!{
-                <UserPanel user = user callback = &self.props.callback />
-            },
-            None => html! {
-                <LoginPage />
+        if is_logged_in() {
+            match self.props.user.clone().success() {
+                Some(user) => html!{
+                    <UserPanel user = user callback = &self.props.callback />
+                },
+                None => html!{
+                    <Button callback = |_| Msg::NoOp />
+                }
+            }
+        } else {
+            html! {
+                <LoginButton />
             }
         }
+
     }
 }

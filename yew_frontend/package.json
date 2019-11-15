@@ -1,5 +1,5 @@
 {
-  "author": "Francisco Jesus Navarro Cortes<spieljs@gmail.com>",
+  "author": "Henry Zimmerman",
   "repository": {
     "url": "https://github.com/spielrs/yew-parcel-template"
   },
@@ -12,6 +12,9 @@
   },
   "bin": {
     "create-yew-parcel": ".bin/create-yew-parcel.js"
+  },
+  "dependencies": {
+    "bulma": "^0.8.0"
   },
   "devDependencies": {
     "parcel-bundler": "^1.12.4",

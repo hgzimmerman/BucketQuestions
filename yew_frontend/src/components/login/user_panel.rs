@@ -1,4 +1,4 @@
-use yew::{Component, ComponentLink, Html, html, Properties, Callback};
+use yew::{Component, ComponentLink, Html, html, Properties, Callback, Classes};
 use yew::virtual_dom::VNode;
 use wire::user::User;
 use crate::components::button::Button;
@@ -64,6 +64,7 @@ impl UserPanel {
 
         return html! {
             <Button
+                classes = Classes::from("")
                 callback = |_| Msg::ToggleOpen
                 text = user_name
             />
@@ -72,7 +73,7 @@ impl UserPanel {
 
     fn render_panel(&self) -> Html<Self> {
         if self.open {
-            html! {
+            return html! {
                 <div style = "position: absolute; top: 44px; background-color: orange; height: 120px; width: 100%;">
                     <Button
                         callback = |_| Msg::LogOut
@@ -81,7 +82,7 @@ impl UserPanel {
                 </div>
             }
         } else {
-            html!{}
+            return html!{}
         }
 
     }

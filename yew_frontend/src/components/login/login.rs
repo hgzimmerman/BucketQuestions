@@ -1,4 +1,4 @@
-use yew::{Component, ComponentLink, html, Html, ShouldRender};
+use yew::{Component, ComponentLink, html, Html, ShouldRender, Classes};
 use yew::virtual_dom::VNode;
 //use crate::components::full_height::{full_height_scrollable};
 //use crate::components::centered::centered;
@@ -19,9 +19,9 @@ thread_local! {
 
 
 // Get the oauth link from the server.
-pub struct LoginPage {
+pub struct LoginButton {
     google_oauth_link: FetchState<String>, // TODO probably the wrong data type.
-    link: ComponentLink<LoginPage>
+    link: ComponentLink<LoginButton>
 }
 
 pub enum Msg {
@@ -31,19 +31,19 @@ pub enum Msg {
     GotLinkFail(FetchError)
 }
 
-impl Component for LoginPage {
+impl Component for LoginButton {
     type Message = Msg;
     type Properties = ();
 
     fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        LoginPage {
+        LoginButton {
             google_oauth_link: FetchState::default(),
             link
         }
     }
 
     fn mounted(&mut self) -> ShouldRender {
-        let fetch = fetch_to_msg(&GetOauthLink, Msg::GotLink, Msg::GotLinkFail);
+        let fetch = fetch_to_msg(GetOauthLink, Msg::GotLink, Msg::GotLinkFail);
         self.link.send_future(fetch);
         false
     }
@@ -78,19 +78,25 @@ impl Component for LoginPage {
     }
 }
 
-impl LoginPage {
+impl LoginButton {
     fn css_view(&self, _css: &Css) -> Html<Self> {
 //        full_height_scrollable(centered(
             match &self.google_oauth_link {
-                FetchState::NotFetching
-                | FetchState::Fetching => html! {
+                FetchState::NotFetching => html! {
                     <Button
+                        classes = Classes::from("is-disabled")
                         callback = |_| Msg::NoOp
-                        text= "Login"
+                    />
+                },
+                FetchState::Fetching => html! {
+                    <Button
+                        classes = Classes::from("is-loading")
+                        callback = |_| Msg::NoOp
                     />
                 },
                 FetchState::Success(_) => html! {
                     <Button
+                        classes = Classes::from("is-primary")
                         callback = |_| Msg::GoToGoogleOauthPage
                         text= "Login"
                     />

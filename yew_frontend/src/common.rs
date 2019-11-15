@@ -5,6 +5,7 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, RequestMode, Response, Window};
+use yewtil::NeqAssign;
 
 
 #[derive(Clone, PartialEq, Debug)]
@@ -46,6 +47,13 @@ impl <T> FetchState<T> {
         }
     }
 
+    pub fn alter<F: Fn(&mut T)>(&mut self, f: F) {
+        match self {
+            FetchState::Success(t) => f(t),
+            _ => {}
+        }
+    }
+
     pub fn as_ref(&self) -> FetchState<&T>  {
         match self {
             FetchState::NotFetching => FetchState::NotFetching,
@@ -53,6 +61,15 @@ impl <T> FetchState<T> {
             FetchState::Success(t) => FetchState::Success(t),
             FetchState::Failed(e) => FetchState::Failed(e.clone())
         }
+    }
+}
+
+impl <T: PartialEq> FetchState<T> {
+    /// Sets the fetch state to be fetching.
+    /// If it wasn't already in a fetch state, it will return `true`,
+    /// to indicate that the component should re-render.
+    pub fn set_fetching(&mut self) -> bool {
+        self.neq_assign(FetchState::Fetching)
     }
 }
 
@@ -119,7 +136,9 @@ pub trait FetchRequest {
 
 }
 
-pub async fn fetch_resource<T: FetchRequest>(request: &T) -> Result<T::ResponseType, FetchError> {
+/// Fetch a resource, returning a result of the expected response,
+/// or an error indicating what went wrong.
+pub async fn fetch_resource<T: FetchRequest>(request: T) -> Result<T::ResponseType, FetchError> {
     log::debug!("fetch_resource");
     let method = request.method();
     let headers = request.headers();
@@ -149,6 +168,8 @@ pub async fn fetch_resource<T: FetchRequest>(request: &T) -> Result<T::ResponseT
     debug_assert!(resp_value.is_instance_of::<Response>());
     let resp: Response = resp_value.dyn_into().unwrap();
 
+    // TODO, check the status code here.
+
     // Process the response
     let text = JsFuture::from(resp.text().map_err(|_| FetchError::TextNotAvailable)?)
         .await
@@ -164,11 +185,26 @@ pub async fn fetch_resource<T: FetchRequest>(request: &T) -> Result<T::ResponseT
     Ok(deserialized)
 }
 
-/// Performs a fetch and then resolves the fetch to a message
-pub async fn fetch_to_msg<T: FetchRequest, Msg>(request: &T, success: impl Fn(T::ResponseType) -> Msg, failure: impl Fn(FetchError) -> Msg) -> Msg {
+/// Performs a fetch and then resolves the fetch to a message by way of using two provided Fns to
+/// convert the success and failure cases.
+///
+/// This is useful if you want to handle the success case and failure case separately.
+pub async fn fetch_to_msg<T: FetchRequest, Msg>(request: T, success: impl Fn(T::ResponseType) -> Msg, failure: impl Fn(FetchError) -> Msg) -> Msg {
     fetch_resource(request)
         .await
         .map(success)
         .unwrap_or_else(failure)
 }
 
+/// Performs a fetch and resolves the fetch to a message by converting a FetchState into the Message
+/// by way of a provided closure.
+///
+/// This is useful if you just want to update a FetchState in your model based on the result of your request.
+pub async fn fetch_to_state_msg<T: FetchRequest, Msg>(request: T, to_msg: impl Fn(FetchState<T::ResponseType>) -> Msg) -> Msg {
+    let fetch_state = match fetch_resource(request).await {
+        Ok(response) => FetchState::Success(response),
+        Err(err) => FetchState::Failed(err)
+    };
+
+    to_msg(fetch_state)
+}

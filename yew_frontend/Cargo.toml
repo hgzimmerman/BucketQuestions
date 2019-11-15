@@ -31,6 +31,7 @@ serde_json = "1.0.41"
 
 wasm-bindgen-futures = "0.4.3"
 wasm-bindgen = {version = "0.2.51", features=["serde-serialize"]}
+futures = "0.3.1"
 
 [dependencies.web-sys]
 version = "0.3.30"

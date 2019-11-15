@@ -10,6 +10,7 @@ mod pages;
 mod auth;
 
 mod requests;
+mod panels;
 
 use crate::pages::index::IndexPage;
 
@@ -61,7 +62,7 @@ impl Component for Model {
     }
 
     fn mounted(&mut self) -> ShouldRender {
-        let fetch = fetch_to_msg(&GetUser, Msg::GotUser, Msg::GotUserFailed);
+        let fetch = fetch_to_msg(GetUser, Msg::GotUser, Msg::GotUserFailed);
         self.link.send_future(fetch);
         false
     }
@@ -69,7 +70,6 @@ impl Component for Model {
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             Msg::GotUser(user) => {
-                log::info!("Got user: {:#?}", user);
                 self.user.neq_assign(FetchState::Success(user))
             },
             Msg::GotUserFailed(err) => {
@@ -91,6 +91,7 @@ impl Component for Model {
                     <RouterLink
                         link = Route::from(AppRoute::Index).route
                         text = "BucketQuestions"
+                        classes = "button is-primary"
                     />
                 </div>
                 <div>
