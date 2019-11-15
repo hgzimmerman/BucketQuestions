@@ -8,6 +8,10 @@ body {
     flex-direction: column;
 }
 
+html {
+    overflow: hidden !important;
+}
+
 .full_height_scrollable {
     overflow-y: auto;
     display: flex;
