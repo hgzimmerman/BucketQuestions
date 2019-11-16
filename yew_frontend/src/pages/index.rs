@@ -109,25 +109,25 @@ impl Component for IndexPage {
         };
 
         html! {
-            <div class= "has-background-primary full_height_scrollable">
-                <div class = "container" style="width: 100%">
-                    <div class = "columns">
-                        <div class = "column">
-                            <div class= "container has-background-info has-text-centered">
-                                <label class="has-text-centered is-size-4" >
-                                    {"Public Buckets"}
-                                </label>
+            <div class= "full_height">
+                <div class = "container" style="width: 100%; padding-top: 10px;">
+                    <div class = "columns full_height_scrollable2">
+                        <div class = "column full_height2">
+                            <div class="panel is-primary full_height2 vert_flex">
+                                <p class="panel-heading">{"Public Buckets"}</p>
+                                <div class = "growable_scrollable">
+                                    {public_buckets}
+                                </div>
                             </div>
-                            {public_buckets}
                         </div>
 
-                        <div class = "column">
-                            <div class="container has-background-info has-text-centered">
-                                <label class="is-size-4 " >
-                                    {"Private Buckets"}
-                                </label>
+                        <div class = "column full_height2">
+                            <div class="panel is-primary full_height2 vert_flex">
+                                <p class="panel-heading">{"Private Buckets"}</p>
+                                <div class = "growable_scrollable">
+                                    {users_buckets}
+                                </div>
                             </div>
-                            {users_buckets}
                         </div>
                     </div>
                 </div>
@@ -140,8 +140,8 @@ impl Component for IndexPage {
 impl IndexPage {
     fn bucket_card(bucket: &Bucket) -> Html<Self> {
         html! {
-            <div class = "box">
-                <label class="is-size-5">{&bucket.bucket_name} </label>
+            <div class = "panel-block is-white">
+                <label class="is-size-7">{&bucket.bucket_name} </label>
                 <RouterLink
                     link = Route::from(AppRoute::Bucket{slug: bucket.bucket_slug.clone()}).route
                     text = "Go To"
