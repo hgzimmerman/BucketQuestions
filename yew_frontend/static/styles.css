@@ -47,3 +47,28 @@ html {
     flex-grow: 1;
     overflow-y: auto;
 }
+
+.min_height_200 {
+    min-height: 200px;
+}
+
+.min_height_100 {
+    min-height: 100px;
+}
+
+.min_height_150 {
+    min-height: 150px;
+}
+
+.min_height_250 {
+    min-height: 250px;
+}
+
+
+.full_width {
+    width: 100%;
+}
+
+.no_margin {
+    margin: 0 !important;
+}

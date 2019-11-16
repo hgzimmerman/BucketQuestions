@@ -23,6 +23,7 @@ use yewtil::NeqAssign;
 use crate::components::login::login_or_user_panel::LoginUserPanel;
 //use crate::components::navbar::navbar;
 use crate::pages::bucket::BucketPage;
+use crate::pages::create_bucket::CreateBucketPage;
 
 #[wasm_bindgen]
 pub fn start_app() {
@@ -35,7 +36,9 @@ pub enum AppRoute {
     #[to = "/!"]
     Index,
     #[to = "/bucket/{slug}"]
-    Bucket{slug: String}
+    Bucket{slug: String},
+    #[to = "/create_bucket"]
+    CreateBucket
 }
 
 
@@ -99,6 +102,7 @@ impl Component for Model {
                     match switch {
                         AppRoute::Index => html!{<IndexPage/>},
                         AppRoute::Bucket{slug} => html!{<BucketPage slug = slug />},
+                        AppRoute::CreateBucket => html!{<CreateBucketPage />}
                     }
                 })
                 redirect = Router::redirect(|_| {

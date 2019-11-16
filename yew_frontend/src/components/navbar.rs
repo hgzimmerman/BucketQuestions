@@ -13,57 +13,12 @@ thread_local! {
 }
 
 
-
-//pub struct Navbar {
-//    props: Props,
-//}
-//
-//pub enum Msg {
-//}
-//
-//#[derive(Debug, Properties)]
-//pub struct Props {
-//    pub children: Children<Navbar>,
-//}
-//
-//
-//
-//impl Component for Navbar {
-//    type Message = Msg;
-//    type Properties = Props;
-//
-//    fn create(props: Props, link: ComponentLink<Self>) -> Self {
-//        Navbar {
-//            props,
-//        }
-//    }
-//
-//    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-//        true
-//    }
-//
-//    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-//        self.props = props;
-//        true
-////        self.props.neq_assign(props)
-//    }
-//
-//    fn view(&self) -> Html<Self> {
-//        CSS.with(|css| -> Html<Self> {
-//            return html! {
-//                <nav class=&css["navbar"]>
-//                    {self.props.children.render()}
-//                </nav>
-//            }
-//        })
-//    }
-//}
-
 impl Model {
     pub fn navbar(&self) -> Html<Model> {
         html! {
             <nav class="navbar is-dark" role="navigation" aria-label="main navigation">
                 <div class="navbar-brand">
+                        // TODO make this a bread crumbs thing.
                         <RouterLink
                             link = Route::from(AppRoute::Index).route
                             text = "Bucket Questions"
@@ -77,6 +32,7 @@ impl Model {
     }
 
     fn render_burger(&self) -> Html<Self> {
+
         let inner_content = html! {
             <>
                 <span aria-hidden="true"></span>
@@ -100,10 +56,27 @@ impl Model {
     }
 
     fn render_nav_or_burger_content(&self) -> Html<Self> {
+
+        // TODO make this conditional so it only shows up in index
+        let create_bucket = html! {
+//            <RouterLink
+//                link: Route::from(AppRoute::CreateBucket)
+//                text: "Create Bucket"
+//                classes: "navbar-link"
+//            />
+
+
+            <RouterLink
+                link = Route::from(AppRoute::CreateBucket).route
+                text = "Create Bucket"
+                classes = "navbar-item"
+            />
+        };
         let inner_content = html! {
         <>
             <div class="navbar-start">
             // TODO, maybe put the name of the bucket here? breadcrumbs?
+                {create_bucket}
             </div>
 
             <div class="navbar-end">

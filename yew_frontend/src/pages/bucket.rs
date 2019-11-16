@@ -164,9 +164,13 @@ impl Component for BucketPage {
         html! {
 
             <div class= "has-background-primary full_height_scrollable">
-                <div class = "container" >
-                    {self.render_q_and_a_card()}
-                    {self.render_new_question_card()}
+                <div class = "full_width">
+                    <div class = "columns is-centered no_margin">
+                        <div class="column is-two-thirds-tablet is-half-desktop is-centered">
+                            {self.render_q_and_a_card()}
+                            {self.render_new_question_card()}
+                        </div>
+                    </div>
                 </div>
             </div>
         }
@@ -246,7 +250,7 @@ impl BucketPage {
             }
         };
         html!{
-            <div class = "box ">
+            <div class = "box full_width">
                 {content}
             </div>
         }
