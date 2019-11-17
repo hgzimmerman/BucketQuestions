@@ -64,8 +64,8 @@ impl LoadingBool {
 
 #[derive(PartialEq, Properties, Clone)]
 pub struct Props {
-    pub is_open: bool,
-    pub bucket: FetchState<Bucket>,
+    #[props(required)]
+    pub bucket: Bucket,
 }
 
 pub enum Msg {
@@ -89,13 +89,7 @@ impl Component for SettingsModal {
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             Msg::Close => {
-                let route = match &self.props.bucket {
-                    FetchState::Success(bucket) => AppRoute::Bucket{ slug: bucket.bucket_slug.clone() },
-                    _ => {
-                        log::warn!("Bucket wasn't fetched, settings don't know where to go");
-                        AppRoute::Index
-                    }
-                };
+                let route = AppRoute::Bucket{ slug: self.props.bucket.bucket_slug.clone()};
                 RouteAgentDispatcher::new().send(RouteRequest::ChangeRoute(Route::from(route)));
                 false
             }
@@ -115,44 +109,40 @@ impl Component for SettingsModal {
     }
 
     fn view(&self) -> Html<Self> {
-        if self.props.is_open {
-            return html! {
-                <div class="modal is-active">
-                    <div class="modal-background"></div>
-                    <div class="modal-content">
-                   // <!-- Any other Bulma elements you want -->
-                        <div class="has-background-white">
-                            <div class="panel">
-                                <p class="panel-heading">
-                                    {"Settings"}
-                                </p>
-                                <a class="panel-block">
-                                    <div class="level full_width">
-                                        <label>{"Pubilc"}</label>
-                                        <div class="level-right">
-                                            <input
-                                                id="publicSwitch"
-                                                type="checkbox"
-                                                name="publicSwitch"
-                                                class="switch"
-                                                checked=self.settings.is_public.eval()
-                                                disabled=self.settings.is_public.is_loading()
-                                            />
-                                            <label for="publicSwitch">{'\u{00A0}'}</label> // Non-breaking space. The switch is targeted to this label.
-                                        </div>
+        return html! {
+            <div class="modal is-active">
+                <div class="modal-background"></div>
+                <div class="modal-content">
+               // <!-- Any other Bulma elements you want -->
+                    <div class="has-background-white">
+                        <div class="panel">
+                            <p class="panel-heading">
+                                {"Settings"}
+                            </p>
+                            <a class="panel-block">
+                                <div class="level full_width">
+                                    <label>{"Pubilc"}</label>
+                                    <div class="level-right">
+                                        <input
+                                            id="publicSwitch"
+                                            type="checkbox"
+                                            name="publicSwitch"
+                                            class="switch"
+                                            checked=self.settings.is_public.eval()
+                                            disabled=self.settings.is_public.is_loading()
+                                        />
+                                        <label for="publicSwitch">{'\u{00A0}'}</label> // Non-breaking space. The switch is targeted to this label.
                                     </div>
-                                </a>
-                                <a class="panel-block">
-                                    {"Exclusive"}
-                                </a>
-                            </div>
+                                </div>
+                            </a>
+                            <a class="panel-block">
+                                {"Exclusive"}
+                            </a>
                         </div>
                     </div>
-                    <button class="modal-close is-large" aria-label="close" onclick=|_| Msg::Close></button>
                 </div>
-            }
-        } else {
-            return html!{}
+                <button class="modal-close is-large" aria-label="close" onclick=|_| Msg::Close></button>
+            </div>
         }
     }
 }

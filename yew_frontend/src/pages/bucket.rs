@@ -174,9 +174,21 @@ impl Component for BucketPage {
     }
 
     fn view(&self) -> Html<Self> {
+        let modal = if let FetchState::Success(bucket) = &self.bucket {
+            if self.props.is_settings_open {
+                html!{
+                    <SettingsModal bucket= bucket.clone() />
+                }
+            } else {
+                html!{}
+            }
+        } else {
+            html!{}
+        };
+
         html! {
             <>
-            <SettingsModal is_open = self.props.is_settings_open bucket= self.bucket.clone() />
+            {modal}
             <div class= "has-background-primary full_height_scrollable">
                 <div class = "full_width">
                     <div class = "columns is-centered no_margin">
