@@ -8,7 +8,6 @@ use db::{
     answer::db_types::{Answer, NewAnswer},
     BoxedRepository,
 };
-use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use warp::{filters::BoxedFilter, path, Filter, Reply};
 use wire::answer::NewAnswerRequest;
@@ -24,12 +23,14 @@ pub fn answer_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .map(answer_question_handler)
         .and_then(json_or_reject);
 
+
     // TODO need a get answers?
     // Put that under this subpath or questions?
 
     path(ANSWER_PATH).and(answer_question).boxed()
 }
 
+/// Will set the associated question to archived if the archived field of the request is set to true.
 fn answer_question_handler(
     request: NewAnswerRequest,
     user_uuid: Option<Uuid>,
@@ -41,5 +42,9 @@ fn answer_question_handler(
         publicly_visible: request.publicly_visible,
         answer_text: request.answer_text,
     };
-    conn.create_answer(new_answer).map_err(Error::from)
+    let answer = conn.create_answer(new_answer).map_err(Error::from)?;
+    if request.archive_question {
+        conn.set_archive_status_for_question(request.question_uuid, true)?;
+    }
+    Ok(answer)
 }

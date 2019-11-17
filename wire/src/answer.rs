@@ -43,4 +43,6 @@ pub struct NewAnswerRequest {
     pub publicly_visible: bool,
     /// The answer
     pub answer_text: String,
+    /// The request should archive the question
+    pub archive_question: bool
 }

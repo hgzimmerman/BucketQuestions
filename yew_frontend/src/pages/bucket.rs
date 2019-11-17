@@ -41,7 +41,7 @@ pub enum Msg {
     UpdateNewQuestion(String),
     FetchedNewQuestionCreate(()),
     UpdateNewAnswer(String),
-    FetchedNewAnswerCreate(()),
+    FetchedNewAnswerCreate(FetchState<()>),
     GetARandomQuestion,
     PutQuestionBackInBucket,
     DiscardQuestion,
@@ -88,10 +88,15 @@ impl Component for BucketPage {
             Msg::UpdateNewAnswer(answer_text) => {
                 self.new_answer.neq_assign(answer_text)
             }
-            Msg::FetchedNewAnswerCreate(_) => {
+            Msg::FetchedNewAnswerCreate(response) => {
 
                 // TODO if success, then ...
-                self.new_answer = "".to_string();
+                if let FetchState::Success(_) = response {
+                    self.new_answer = "".to_string();
+                    self.active_question = FetchState::NotFetching;
+                } else {
+                    // Send error message to toast agent.
+                }
                 true
             }
             Msg::GetARandomQuestion => {
@@ -115,7 +120,7 @@ impl Component for BucketPage {
                     let request = DeleteQuestion{
                         question_uuid: question.uuid
                     };
-                    self.link.send_future(fetch_to_state_msg(request, |_| Msg::FetchedNewAnswerCreate(())));
+                    self.link.send_future(fetch_to_state_msg(request, |resp| Msg::FetchedNewAnswerCreate(resp.map(|_| ()))));
                     true
                 } else {
                     true
@@ -153,9 +158,10 @@ impl Component for BucketPage {
                     let request = CreateAnswer(NewAnswerRequest {
                         question_uuid: self.active_question.as_ref().unwrap().as_ref().unwrap().uuid,
                         publicly_visible: true,
-                        answer_text: self.new_answer.clone()
+                        answer_text: self.new_answer.clone(),
+                        archive_question: true
                     });
-                    self.link.send_future(fetch_to_state_msg(request, |_| Msg::FetchedNewAnswerCreate(())));
+                    self.link.send_future(fetch_to_state_msg(request, |resp| Msg::FetchedNewAnswerCreate(resp.map(|_| ()))));
                     true
                 } else {
                     true
@@ -291,10 +297,10 @@ impl BucketPage {
                         rows=6
                         value=&self.new_answer
                         oninput=|e| Msg::UpdateNewAnswer(e.value)
-                        placeholder="Answer (can be left blank)"
+                        placeholder="Answer"
                     />
 
-                    <button class= "button is-success is-fullwidth" onclick= |_| Msg::SubmitNewAnswer>
+                    <button class= "button is-success is-fullwidth" onclick= |_| Msg::SubmitNewAnswer disabled=self.new_answer.is_empty()>
                         {"Answer"}
                     </button>
 
@@ -362,7 +368,7 @@ impl BucketPage {
         html! {
             <div class = "box">
                 {textarea}
-                <button class= "button is-success is-fullwidth" onclick=|_| Msg::SubmitNewQuestion>
+                <button class= "button is-success is-fullwidth" onclick=|_| Msg::SubmitNewQuestion disabled=self.new_question.is_empty()>
                      {"Submit New Question"}
                 </button>
             </div>
