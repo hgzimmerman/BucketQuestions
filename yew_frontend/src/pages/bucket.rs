@@ -212,8 +212,9 @@ impl Component for BucketPage {
 }
 
 impl BucketPage {
-    fn sholud_show_settings(&self) -> bool {
-        if let FetchState::Success(bucket) = self.bucket {
+    fn should_show_settings(&self) -> bool {
+        // TODO this is the wrong thing to look for.
+        if let FetchState::Success(bucket) = &self.bucket {
             // TODO make another request to find out if the user owns this bucket
             true
         } else {
@@ -239,29 +240,27 @@ impl BucketPage {
         } else {
             html!{}
         };
+        
 
         let content = match &self.bucket {
             FetchState::Success(bucket) => html !{
                 html!{
                     <>
-//                        <div class="level-left">
                             <span class="card-header-title">
                                 {&bucket.bucket_name}
                             </span>
-//                        </div>
-//                        <div class="level-right">
                             {settings_link}
-//                        </div>
                     </>
                 }
             },
             _ => html!{
-                    <>
-                        <span class="card-header-title">
-                            {crate::NBS}
-                        </span>
-                        {settings_link}
-                    </>
+                <>
+                    <span class="card-header-title">
+                        <progress class="progress is-small is-dark is-radiusless" max="100"></progress>
+                        {crate::NBS}
+                    </span>
+                    {settings_link}
+                </>
             }
         };
 
