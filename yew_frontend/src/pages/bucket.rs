@@ -212,15 +212,29 @@ impl Component for BucketPage {
 }
 
 impl BucketPage {
+    fn sholud_show_settings(&self) -> bool {
+        if let FetchState::Success(bucket) = self.bucket {
+            // TODO make another request to find out if the user owns this bucket
+            true
+        } else {
+            false
+        }
+
+    }
+
     fn render_title(&self) -> Html<Self> {
         // TODO render the number of questions in the bucket.
         // TODO determine if a user is a bucket_owner.
-        let should_show_settings = true;
-        let settings_link = if should_show_settings {
+        let settings_link = if self.should_show_settings() {
             html! {
-                <button class="button is-white" onclick=|_| Msg::ShowSettingsModal >
-                    {"Settings"}
-                </button>
+                <a
+                    onclick=|_| Msg::ShowSettingsModal
+                    href="#" class="card-header-icon" aria-label="bucket settings"
+                >
+                    <span class="icon has-text-dark">
+                        <i class="fas fa-cog" aria-hidden="true"></i>
+                    </span>
+                </a>
             }
         } else {
             html!{}
@@ -230,27 +244,33 @@ impl BucketPage {
             FetchState::Success(bucket) => html !{
                 html!{
                     <>
-                        <div class="level-left">
-                            <span class="is-size-3">
+//                        <div class="level-left">
+                            <span class="card-header-title">
                                 {&bucket.bucket_name}
                             </span>
-                        </div>
-                        <div class="level-right">
+//                        </div>
+//                        <div class="level-right">
                             {settings_link}
-                        </div>
+//                        </div>
                     </>
                 }
             },
-            _ => html!{}
+            _ => html!{
+                    <>
+                        <span class="card-header-title">
+                            {crate::NBS}
+                        </span>
+                        {settings_link}
+                    </>
+            }
         };
 
         html! {
-            <div class = "panel has-background-white">
-                <div class = "margin_20">
-                    <div class= "level">
-                        {content}
-                    </div>
-                </div>
+
+            <div class="card column_margin">
+                <header class="card-header">
+                    {content}
+                </header>
             </div>
         }
     }
@@ -258,66 +278,80 @@ impl BucketPage {
     fn render_q_and_a_card(&self) -> Html<Self> {
         let content = match &self.active_question {
             FetchState::Fetching => html! {
-                <>
+                <div class="card-footer">
                     <button
-                        class = "button is-success is-loading is-fullwidth"
+                        class = "button is-success card-footer-item is-radiusless"
                         disabled = true
                     >
                         {"Get A Random Question"}
                     </button>
-                </>
+                </div>
             },
             FetchState::NotFetching => html! {
-                <button
-                    class = "button is-success is-fullwidth"
-                    onclick=|_| Msg::GetARandomQuestion
-                >
-                    {"Get A Random Question"}
-                </button>
+
+                <div class="card-footer">
+                    <button
+                        class = "button is-success card-footer-item is-radiusless"
+                        onclick=|_| Msg::GetARandomQuestion
+                    >
+                        {"Get A Random Question"}
+                    </button>
+                </div>
             },
             FetchState::Success(Some(question)) => html! {
                 <>
-                    <div class="is-size-4">
-                        <p>{&question.question_text}</p>
+                    <div class="card-content">
+                        <div class="is-size-4">
+                            <p>{&question.question_text}</p>
+                        </div>
+                        <br />
+
+
+                        <div class="level">
+                            <button class="button is-info" onclick = |_| Msg::PutQuestionBackInBucket>
+                                {"Put Back"}
+                            </button>
+                            <button class="button is-warning" onclick = |_| Msg::DiscardQuestion>
+                                {"Discard"}
+                            </button>
+                        </div>
+
+                        <textarea
+                            class = "textarea is-medium"
+                            rows=6
+                            value=&self.new_answer
+                            oninput=|e| Msg::UpdateNewAnswer(e.value)
+                            placeholder="Answer"
+                        />
                     </div>
-                    <br />
 
-
-                    <div class="level">
-                        <button class="button is-info" onclick = |_| Msg::PutQuestionBackInBucket>
-                            {"Put Back"}
-                        </button>
-                        <button class="button is-warning" onclick = |_| Msg::DiscardQuestion>
-                            {"Discard"}
+                    <div class="card-footer">
+                        <button
+                            class= "button is-success card-footer-item is-radiusless"
+                            onclick= |_| Msg::SubmitNewAnswer
+                            disabled=self.new_answer.is_empty()
+                        >
+                            {"Answer"}
                         </button>
                     </div>
-
-                    <textarea
-                        class = "textarea is-medium"
-                        rows=6
-                        value=&self.new_answer
-                        oninput=|e| Msg::UpdateNewAnswer(e.value)
-                        placeholder="Answer"
-                    />
-
-                    <button class= "button is-success is-fullwidth" onclick= |_| Msg::SubmitNewAnswer disabled=self.new_answer.is_empty()>
-                        {"Answer"}
-                    </button>
 
                 </>
             },
             FetchState::Success(None) => html! {
                 html! {
                     <>
-                        <div>
+                        <div class="card-content">
                             {"No questions in this bucket. Try adding some!"}
                         </div>
-                        <button
-                            class = "button is-success is-fullwidth"
-                            onclick=|_| Msg::GetARandomQuestion
-                        >
-                            {"Get A Random Question"}
-                        </button>
+                        <div class="card-footer">
+                            <button
+                                class= "button is-success card-footer-item is-radiusless"
+                                onclick=|_| Msg::GetARandomQuestion
+                            >
+                                {"Get A Random Question"}
+                            </button>
+
+                        </div>
                     </>
                 }
             },
@@ -327,7 +361,16 @@ impl BucketPage {
         };
         html!{
         // TODO use a panel here instead of a card
-            <div class = "box full_width">
+//            <div class = "box full_width">
+//                {content}
+//            </div>
+//
+            <div class="card column_margin">
+                <header class="card-header">
+                    <p class="card-header-title">
+                        {"Draw Question From Bucket"}
+                    </p>
+                </header>
                 {content}
             </div>
         }
@@ -366,11 +409,24 @@ impl BucketPage {
         };
 
         html! {
-            <div class = "box">
-                {textarea}
-                <button class= "button is-success is-fullwidth" onclick=|_| Msg::SubmitNewQuestion disabled=self.new_question.is_empty()>
-                     {"Submit New Question"}
-                </button>
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">
+                        {"New Question"}
+                    </p>
+                </header>
+                <div class="card-content">
+                    {textarea}
+                </div>
+                <div class="card-footer">
+                    <button
+                        class= "button is-success card-footer-item is-radiusless"
+                        onclick=|_| Msg::SubmitNewQuestion
+                        disabled=self.new_question.is_empty()
+                    >
+                         {"Submit New Question"}
+                    </button>
+                </div>
             </div>
         }
     }

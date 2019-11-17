@@ -114,7 +114,7 @@ impl Component for SettingsModal {
                 <div class="modal-background"></div>
                 <div class="modal-content">
                // <!-- Any other Bulma elements you want -->
-                    <div class="has-background-white">
+                    <div class="box is-paddingless">
                         <div class="panel">
                             <p class="panel-heading">
                                 {"Settings"}

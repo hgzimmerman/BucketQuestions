@@ -14,10 +14,13 @@
     "create-yew-parcel": ".bin/create-yew-parcel.js"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^5.11.2",
+    "@fortawesome/fontawesome-free-solid": "^5.0.13",
     "bulma": "^0.8.0",
     "bulma-switch": "^2.0.0"
   },
   "devDependencies": {
+    "@fortawesome/free-solid-svg-icons": "^5.11.2",
     "parcel-bundler": "^1.12.4",
     "parcel-plugin-wasm.rs": "^1.2.15",
     "sass": "^1.23.6",

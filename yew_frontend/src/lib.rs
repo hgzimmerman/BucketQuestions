@@ -25,6 +25,9 @@ use crate::components::login::login_or_user_panel::LoginUserPanel;
 use crate::pages::bucket::BucketPage;
 use crate::pages::create_bucket::CreateBucketPage;
 
+/// Non breaking space
+pub const NBS: char = '\u{00A0}';
+
 #[wasm_bindgen]
 pub fn start_app() {
     web_logger::init();
