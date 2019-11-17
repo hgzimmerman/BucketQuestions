@@ -10,6 +10,10 @@ use crate::requests::bucket::GetBucketBySlug;
 use uuid::Uuid;
 use crate::requests::answer::CreateAnswer;
 use wire::answer::NewAnswerRequest;
+use crate::pages::settings_modal::SettingsModal;
+use yew_router::unit_state::{RouteAgentDispatcher, Route};
+use crate::AppRoute;
+use yew_router::agent::RouteRequest;
 
 pub struct BucketPage {
     props: Props,
@@ -25,7 +29,10 @@ pub struct BucketPage {
 
 #[derive(Properties, PartialEq, Debug)]
 pub struct Props {
-    pub slug: String
+    #[props(required)]
+    pub slug: String,
+    #[props(required)]
+    pub is_settings_open: bool
 }
 
 pub enum Msg {
@@ -39,7 +46,8 @@ pub enum Msg {
     PutQuestionBackInBucket,
     DiscardQuestion,
     SubmitNewQuestion,
-    SubmitNewAnswer
+    SubmitNewAnswer,
+    ShowSettingsModal
 }
 
 impl Component for BucketPage {
@@ -153,6 +161,11 @@ impl Component for BucketPage {
                     true
                 }
             }
+            Msg::ShowSettingsModal => {
+                let route = AppRoute::BucketSettings{ slug: self.props.slug.clone() };
+                RouteAgentDispatcher::new().send(RouteRequest::ChangeRoute( Route::from(route)));
+                false
+            }
         }
     }
 
@@ -162,22 +175,67 @@ impl Component for BucketPage {
 
     fn view(&self) -> Html<Self> {
         html! {
-
+            <>
+            <SettingsModal is_open = self.props.is_settings_open bucket= self.bucket.clone() />
             <div class= "has-background-primary full_height_scrollable">
                 <div class = "full_width">
                     <div class = "columns is-centered no_margin">
                         <div class="column is-two-thirds-tablet is-half-desktop is-centered">
+                            {self.render_title()}
                             {self.render_q_and_a_card()}
                             {self.render_new_question_card()}
                         </div>
                     </div>
                 </div>
             </div>
+            </>
         }
     }
 }
 
 impl BucketPage {
+    fn render_title(&self) -> Html<Self> {
+        // TODO render the number of questions in the bucket.
+        // TODO determine if a user is a bucket_owner.
+        let should_show_settings = true;
+        let settings_link = if should_show_settings {
+            html! {
+                <button class="button is-white" onclick=|_| Msg::ShowSettingsModal >
+                    {"Settings"}
+                </button>
+            }
+        } else {
+            html!{}
+        };
+
+        let content = match &self.bucket {
+            FetchState::Success(bucket) => html !{
+                html!{
+                    <>
+                        <div class="level-left">
+                            <span class="is-size-3">
+                                {&bucket.bucket_name}
+                            </span>
+                        </div>
+                        <div class="level-right">
+                            {settings_link}
+                        </div>
+                    </>
+                }
+            },
+            _ => html!{}
+        };
+
+        html! {
+            <div class = "panel has-background-white">
+                <div class = "margin_20">
+                    <div class= "level">
+                        {content}
+                    </div>
+                </div>
+            </div>
+        }
+    }
 
     fn render_q_and_a_card(&self) -> Html<Self> {
         let content = match &self.active_question {
@@ -250,6 +308,7 @@ impl BucketPage {
             }
         };
         html!{
+        // TODO use a panel here instead of a card
             <div class = "box full_width">
                 {content}
             </div>

@@ -35,6 +35,8 @@ pub fn start_app() {
 pub enum AppRoute {
     #[to = "/!"]
     Index,
+    #[to = "/bucket/{slug}/settings"]
+    BucketSettings{slug: String},
     #[to = "/bucket/{slug}"]
     Bucket{slug: String},
     #[to = "/create_bucket"]
@@ -101,7 +103,8 @@ impl Component for Model {
                 render = Router::render(|switch: AppRoute| {
                     match switch {
                         AppRoute::Index => html!{<IndexPage/>},
-                        AppRoute::Bucket{slug} => html!{<BucketPage slug = slug />},
+                        AppRoute::Bucket{slug} => html!{<BucketPage slug = slug is_settings_open = false/>},
+                        AppRoute::BucketSettings{slug} => html!{<BucketPage slug = slug is_settings_open = true/>},
                         AppRoute::CreateBucket => html!{<CreateBucketPage />}
                     }
                 })

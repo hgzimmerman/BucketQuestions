@@ -72,3 +72,11 @@ html {
 .no_margin {
     margin: 0 !important;
 }
+
+.margin_8 {
+    margin: 8px;
+}
+
+.margin_20 {
+    margin: 20px;
+}
