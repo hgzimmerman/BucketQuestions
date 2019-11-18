@@ -5,6 +5,7 @@ use wire::bucket::{SetPermissionsRequest, ChangeBucketFlagsRequest};
 use wire::user::User;
 
 /// Creates a bucket
+#[derive(Clone, Debug)]
 pub struct CreateBucket(pub NewBucketRequest);
 
 impl FetchRequest for CreateBucket {

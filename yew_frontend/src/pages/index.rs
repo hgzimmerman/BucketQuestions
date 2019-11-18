@@ -6,6 +6,7 @@ use crate::requests::bucket::{GetPublicBuckets, GetParticipatingBuckets, CreateB
 use yewtil::NeqAssign;
 use yew_router::unit_state::{Route, RouterLink};
 use crate::AppRoute;
+use yew_router::agent::RouteRequest;
 
 pub struct IndexPage {
     public_buckets: FetchState<Vec<Bucket>>,
@@ -15,11 +16,13 @@ pub struct IndexPage {
     link: ComponentLink<Self>
 }
 
+#[derive(Debug, Clone)]
 pub enum Msg {
     FetchedPublicBuckets(FetchState<Vec<Bucket>>),
     FetchedUserBuckets(FetchState<Vec<Bucket>>),
     RequestCreateBucket(CreateBucket),
-    FetchedCreatedBucket(FetchState<Bucket>)
+    FetchedCreatedBucket(FetchState<Bucket>),
+    GoTo(AppRoute)
 }
 
 impl Component for IndexPage {
@@ -74,6 +77,10 @@ impl Component for IndexPage {
                     _ => unreachable!()
                 }
             }
+            Msg::GoTo(route) => {
+                yew_router::unit_state::RouteAgentDispatcher::new().send(RouteRequest::ChangeRoute(route.into()));
+                false
+            }
         }
     }
 
@@ -109,23 +116,33 @@ impl Component for IndexPage {
         };
 
         html! {
-            <div class= "full_height">
-                <div class = "container" style="width: 100%; padding-top: 10px;">
-                    <div class = "columns full_height_scrollable2">
+            <div class= "full_height has-background-primary">
+                <div class = "container full_height2" style="width: 100%; padding-top: 10px;">
+                    <div class = "columns full_height3 is-marginless">
                         <div class = "column full_height2">
-                            <div class="panel is-primary full_height2 vert_flex">
-                                <p class="panel-heading">{"Public Buckets"}</p>
-                                <div class = "growable_scrollable">
-                                    {public_buckets}
+                            <div class="card full_height2 vert_flex">
+                                <div class="card-header">
+                                    <p class="card-header-title">{"Public Buckets"}</p>
+                                </div>
+
+                                <div class="card-content full_height2 is-paddingless">
+                                    <div class="panel full_height_scrollable2">
+                                        {public_buckets}
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div class = "column full_height2">
-                            <div class="panel is-primary full_height2 vert_flex">
-                                <p class="panel-heading">{"Private Buckets"}</p>
-                                <div class = "growable_scrollable">
-                                    {users_buckets}
+                            <div class = "card full_height2 vert_flex">
+                                <div class="card-header">
+                                    <p class="card-header-title">{"Private Buckets"}</p>
+                                </div>
+
+                                <div class="card-content full_height2 is-paddingless">
+                                    <div class="panel full_height_scrollable2">
+                                        {users_buckets}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -139,14 +156,15 @@ impl Component for IndexPage {
 
 impl IndexPage {
     fn bucket_card(bucket: &Bucket) -> Html<Self> {
+        let slug = bucket.bucket_slug.clone();
+        let route = AppRoute::Bucket{slug};
         html! {
-            <div class = "panel-block is-white">
-                <label class="is-size-7">{&bucket.bucket_name} </label>
-                <RouterLink
-                    link = Route::from(AppRoute::Bucket{slug: bucket.bucket_slug.clone()}).route
-                    text = "Go To"
-                />
-            </div>
+            <a
+                class = "panel-block is-white"
+                onclick = |_| Msg::GoTo(route.clone())
+            >
+                <label class="is-size-5">{&bucket.bucket_name} </label>
+            </a>
         }
 
     }

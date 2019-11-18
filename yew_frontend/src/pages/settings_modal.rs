@@ -341,13 +341,13 @@ impl SettingsModal {
                         <div class="is-4 column">
                             <input
                                 class="switch"
-                                id=mangle_id_switch("admin")
-                                name=mangle_id_switch("admin")
+                                id=mangle_id_switch("kick")
+                                name=mangle_id_switch("kick")
                                 type="checkbox"
                                 checked = user_permissions.permissions.kick_permission
                             />
                             <label
-                                for=mangle_id_switch("admin")
+                                for=mangle_id_switch("kick")
                             >
                                 {"Kick"}
                             </label>

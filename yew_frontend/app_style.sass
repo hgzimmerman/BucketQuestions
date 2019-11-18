@@ -45,6 +45,14 @@ html
   overflow: hidden
   height: 100%
 
+// On tablet and bigger, overflow-y will be hidden.
+.full_height3
+  height: 100%
+  +tablet
+    overflow-y: hidden
+  +mobile
+    overflow-y: scroll
+
 .full_height_scrollable2
   overflow-y: auto
   height: 100%
