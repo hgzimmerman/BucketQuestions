@@ -16,6 +16,7 @@ use crate::AppRoute;
 use yew_router::agent::RouteRequest;
 use wire::bucket_user_relation::BucketUserPermissions;
 
+// TODO break this component across a data-wiring, view and update modules. @ 500 lines, this is getting hard to follow.
 pub struct BucketPage {
     props: Props,
     link: ComponentLink<BucketPage>,
@@ -139,7 +140,6 @@ impl Component for BucketPage {
             }
             Msg::DiscardQuestion => {
                 // The question won't be able to be drawn from the bucket again.
-
                 let mut should_clear_active_question = false;
 
                 let retval = if let FetchState::Success(Some(question)) = &self.active_question {
@@ -241,32 +241,20 @@ impl Component for BucketPage {
     }
 
     fn view(&self) -> Html<Self> {
-        let modal = if let FetchState::Success(bucket) = &self.bucket {
-            if self.props.is_settings_open {
-                html!{
-                    <SettingsModal bucket= bucket.clone() />
-                }
-            } else {
-                html!{}
-            }
-        } else {
-            html!{}
-        };
-
         html! {
             <>
-            {modal}
-            <div class= "has-background-primary full_height_scrollable">
-                <div class = "full_width">
-                    <div class = "columns is-centered no_margin">
-                        <div class="column is-two-thirds-tablet is-half-desktop is-centered">
-                            {self.render_title()}
-                            {self.render_q_and_a_card()}
-                            {self.render_new_question_card()}
+                {self.modal()}
+                <div class= "has-background-primary full_height_scrollable">
+                    <div class = "full_width">
+                        <div class = "columns is-centered no_margin">
+                            <div class="column is-two-thirds-tablet is-half-desktop is-centered">
+                                {self.render_title()}
+                                {self.render_q_and_a_card()}
+                                {self.render_new_question_card()}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
             </>
         }
     }
@@ -283,6 +271,20 @@ impl BucketPage {
                 || permissions.set_public_permission
         } else {
             false
+        }
+    }
+
+    fn modal(&self) -> Html<Self> {
+        if let (FetchState::Success(bucket), FetchState::Success(permissions) )= (&self.bucket, &self.permissions) {
+            if self.props.is_settings_open {
+                return html!{
+                    <SettingsModal bucket= bucket.clone() permissions = permissions.clone()/>
+                }
+            } else {
+                return html!{}
+            }
+        } else {
+            return html!{}
         }
     }
 
@@ -304,7 +306,7 @@ impl BucketPage {
 
         let num_questions_in_bucket = if let FetchState::Success(count) = self.questions_in_bucket_count {
             html! {
-                <span class= "" style = "padding-top: .75rem; padding-bottom: .75rem; padding-right: .25rem"> // TODO, find a better class for this
+                <span class= "" style = "padding-top: .75rem; padding-bottom: .75rem; padding-right: .25rem">
                     {format!("Q: {}", count)}
                 </span>
             }

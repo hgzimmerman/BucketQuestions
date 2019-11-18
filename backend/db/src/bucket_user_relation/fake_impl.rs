@@ -154,4 +154,23 @@ impl BucketUserRelationRepository for Arc<Mutex<FakeDatabase>> {
 
         Ok(users)
     }
+
+    fn get_permissions_all_users_in_bucket(&self, bucket_uuid: Uuid) -> Result<Vec<(BucketUserPermissions, User)>, Error> {
+        let db = self.lock().unwrap();
+        let users = self.get_users_in_bucket(bucket_uuid)?;
+
+        // unlock
+        drop(db);
+
+        let permissions: Vec<BucketUserPermissions> = users
+            .iter()
+            .map(|user| {
+                self.get_permissions(user.uuid, bucket_uuid)
+            })
+            .collect::<Result<Vec<BucketUserPermissions>, Error>>()?;
+
+        Ok(permissions.into_iter().zip(users).collect())
+
+
+    }
 }

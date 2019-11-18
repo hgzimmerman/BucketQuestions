@@ -73,7 +73,6 @@ pub struct BucketUserPermissionsChangeset {
     pub grant_permissions_permission: Option<bool>,
 }
 
-// TODO, maybe remove this structure.
 
 /// Structure that just contains the permissions for a user-bucket relation.
 #[derive(Clone, Copy, Queryable, Debug, Serialize, Deserialize)]
@@ -89,3 +88,4 @@ pub struct BucketUserPermissions {
     /// Can the user kick other users.
     pub kick_permission: bool,
 }
+

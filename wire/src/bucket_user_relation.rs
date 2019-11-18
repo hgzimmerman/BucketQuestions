@@ -1,6 +1,7 @@
 use serde::{Serialize, Deserialize};
 use uuid::Uuid;
 use chrono::NaiveDateTime;
+use crate::user::User;
 
 #[derive(Clone, Debug, PartialEq, PartialOrd, Serialize, Deserialize)]
 pub struct BucketUserRelation {
@@ -73,4 +74,12 @@ pub struct BucketUserPermissions {
     pub grant_permissions_permission: bool,
     /// Can the user kick other users.
     pub kick_permission: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, PartialOrd, Serialize, Deserialize)]
+pub struct UserAndPermissions {
+    /// The user
+    pub user: User,
+    /// The associated permissions
+    pub permissions: BucketUserPermissions
 }

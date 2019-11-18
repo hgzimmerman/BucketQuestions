@@ -120,4 +120,23 @@ where
             .select(bq_user::all_columns)
             .get_results(self.as_conn())
     }
+
+    fn get_permissions_all_users_in_bucket(&self, bucket_uuid: Uuid) -> Result<Vec<(BucketUserPermissions, User)>, Error> {
+        bucket_user_relation::table
+            .filter(
+                bucket_user_relation::bucket_uuid.eq(bucket_uuid)
+            )
+            .inner_join(bq_user::table)
+            .order_by(bucket_user_relation::created_at)
+            .select((
+                (
+                    bucket_user_relation::set_public_permission,
+                    bucket_user_relation::set_drawing_permission,
+                    bucket_user_relation::set_exclusive_permission,
+                    bucket_user_relation::kick_permission,
+                    bucket_user_relation::grant_permissions_permission,
+                )
+                , bq_user::all_columns))
+            .get_results(self.as_conn())
+    }
 }

@@ -1,8 +1,6 @@
 //! Bucket-User relation conversions
 
-use crate::bucket_user_relation::db_types::{
-    BucketUserPermissionsChangeset, BucketUserRelation, NewBucketUserRelation,
-};
+use crate::bucket_user_relation::db_types::{BucketUserPermissionsChangeset, BucketUserRelation, NewBucketUserRelation, BucketUserPermissions};
 use wire;
 
 impl Into<wire::bucket_user_relation::BucketUserRelation> for BucketUserRelation {
@@ -93,6 +91,18 @@ impl From<wire::bucket_user_relation::BucketUserPermissionsChangeset>
             set_exclusive_permission: bupc.set_exclusive_permission,
             kick_permission: bupc.kick_permission,
             grant_permissions_permission: bupc.grant_permissions_permission,
+        }
+    }
+}
+
+impl Into<wire::bucket_user_relation::BucketUserPermissions> for BucketUserPermissions {
+    fn into(self) -> wire::bucket_user_relation::BucketUserPermissions {
+        wire::bucket_user_relation::BucketUserPermissions {
+            set_public_permission: self.set_public_permission,
+            set_drawing_permission: self.set_drawing_permission,
+            set_exclusive_permission: self.set_exclusive_permission,
+            grant_permissions_permission: self.grant_permissions_permission,
+            kick_permission: self.kick_permission
         }
     }
 }

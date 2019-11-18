@@ -21,6 +21,7 @@ use warp::{filters::BoxedFilter, path, Filter, Reply};
 pub const BUCKET_PATH: &str = "bucket";
 
 use wire::bucket::{ChangeBucketFlagsRequest, UserUuidQueryParam, SetPermissionsRequest, NewBucketRequest};
+use wire::bucket_user_relation::UserAndPermissions;
 
 pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
     //impl Filter<Extract=(impl Reply,), Error=Rejection> + Clone{
@@ -121,6 +122,14 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
         .map(get_users_in_bucket_handler)
         .and_then(json_or_reject);
 
+
+    let get_users_and_permissions_in_bucket = path!(Uuid / "all_user_permissions")
+        .and(warp::path::end())
+        .and(warp::get2())
+        .and(state.db())
+        .map(get_all_user_permissions_for_bucket_handler)
+        .and_then(json_or_reject);
+
     path(BUCKET_PATH)
         .and(
             create_bucket
@@ -133,6 +142,7 @@ pub fn bucket_api(state: &State) -> BoxedFilter<(impl Reply,)> {
                 .or(set_permissions)
                 .or(set_bucket_flags)
                 .or(get_users_in_bucket)
+                .or(get_users_and_permissions_in_bucket)
                 .or(get_bucket),
         )
         .boxed()
@@ -287,6 +297,25 @@ fn get_users_in_bucket_handler(
 ) -> Result<Vec<User>, Error> {
     info!("get_users_in_bucket_handler");
     conn.get_users_in_bucket(bucket_uuid).map_err(Error::from)
+}
+
+fn get_all_user_permissions_for_bucket_handler(
+    bucket_uuid: Uuid,
+    conn: BoxedRepository
+) -> Result<Vec<UserAndPermissions>, Error> {
+    info!("get_all_user_permissions_for_bucket_handler");
+    conn.get_permissions_all_users_in_bucket(bucket_uuid)
+        .map(|list| {
+            list.into_iter()
+                .map(|(permissions, user)|{
+                    UserAndPermissions {
+                        user: user.into(),
+                        permissions: permissions.into()
+                    }
+                })
+                .collect()
+        } )
+        .map_err(Error::from)
 }
 
 fn set_permissions_handler(

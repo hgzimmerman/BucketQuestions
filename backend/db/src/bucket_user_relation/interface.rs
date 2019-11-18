@@ -46,4 +46,7 @@ pub trait BucketUserRelationRepository {
     fn get_buckets_user_is_a_part_of(&self, user_uuid: Uuid) -> QueryResult<Vec<Bucket>>;
     /// Gets the users in a given bucket.
     fn get_users_in_bucket(&self, bucket_uuid: Uuid) -> QueryResult<Vec<User>>;
+
+    /// Gets the users in a given bucket, as well as their relation
+    fn get_permissions_all_users_in_bucket(&self, bucket_uuid: Uuid) -> QueryResult<Vec<(BucketUserPermissions, User)>>;
 }

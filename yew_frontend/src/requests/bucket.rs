@@ -1,6 +1,6 @@
 use super::*;
 use uuid::Uuid;
-use wire::bucket_user_relation::{BucketUserRelation, BucketUserPermissions};
+use wire::bucket_user_relation::{BucketUserRelation, BucketUserPermissions, UserAndPermissions};
 use wire::bucket::{SetPermissionsRequest, ChangeBucketFlagsRequest};
 use wire::user::User;
 
@@ -207,6 +207,26 @@ impl FetchRequest for GetUsersInBucket {
 
     fn url(&self) -> String {
         create_url(&format!("bucket/{}/users", self.bucket_uuid))
+    }
+
+    fn method(&self) -> MethodBody<Self::RequestType> {
+        MethodBody::Get
+    }
+
+    fn headers(&self) -> Vec<(String, String)> {
+        default_headers()
+    }
+}
+
+
+pub struct GetUsersAndPermissionsInBucket{pub bucket_uuid: Uuid}
+
+impl FetchRequest for GetUsersAndPermissionsInBucket {
+    type RequestType = ();
+    type ResponseType = Vec<UserAndPermissions>;
+
+    fn url(&self) -> String {
+        create_url(&format!("bucket/{}/all_user_permissions", self.bucket_uuid))
     }
 
     fn method(&self) -> MethodBody<Self::RequestType> {
