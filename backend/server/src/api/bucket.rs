@@ -143,7 +143,7 @@ fn create_bucket_handler(
     user_uuid: Uuid,
     conn: BoxedRepository,
 ) -> Result<Bucket, Error> {
-    info!("add_self_to_bucket_handler");
+    info!("create_bucket_handler");
 
     fn bucket_already_exists(
         slug: &String,

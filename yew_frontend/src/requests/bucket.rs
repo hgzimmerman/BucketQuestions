@@ -1,6 +1,6 @@
 use super::*;
 use uuid::Uuid;
-use wire::bucket_user_relation::BucketUserRelation;
+use wire::bucket_user_relation::{BucketUserRelation, BucketUserPermissions};
 use wire::bucket::{SetPermissionsRequest, ChangeBucketFlagsRequest};
 use wire::user::User;
 
@@ -123,7 +123,7 @@ impl FetchRequest for AddSelfToBucket {
     }
 }
 
-pub struct RemoveSelfFromBucket{bucket_uuid: Uuid}
+pub struct RemoveSelfFromBucket{pub bucket_uuid: Uuid}
 
 impl FetchRequest for RemoveSelfFromBucket {
     type RequestType = ();
@@ -142,11 +142,11 @@ impl FetchRequest for RemoveSelfFromBucket {
     }
 }
 
-pub struct GetPermissionsForUser{bucket_uuid: Uuid}
+pub struct GetPermissionsForUser{pub bucket_uuid: Uuid}
 
 impl FetchRequest for GetPermissionsForUser {
     type RequestType = ();
-    type ResponseType = BucketUserRelation;
+    type ResponseType = BucketUserPermissions;
 
     fn url(&self) -> String {
         create_url(&format!("bucket/{}/user", self.bucket_uuid))
@@ -161,7 +161,7 @@ impl FetchRequest for GetPermissionsForUser {
     }
 }
 
-pub struct SetPermissionsForUser{bucket_uuid: Uuid, permissions: SetPermissionsRequest}
+pub struct SetPermissionsForUser{pub bucket_uuid: Uuid, permissions: SetPermissionsRequest}
 
 impl FetchRequest for SetPermissionsForUser {
     type RequestType = SetPermissionsRequest;
@@ -180,7 +180,7 @@ impl FetchRequest for SetPermissionsForUser {
     }
 }
 
-pub struct SetBucketFlags{bucket_uuid: Uuid, flag_changeset: ChangeBucketFlagsRequest}
+pub struct SetBucketFlags{pub bucket_uuid: Uuid, pub flag_changeset: ChangeBucketFlagsRequest}
 
 impl FetchRequest for SetBucketFlags {
     type RequestType = ChangeBucketFlagsRequest;
@@ -199,7 +199,7 @@ impl FetchRequest for SetBucketFlags {
     }
 }
 
-pub struct GetUsersInBucket{bucket_uuid: Uuid}
+pub struct GetUsersInBucket{pub bucket_uuid: Uuid}
 
 impl FetchRequest for GetUsersInBucket {
     type RequestType = ();

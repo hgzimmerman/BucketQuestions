@@ -3,10 +3,10 @@ use yew::virtual_dom::VNode;
 use yewtil::NeqAssign;
 use wire::question::{Question, NewQuestionRequest};
 use crate::common::{FetchState, fetch_to_state_msg};
-use crate::requests::question::{GetRandomQuestion, CreateQuestion, DeleteQuestion};
-use crate::pages::bucket::Msg::FetchedActiveQuestion;
+use crate::requests::question::{GetRandomQuestion, CreateQuestion, DeleteQuestion, GetNumberOfQeustionsInTheBucket};
+use crate::pages::bucket::Msg::{FetchedActiveQuestion, GetPermissions};
 use wire::bucket::Bucket;
-use crate::requests::bucket::GetBucketBySlug;
+use crate::requests::bucket::{GetBucketBySlug, GetPermissionsForUser};
 use uuid::Uuid;
 use crate::requests::answer::CreateAnswer;
 use wire::answer::NewAnswerRequest;
@@ -14,6 +14,7 @@ use crate::pages::settings_modal::SettingsModal;
 use yew_router::unit_state::{RouteAgentDispatcher, Route};
 use crate::AppRoute;
 use yew_router::agent::RouteRequest;
+use wire::bucket_user_relation::BucketUserPermissions;
 
 pub struct BucketPage {
     props: Props,
@@ -24,7 +25,8 @@ pub struct BucketPage {
     new_question_create: FetchState<()>,
     new_answer: String,
     new_answer_create: FetchState<()>,
-    questions_in_bucket_count: FetchState<usize>
+    questions_in_bucket_count: FetchState<usize>,
+    permissions: FetchState<BucketUserPermissions>
 }
 
 #[derive(Properties, PartialEq, Debug)]
@@ -39,12 +41,17 @@ pub enum Msg {
     FetchedBucket(FetchState<Bucket>),
     FetchedActiveQuestion(FetchState<Option<Question>>),
     UpdateNewQuestion(String),
-    FetchedNewQuestionCreate(()),
+    FetchedNewQuestionCreate(FetchState<()>),
     UpdateNewAnswer(String),
     FetchedNewAnswerCreate(FetchState<()>),
     GetARandomQuestion,
     PutQuestionBackInBucket,
+    GetPermissions,
+    FetchedPermissions(FetchState<BucketUserPermissions>),
+    GetNumQuestionsInBucket,
+    FetchedNumQuestionsInBucket(FetchState<usize>),
     DiscardQuestion,
+    FetchedDiscardQuestion(FetchState<Question>),
     SubmitNewQuestion,
     SubmitNewAnswer,
     ShowSettingsModal
@@ -64,7 +71,8 @@ impl Component for BucketPage {
             new_question_create: Default::default(),
             new_answer: "".to_string(),
             new_answer_create: Default::default(),
-            questions_in_bucket_count: Default::default()
+            questions_in_bucket_count: Default::default(),
+            permissions: Default::default()
         }
     }
 
@@ -77,19 +85,39 @@ impl Component for BucketPage {
 
     fn update(&mut self, msg: Self::Message) -> bool {
         match msg {
-            Msg::FetchedBucket(state) => {self.bucket.neq_assign(state)}
-            Msg::FetchedActiveQuestion(state) => self.active_question.neq_assign(state),
+            Msg::FetchedBucket(state) => {
+                let rerender = self.bucket.neq_assign(state);
+
+                // get permissions and number of questions.
+//                self.link.send_back_batch(|_| vec![Msg::GetPermissions, Msg::GetNumQuestionsInBucket]).emit(());
+                // TODO, we need send_batch
+                self.link.send_self(Msg::GetPermissions);
+                self.link.send_self(Msg::GetNumQuestionsInBucket);
+
+                rerender
+            }
+            Msg::FetchedActiveQuestion(state) => {
+                let rerender = self.active_question.neq_assign(state);
+                self.link.send_self(Msg::GetNumQuestionsInBucket);
+                rerender
+            },
             Msg::UpdateNewQuestion(question_text) => self.new_question.neq_assign(question_text),
-            Msg::FetchedNewQuestionCreate(_) => {
+            Msg::FetchedNewQuestionCreate(new_question) => {
+                self.link.send_self(Msg::GetNumQuestionsInBucket);
                 // TODO if success, then ...
-                self.new_question = "".to_string();
+                if let FetchState::Success(question) = new_question {
+                    self.new_question = "".to_string();
+                } else {
+                    // Notify the toast agent.
+                }
                 true
             }
             Msg::UpdateNewAnswer(answer_text) => {
                 self.new_answer.neq_assign(answer_text)
             }
             Msg::FetchedNewAnswerCreate(response) => {
-
+                // Re-get the number of questions in the bucket
+                self.link.send_self(Msg::GetNumQuestionsInBucket);
                 // TODO if success, then ...
                 if let FetchState::Success(_) = response {
                     self.new_answer = "".to_string();
@@ -120,7 +148,7 @@ impl Component for BucketPage {
                     let request = DeleteQuestion{
                         question_uuid: question.uuid
                     };
-                    self.link.send_future(fetch_to_state_msg(request, |resp| Msg::FetchedNewAnswerCreate(resp.map(|_| ()))));
+                    self.link.send_future(fetch_to_state_msg(request, Msg::FetchedDiscardQuestion));
                     true
                 } else {
                     true
@@ -143,7 +171,7 @@ impl Component for BucketPage {
                             question_text: self.new_question.clone()
                         }
                     };
-                    self.link.send_future(fetch_to_state_msg(request, |_| Msg::FetchedNewQuestionCreate(())));
+                    self.link.send_future(fetch_to_state_msg(request, |resp| Msg::FetchedNewQuestionCreate(resp.map(|_|()))));
                     true
                 } else {
                     log::warn!("Tried to add a new question when the question was empty, or the bucket uuid was unknown.");
@@ -170,6 +198,39 @@ impl Component for BucketPage {
             Msg::ShowSettingsModal => {
                 let route = AppRoute::BucketSettings{ slug: self.props.slug.clone() };
                 RouteAgentDispatcher::new().send(RouteRequest::ChangeRoute( Route::from(route)));
+                false
+            }
+            Msg::FetchedPermissions(permissions) => {
+                self.permissions.neq_assign(permissions)
+            }
+            Msg::GetPermissions => {
+                log::info!("getting permissions");
+                if let FetchState::Success(bucket) = &self.bucket {
+                    self.permissions.set_fetching();
+                    let request = GetPermissionsForUser{ bucket_uuid: bucket.uuid};
+                    self.link.send_future(fetch_to_state_msg(request, Msg::FetchedPermissions));
+                    true
+                } else {
+                    log::warn!("Did not have bucket to use in fetching permissions.");
+                    false
+                }
+            }
+            Msg::GetNumQuestionsInBucket => {
+                if let FetchState::Success(bucket) = &self.bucket {
+                    let request = GetNumberOfQeustionsInTheBucket{ bucket_uuid: bucket.uuid};
+                    self.link.send_future(fetch_to_state_msg(request, Msg::FetchedNumQuestionsInBucket));
+                    true
+                } else {
+                    log::warn!("Did not have bucket to use in fetching num questions.");
+                    false
+                }
+            }
+            Msg::FetchedNumQuestionsInBucket(num) => {
+                self.questions_in_bucket_count.neq_assign(num)
+            }
+            Msg::FetchedDiscardQuestion(question) => {
+                log::info!("Discarded question: {:?}", question);
+                self.link.send_self(Msg::GetNumQuestionsInBucket);
                 false
             }
         }
@@ -212,20 +273,20 @@ impl Component for BucketPage {
 }
 
 impl BucketPage {
+    /// Show settings if the user is cappable of editing any of them.
     fn should_show_settings(&self) -> bool {
-        // TODO this is the wrong thing to look for.
-        if let FetchState::Success(bucket) = &self.bucket {
-            // TODO make another request to find out if the user owns this bucket
-            true
+        if let FetchState::Success(permissions) = &self.permissions {
+            permissions.grant_permissions_permission
+                || permissions.kick_permission
+                || permissions.set_exclusive_permission
+                || permissions.set_drawing_permission
+                || permissions.set_public_permission
         } else {
             false
         }
-
     }
 
     fn render_title(&self) -> Html<Self> {
-        // TODO render the number of questions in the bucket.
-        // TODO determine if a user is a bucket_owner.
         let settings_link = if self.should_show_settings() {
             html! {
                 <a
@@ -240,16 +301,26 @@ impl BucketPage {
         } else {
             html!{}
         };
-        
+
+        let num_questions_in_bucket = if let FetchState::Success(count) = self.questions_in_bucket_count {
+            html! {
+                <span class= "" style = "padding-top: .75rem; padding-bottom: .75rem; padding-right: .25rem"> // TODO, find a better class for this
+                    {format!("Q: {}", count)}
+                </span>
+            }
+        } else {
+            html!{}
+        };
 
         let content = match &self.bucket {
             FetchState::Success(bucket) => html !{
                 html!{
                     <>
-                            <span class="card-header-title">
-                                {&bucket.bucket_name}
-                            </span>
-                            {settings_link}
+                        <span class="card-header-title">
+                            {&bucket.bucket_name}
+                        </span>
+                        {num_questions_in_bucket}
+                        {settings_link}
                     </>
                 }
             },
@@ -358,16 +429,17 @@ impl BucketPage {
                 {"Something went wrong :("}
             }
         };
+
+        let title = match &self.active_question {
+            FetchState::Success(_) => "Answer Question",
+            _ => "Draw Question From Bucket"
+        };
+
         html!{
-        // TODO use a panel here instead of a card
-//            <div class = "box full_width">
-//                {content}
-//            </div>
-//
             <div class="card column_margin">
                 <header class="card-header">
                     <p class="card-header-title">
-                        {"Draw Question From Bucket"}
+                        {title}
                     </p>
                 </header>
                 {content}
