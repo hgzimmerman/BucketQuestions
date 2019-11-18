@@ -152,16 +152,16 @@ impl Component for SettingsModal {
         return html! {
             <div class="modal is-active">
                 <div class="modal-background"></div>
-                <div class="modal-content">
-               // <!-- Any other Bulma elements you want -->
-                    <div class="card">
+                <div class="modal-content" style = "height: 70%; overflow-y: hidden; position: inherit;">
+                    <div class="card full_height2">
                         <div class="card-header">
                             <div class="card-header-title">
                                 {"Settings"}
                             </div>
                         </div>
-                        <div class="card-content">
-                            <div class="panel">
+                        <div class="card-content full_height2 is-paddingless">
+                            <div class="panel full_height_scrollable2">
+
                                {self.tab_panel_and_respective_children()}
                             </div>
                         </div>
@@ -213,6 +213,9 @@ impl SettingsModal {
                 <a class="panel-block" onclick=|_| Msg::TogglePublic >
                     <div class="level full_width">
                         <label>{"Public"}</label>
+                        <div class = "is-size-7">
+                            {"Show the bucket to anyone on the main page."}
+                        </div>
                         <div class="level-right">
                             <input
                                 id="publicSwitch"
@@ -229,6 +232,9 @@ impl SettingsModal {
                 <a class="panel-block">
                     <div class="level full_width">
                         <label>{"Drawing"}</label>
+                        <div class="is-size-7">
+                           {"Allows players to draw questions from this bucket."}
+                        </div>
                         <div class="level-right">
                             <input
                                 id="drawingSwitch"
@@ -245,6 +251,9 @@ impl SettingsModal {
                 <a class="panel-block" onclick=|_| Msg::ToggleExclusive >
                     <div class="level full_width">
                         <label>{"Exclusive"}</label>
+                        <div class="is-size-7">
+                            {"I don't know."}
+                        </div>
                         <div class="level-right">
                             <input
                                 id="exclusiveSwitch"
@@ -255,6 +264,7 @@ impl SettingsModal {
                                 disabled= !self.props.permissions.set_exclusive_permission
                             />
                             <label for="exclusiveSwitch">{'\u{00A0}'}</label> // Non-breaking space. The switch is targeted to this label.
+
                         </div>
                     </div>
                 </a>
@@ -291,6 +301,7 @@ impl SettingsModal {
                             >
                                 {"Public"}
                              </label>
+
                         </div>
 
                         <div class="is-4 column">
