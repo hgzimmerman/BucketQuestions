@@ -65,24 +65,31 @@ impl Component for CreateBucketPage {
     fn view(&self) -> VNode<Self> {
         html! {
             <div class= "has-background-primary full_height_scrollable">
-                <div class = "columns is-centered full_width">
+                <div class = "columns is-centered full_width is-marginless">
                     <div class="column is-two-thirds-tablet is-half-desktop">
-                        <div class = "box min_height_200">
-                            <div class="field">
-                                <label class="label">{"Bucket Name"}</label>
-                                <div class="control">
-                                    <input class="input"
-                                        type="text"
-                                        value=self.bucket_name
-                                        oninput = |i| Msg::UpdateBucketName(i.value)
-                                    />
-                                </div>
-                                <div class="field is-grouped is-grouped-centered">
-                                    <p class="control">
-                                        <a class="button is-primary" onclick=|_| Msg::FetchCreateBucket>
-                                            {"Submit"}
-                                        </a>
-                                    </p>
+                        <div class = "card min_height_200">
+                            <div class="card-header">
+                                <p class="card-header-title">
+                                    {"Create Bucket"}
+                                </p>
+                            </div>
+                            <div class="card-content">
+                                <div class="field">
+                                    <label class="label">{"Bucket Name"}</label>
+                                    <div class="control">
+                                        <input class="input"
+                                            type="text"
+                                            value=self.bucket_name
+                                            oninput = |i| Msg::UpdateBucketName(i.value)
+                                        />
+                                    </div>
+                                    <div class="field is-grouped is-grouped-centered">
+                                        <p class="control">
+                                            <a class="button is-primary" onclick=|_| Msg::FetchCreateBucket>
+                                                {"Submit"}
+                                            </a>
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
