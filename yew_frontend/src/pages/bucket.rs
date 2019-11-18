@@ -6,7 +6,7 @@ use crate::common::{FetchState, fetch_to_state_msg};
 use crate::requests::question::{GetRandomQuestion, CreateQuestion, DeleteQuestion, GetNumberOfQeustionsInTheBucket};
 use crate::pages::bucket::Msg::{FetchedActiveQuestion, GetPermissions};
 use wire::bucket::Bucket;
-use crate::requests::bucket::{GetBucketBySlug, GetPermissionsForUser};
+use crate::requests::bucket::{GetBucketBySlug, GetPermissionsForUser, AddSelfToBucket};
 use uuid::Uuid;
 use crate::requests::answer::CreateAnswer;
 use wire::answer::NewAnswerRequest;
@@ -55,7 +55,9 @@ pub enum Msg {
     FetchedDiscardQuestion(FetchState<Question>),
     SubmitNewQuestion,
     SubmitNewAnswer,
-    ShowSettingsModal
+    ShowSettingsModal,
+    JoinBucket,
+    JoinedBucket(FetchState<()>)
 }
 
 impl Component for BucketPage {
@@ -233,6 +235,20 @@ impl Component for BucketPage {
                 self.link.send_self(Msg::GetNumQuestionsInBucket);
                 false
             }
+            Msg::JoinBucket => {
+                if let FetchState::Success(bucket) = &self.bucket {
+                    let request = AddSelfToBucket { bucket_uuid: bucket.uuid };
+                    self.link.send_future(fetch_to_state_msg(request, |resp|Msg::JoinedBucket(resp.map(|_|()))));
+                    true
+                } else {
+                    false
+                }
+            }
+            Msg::JoinedBucket(_) => {
+                self.update(Msg::GetPermissions);
+                self.update(Msg::GetNumQuestionsInBucket);
+                true
+            }
         }
     }
 
@@ -260,17 +276,37 @@ impl Component for BucketPage {
     }
 }
 
+enum SettingsJoin {
+    Settings,
+    JoinBucket
+}
+
 impl BucketPage {
-    /// Show settings if the user is cappable of editing any of them.
-    fn should_show_settings(&self) -> bool {
-        if let FetchState::Success(permissions) = &self.permissions {
-            permissions.grant_permissions_permission
-                || permissions.kick_permission
-                || permissions.set_exclusive_permission
-                || permissions.set_drawing_permission
-                || permissions.set_public_permission
-        } else {
-            false
+
+    // TODO It may not be wise to rely on a 403/401 error to indicate that a certain button should exist.
+    // TODO if it is indeed a 404, that is probably better.
+    /// Show settings if the user is capable of editing any of them.
+    /// Or, if the permissions can't be gotten, show the option to join the bucket.
+    ///
+    /// None represents that neither should be rendered
+    fn show_settings_or_join_button(&self) -> Option<SettingsJoin> {
+        match &self.permissions {
+            FetchState::Success(permissions) => {
+                if permissions.grant_permissions_permission
+                    || permissions.kick_permission
+                    || permissions.set_exclusive_permission
+                    || permissions.set_drawing_permission
+                    || permissions.set_public_permission {
+                    Some(SettingsJoin::Settings)
+                } else {
+                    None
+                }
+            }
+            // TODO proide a more narrow error here.
+            FetchState::Failed(_) => {
+                Some(SettingsJoin::JoinBucket)
+            }
+            _ => None
         }
     }
 
@@ -289,8 +325,8 @@ impl BucketPage {
     }
 
     fn render_title(&self) -> Html<Self> {
-        let settings_link = if self.should_show_settings() {
-            html! {
+        let settings_modal_link_or_join_button = match self.show_settings_or_join_button() {
+            Some(SettingsJoin::Settings) => html! {
                 <a
                     onclick=|_| Msg::ShowSettingsModal
                     href="#" class="card-header-icon" aria-label="bucket settings"
@@ -299,10 +335,19 @@ impl BucketPage {
                         <i class="fas fa-cog" aria-hidden="true"></i>
                     </span>
                 </a>
-            }
-        } else {
-            html!{}
-        };
+            },
+            Some(SettingsJoin::JoinBucket) => html!{
+                <div class="full_height">
+                    <button
+                        class="button"
+                        onclick=|_| Msg::JoinBucket
+                    >
+                        {"Join"}
+                    </button>
+                </div>
+            },
+            None => html!{}
+        } ;
 
         let num_questions_in_bucket = if let FetchState::Success(count) = self.questions_in_bucket_count {
             html! {
@@ -322,7 +367,7 @@ impl BucketPage {
                             {&bucket.bucket_name}
                         </span>
                         {num_questions_in_bucket}
-                        {settings_link}
+                        {settings_modal_link_or_join_button}
                     </>
                 }
             },
@@ -332,7 +377,7 @@ impl BucketPage {
                         <progress class="progress is-small is-dark is-radiusless" max="100"></progress>
                         {crate::NBS}
                     </span>
-                    {settings_link}
+                    {settings_modal_link_or_join_button}
                 </>
             }
         };

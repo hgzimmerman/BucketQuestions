@@ -86,7 +86,7 @@ impl FetchRequest for GetBucketBySlug {
     }
 }
 
-pub struct GetBucketByUuid{uuid: Uuid}
+pub struct GetBucketByUuid{pub uuid: Uuid}
 
 impl FetchRequest for GetBucketByUuid {
     type RequestType = ();
@@ -105,7 +105,7 @@ impl FetchRequest for GetBucketByUuid {
     }
 }
 
-pub struct AddSelfToBucket{bucket_uuid: Uuid}
+pub struct AddSelfToBucket{pub bucket_uuid: Uuid}
 
 impl FetchRequest for AddSelfToBucket {
     type RequestType = ();

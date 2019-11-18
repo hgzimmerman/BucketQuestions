@@ -252,7 +252,7 @@ impl SettingsModal {
                     <div class="level full_width">
                         <label>{"Exclusive"}</label>
                         <div class="is-size-7">
-                            {"I don't know."}
+                            {"Prevents anyone from joining"}
                         </div>
                         <div class="level-right">
                             <input
