@@ -153,7 +153,7 @@ impl Component for SettingsModal {
             <div class="modal is-active">
                 <div class="modal-background"></div>
                 <div class="modal-content" style = "height: 70%; overflow-y: hidden; position: inherit;">
-                    <div class="card full_height2">
+                    <div class="card full_height">
                         <div class="card-header">
                             <div class="card-header-title">
                                 {"Settings"}

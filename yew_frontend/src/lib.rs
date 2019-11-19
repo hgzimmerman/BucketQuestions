@@ -19,7 +19,6 @@ use wire::user::User;
 use crate::requests::auth_and_user::GetUser;
 use yewtil::NeqAssign;
 use crate::components::login::login_or_user_panel::LoginUserPanel;
-//use crate::components::navbar::navbar;
 use crate::pages::bucket::BucketPage;
 use crate::pages::create_bucket::CreateBucketPage;
 
