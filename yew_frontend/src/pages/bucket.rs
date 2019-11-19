@@ -2,7 +2,7 @@ use yew::{Component, ComponentLink, Properties, html, Html};
 use yew::virtual_dom::VNode;
 use yewtil::NeqAssign;
 use wire::question::{Question, NewQuestionRequest};
-use crate::common::{FetchState, fetch_to_state_msg};
+use yewtil::fetch::{FetchState, fetch_to_state_msg};
 use crate::requests::question::{GetRandomQuestion, CreateQuestion, DeleteQuestion, GetNumberOfQeustionsInTheBucket};
 use crate::pages::bucket::Msg::{FetchedActiveQuestion, GetPermissions};
 use wire::bucket::Bucket;

@@ -4,7 +4,7 @@ use yew::virtual_dom::VNode;
 //use crate::components::centered::centered;
 use crate::components::button::Button;
 use yew_css::{Css, css_file};
-use crate::common::{FetchError, FetchState, fetch_to_msg};
+use yewtil::fetch::{FetchError, FetchState, fetch_to_msg};
 use crate::requests::LinkResponse;
 use yewtil::NeqAssign;
 use web_sys::{Window};

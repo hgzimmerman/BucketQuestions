@@ -1,8 +1,9 @@
-use crate::common::{FetchRequest, MethodBody};
+use yewtil::fetch::{FetchRequest, MethodBody};
 use serde::{Serialize, Deserialize};
 use wire::user::BEARER;
 
 use wire::bucket::{Bucket, NewBucketRequest};
+use serde::de::DeserializeOwned;
 
 
 // TODO move this into wire.
@@ -41,6 +42,11 @@ const URL_BASE: &str = "http://0.0.0.0:8080/api/";
 
 fn create_url(path: &str) -> String {
     [URL_BASE, path].into_iter().cloned().collect()
+}
+
+// TODO this should be compiled later.
+pub fn cors() -> bool {
+    true
 }
 
 pub mod auth_and_user;

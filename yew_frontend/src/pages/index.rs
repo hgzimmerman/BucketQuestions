@@ -1,6 +1,6 @@
 use yew::{Component, ComponentLink, html, ShouldRender, Html};
 use yew::virtual_dom::VNode;
-use crate::common::{FetchState, fetch_to_msg, FetchError, fetch_to_state_msg};
+use yewtil::fetch::{FetchState, fetch_to_msg, FetchError, fetch_to_state_msg};
 use wire::bucket::Bucket;
 use crate::requests::bucket::{GetPublicBuckets, GetParticipatingBuckets, CreateBucket};
 use yewtil::NeqAssign;

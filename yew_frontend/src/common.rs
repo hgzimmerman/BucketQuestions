@@ -125,20 +125,19 @@ pub enum FetchError {
 }
 
 pub trait FetchRequest {
-    type RequestType: Serialize;
-    type ResponseType: DeserializeOwned;
+    type RequestBody: Serialize;
+    type ResponseBody: DeserializeOwned;
 
     fn url(&self) -> String;
 
-    fn method(&self) -> MethodBody<Self::RequestType>;
+    fn method(&self) -> MethodBody<Self::RequestBody>;
 
     fn headers(&self) -> Vec<(String, String)>;
-
 }
 
 /// Fetch a resource, returning a result of the expected response,
 /// or an error indicating what went wrong.
-pub async fn fetch_resource<T: FetchRequest>(request: T) -> Result<T::ResponseType, FetchError> {
+pub async fn fetch_resource<T: FetchRequest>(request: T) -> Result<T::ResponseBody, FetchError> {
     log::debug!("fetch_resource");
     let method = request.method();
     let headers = request.headers();
@@ -189,7 +188,7 @@ pub async fn fetch_resource<T: FetchRequest>(request: T) -> Result<T::ResponseTy
 /// convert the success and failure cases.
 ///
 /// This is useful if you want to handle the success case and failure case separately.
-pub async fn fetch_to_msg<T: FetchRequest, Msg>(request: T, success: impl Fn(T::ResponseType) -> Msg, failure: impl Fn(FetchError) -> Msg) -> Msg {
+pub async fn fetch_to_msg<T: FetchRequest, Msg>(request: T, success: impl Fn(T::ResponseBody) -> Msg, failure: impl Fn(FetchError) -> Msg) -> Msg {
     fetch_resource(request)
         .await
         .map(success)
@@ -200,7 +199,7 @@ pub async fn fetch_to_msg<T: FetchRequest, Msg>(request: T, success: impl Fn(T::
 /// by way of a provided closure.
 ///
 /// This is useful if you just want to update a FetchState in your model based on the result of your request.
-pub async fn fetch_to_state_msg<T: FetchRequest, Msg>(request: T, to_msg: impl Fn(FetchState<T::ResponseType>) -> Msg) -> Msg {
+pub async fn fetch_to_state_msg<T: FetchRequest, Msg>(request: T, to_msg: impl Fn(FetchState<T::ResponseBody>) -> Msg) -> Msg {
     let fetch_state = match fetch_resource(request).await {
         Ok(response) => FetchState::Success(response),
         Err(err) => FetchState::Failed(err)

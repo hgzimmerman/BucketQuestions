@@ -1,4 +1,4 @@
-use crate::common::FetchState;
+use yewtil::fetch::FetchState;
 use yew::{Component, ComponentLink, Html, html, Properties, ShouldRender, Callback};
 use wire::user::User;
 use yewtil::NeqAssign;

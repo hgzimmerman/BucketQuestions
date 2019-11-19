@@ -3,7 +3,7 @@ use yew::prelude::*;
 use wasm_bindgen::prelude::*;
 use yew_router::prelude::*;
 
-mod common;
+//mod common;
 
 mod components;
 mod pages;
@@ -15,7 +15,7 @@ mod panels;
 use crate::pages::index::IndexPage;
 
 use yew_router::prelude::{Route};
-use crate::common::{FetchState,  FetchError, fetch_to_msg};
+use yewtil::fetch::{FetchState,  FetchError, fetch_to_msg};
 
 use wire::user::User;
 use crate::requests::auth_and_user::GetUser;

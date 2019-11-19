@@ -4,20 +4,22 @@ use uuid::Uuid;
 pub struct GetOauthLink;
 
 impl FetchRequest for GetOauthLink {
-    type RequestType = ();
-    type ResponseType = LinkResponse;
+    type RequestBody = ();
+    type ResponseBody = LinkResponse;
 
     fn url(&self) -> String {
         [URL_BASE, "auth/link"].into_iter().cloned().collect()
     }
 
-    fn method(&self) -> MethodBody<Self::RequestType> {
+    fn method(&self) -> MethodBody<Self::RequestBody> {
         MethodBody::Get
     }
 
     fn headers(&self) -> Vec<(String, String)> {
         vec![]
     }
+
+    fn use_cors(&self) -> bool {cors()}
 }
 
 
@@ -25,37 +27,41 @@ impl FetchRequest for GetOauthLink {
 pub struct GetUser;
 
 impl FetchRequest for GetUser {
-    type RequestType = ();
-    type ResponseType = wire::user::User;
+    type RequestBody = ();
+    type ResponseBody = wire::user::User;
 
     fn url(&self) -> String {
         create_url("user")
     }
 
-    fn method(&self) -> MethodBody<Self::RequestType> {
+    fn method(&self) -> MethodBody<Self::RequestBody> {
         MethodBody::Get
     }
 
     fn headers(&self) -> Vec<(String, String)> {
         default_headers()
     }
+
+    fn use_cors(&self) -> bool {cors()}
 }
 
 pub struct GetUserUuid;
 
 impl FetchRequest for GetUserUuid {
-    type RequestType = ();
-    type ResponseType = Uuid;
+    type RequestBody = ();
+    type ResponseBody = Uuid;
 
     fn url(&self) -> String {
         create_url("user/uuid")
     }
 
-    fn method(&self) -> MethodBody<Self::RequestType> {
+    fn method(&self) -> MethodBody<Self::RequestBody> {
         MethodBody::Get
     }
 
     fn headers(&self) -> Vec<(String, String)> {
         default_headers()
     }
+
+    fn use_cors(&self) -> bool {cors()}
 }

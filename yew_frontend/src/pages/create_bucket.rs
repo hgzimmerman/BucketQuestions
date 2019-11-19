@@ -1,7 +1,7 @@
 use yew::{Component, ComponentLink, Properties, html};
 use yew::virtual_dom::VNode;
 use yewtil::NeqAssign;
-use crate::common::{FetchState, fetch_to_state_msg};
+use yewtil::fetch::{FetchState, fetch_to_state_msg};
 use wire::bucket::{Bucket, NewBucketRequest};
 use crate::requests::bucket::CreateBucket;
 use crate::pages::create_bucket::Msg::FetchedCreateBucket;

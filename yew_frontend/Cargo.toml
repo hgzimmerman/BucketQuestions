@@ -14,7 +14,7 @@ crate-type = ["cdylib", "rlib"]
 yew = "0.10.0"
 yew-router = "0.7.0"
 #yew_router = { git = "https://github.com/yewstack/yew_router", branch="next" }
-yewtil = "0.1.1" #{git = "https://github.com/hgzimmerman/yewtil", branch="next"}
+yewtil = {version = "0.2.0", features = ["fetch"]} #{git = "https://github.com/hgzimmerman/yewtil", branch="next"}
 yew_css = {git = "https://github.com/hgzimmerman/yew_css", branch="master"}
 web_logger = "0.2.0"
 wire = {path = "../wire"}
