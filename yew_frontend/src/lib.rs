@@ -3,8 +3,6 @@ use yew::prelude::*;
 use wasm_bindgen::prelude::*;
 use yew_router::prelude::*;
 
-//mod common;
-
 mod components;
 mod pages;
 mod auth;
