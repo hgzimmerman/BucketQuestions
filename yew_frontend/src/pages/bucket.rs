@@ -4,7 +4,6 @@ use yewtil::NeqAssign;
 use wire::question::{Question, NewQuestionRequest};
 use yewtil::fetch::{FetchState, fetch_to_state_msg};
 use crate::requests::question::{GetRandomQuestion, CreateQuestion, DeleteQuestion, GetNumberOfQeustionsInTheBucket};
-use crate::pages::bucket::Msg::{FetchedActiveQuestion, GetPermissions};
 use wire::bucket::Bucket;
 use crate::requests::bucket::{GetBucketBySlug, GetPermissionsForUser, AddSelfToBucket};
 use uuid::Uuid;
@@ -15,8 +14,12 @@ use yew_router::unit_state::{RouteAgentDispatcher, Route};
 use crate::AppRoute;
 use yew_router::agent::RouteRequest;
 use wire::bucket_user_relation::BucketUserPermissions;
-use crate::pages::bucket::control::join::{JoinAction, Join};
-use crate::pages::bucket::control::answer::{AnswerAction, Answer};
+use crate::pages::bucket::control::join::{JoinAction, JoinLogic};
+use crate::pages::bucket::control::answer::{AnswerAction, AnswerState};
+use crate::pages::bucket::control::new_question::{NewQuestionAction, NewQuestionState};
+use crate::pages::bucket::control::num_questions::{NumQuestionAction, NumQuestionsState};
+use crate::pages::bucket::control::permissions::{PermissionsAction, PermissionsState};
+use crate::pages::bucket::control::active_question::{ActiveQuestionState, ActiveQuestionAction};
 
 
 mod view;
@@ -27,12 +30,11 @@ pub struct BucketPage {
     props: Props,
     link: ComponentLink<BucketPage>,
     bucket: FetchState<Bucket>,
-    active_question: FetchState<Option<Question>>,
-    new_question: String,
-    new_question_create: FetchState<()>,
-    new_answer: Answer,
-    questions_in_bucket_count: FetchState<usize>,
-    permissions: FetchState<BucketUserPermissions>
+    new_answer: AnswerState,
+    new_question: NewQuestionState,
+    num_questions: NumQuestionsState,
+    permissions: PermissionsState,
+    active_question: ActiveQuestionState
 }
 
 #[derive(Properties, PartialEq, Debug)]
@@ -45,21 +47,13 @@ pub struct Props {
 
 pub enum Msg {
     FetchedBucket(FetchState<Bucket>),
-    FetchedActiveQuestion(FetchState<Option<Question>>),
-    UpdateNewQuestion(String),
-    FetchedNewQuestionCreate(FetchState<()>),
-    GetARandomQuestion,
-    PutQuestionBackInBucket,
-    GetPermissions,
-    FetchedPermissions(FetchState<BucketUserPermissions>),
-    GetNumQuestionsInBucket,
-    FetchedNumQuestionsInBucket(FetchState<usize>),
-    DiscardQuestion,
-    FetchedDiscardQuestion(FetchState<Question>),
-    SubmitNewQuestion,
     ShowSettingsModal,
     Joining(JoinAction),
-    Answer(AnswerAction)
+    Answer(AnswerAction),
+    NewQuestion(NewQuestionAction),
+    NumQuestions(NumQuestionAction),
+    Permissions(PermissionsAction),
+    ActiveQuestion(ActiveQuestionAction)
 }
 
 impl Component for BucketPage {
@@ -72,11 +66,10 @@ impl Component for BucketPage {
             link,
             bucket: Default::default(),
             active_question: Default::default(),
-            new_question: "".to_string(),
-            new_question_create: Default::default(),
-            questions_in_bucket_count: Default::default(),
             permissions: Default::default(),
-            new_answer: Default::default()
+            new_answer: Default::default(),
+            new_question: Default::default(),
+            num_questions: Default::default()
         }
     }
 
@@ -88,23 +81,17 @@ impl Component for BucketPage {
     }
 
     fn update(&mut self, msg: Self::Message) -> bool {
+        let bucket_ref = self.bucket.as_ref();
+        let get_bucket_uuid = || bucket_ref.success().map(|bucket| bucket.uuid);
         match msg {
             Msg::FetchedBucket(state) => self.handle_fetched_bucket(state),
-            Msg::FetchedActiveQuestion(state) => self.handle_fetched_active_question(state),
-            Msg::UpdateNewQuestion(question_text) => self.new_question.neq_assign(question_text),
-            Msg::FetchedNewQuestionCreate(new_question) => self.handle_post_new_question(new_question),
-            Msg::GetARandomQuestion => self.get_a_random_question(),
-            Msg::PutQuestionBackInBucket => self.put_question_in_bucket(),
-            Msg::DiscardQuestion => self.discard_question(),
-            Msg::SubmitNewQuestion => self.submit_question(),
             Msg::ShowSettingsModal => self.show_settings_modal(),
-            Msg::FetchedPermissions(permissions) => self.permissions.neq_assign(permissions),
-            Msg::GetPermissions => self.get_user_permissions(),
-            Msg::GetNumQuestionsInBucket => self.get_num_questions_in_bucket(),
-            Msg::FetchedNumQuestionsInBucket(num) => self.questions_in_bucket_count.neq_assign(num),
-            Msg::FetchedDiscardQuestion(question) => self.fetched_discarded_question(question),
-            Msg::Joining(action) => Join::update(action, &mut self.link, &self.bucket),
-            Msg::Answer(action) => self.new_answer.update(action, &mut self.link, &mut self.active_question)
+            Msg::Joining(action) => JoinLogic::update(action, &mut self.link, &self.bucket),
+            Msg::Answer(action) => self.new_answer.update(action, &mut self.link, &mut self.active_question.0),
+            Msg::NewQuestion(action) => self.new_question.update(action, &mut self.link, &self.bucket),
+            Msg::NumQuestions(action) => self.num_questions.update(action, &mut self.link, get_bucket_uuid()),
+            Msg::Permissions(action) => self.permissions.update(action, &mut self.link, get_bucket_uuid()),
+            Msg::ActiveQuestion(action) => self.active_question.update(action, &mut self.link, get_bucket_uuid())
         }
     }
 

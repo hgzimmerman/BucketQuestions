@@ -4,6 +4,8 @@ use yew::{Html, html};
 use crate::pages::settings_modal::SettingsModal;
 use crate::pages::bucket::control::join::JoinAction;
 use crate::pages::bucket::control::answer::AnswerAction;
+use crate::pages::bucket::control::new_question::NewQuestionAction;
+use crate::pages::bucket::control::active_question::ActiveQuestionAction;
 
 enum SettingsJoin {
     Settings,
@@ -38,7 +40,7 @@ impl BucketPage {
     ///
     /// None represents that neither should be rendered
     fn show_settings_or_join_button(&self) -> Option<SettingsJoin> {
-        match &self.permissions {
+        match &self.permissions.permissions {
             FetchState::Success(permissions) => {
                 if permissions.grant_permissions_permission
                     || permissions.kick_permission
@@ -59,7 +61,7 @@ impl BucketPage {
     }
 
     fn modal(&self) -> Html<Self> {
-        if let (FetchState::Success(bucket), FetchState::Success(permissions) )= (&self.bucket, &self.permissions) {
+        if let (FetchState::Success(bucket), FetchState::Success(permissions) )= (&self.bucket, &self.permissions.permissions) {
             if self.props.is_settings_open {
                 return html!{
                     <SettingsModal bucket= bucket.clone() permissions = permissions.clone()/>
@@ -97,7 +99,7 @@ impl BucketPage {
             None => html!{}
         } ;
 
-        let num_questions_in_bucket = if let FetchState::Success(count) = self.questions_in_bucket_count {
+        let num_questions_in_bucket = if let FetchState::Success(count) = self.num_questions.num_questions {
             html! {
                 <span class= "" style = "padding-top: .75rem; padding-bottom: .75rem; padding-right: .25rem">
                     {format!("Q: {}", count)}
@@ -141,7 +143,7 @@ impl BucketPage {
     }
 
     fn render_q_and_a_card(&self) -> Html<Self> {
-        let content = match &self.active_question {
+        let content = match &self.active_question.0 {
             FetchState::Fetching => html! {
                 <div class="card-footer">
                     <button
@@ -157,7 +159,7 @@ impl BucketPage {
                 <div class="card-footer">
                     <button
                         class = "button is-success card-footer-item is-radiusless"
-                        onclick=|_| Msg::GetARandomQuestion
+                        onclick=|_| Msg::ActiveQuestion(ActiveQuestionAction::GetRandom)
                     >
                         {"Get A Random Question"}
                     </button>
@@ -173,10 +175,10 @@ impl BucketPage {
 
 
                         <div class="level">
-                            <button class="button is-info" onclick = |_| Msg::PutQuestionBackInBucket>
+                            <button class="button is-info" onclick = |_| Msg::ActiveQuestion(ActiveQuestionAction::PutBackInBucket)>
                                 {"Put Back"}
                             </button>
-                            <button class="button is-warning" onclick = |_| Msg::DiscardQuestion>
+                            <button class="button is-warning" onclick = |_| Msg::ActiveQuestion(ActiveQuestionAction::Discard)>
                                 {"Discard"}
                             </button>
                         </div>
@@ -211,7 +213,7 @@ impl BucketPage {
                         <div class="card-footer">
                             <button
                                 class= "button is-success card-footer-item is-radiusless"
-                                onclick=|_| Msg::GetARandomQuestion
+                                onclick=|_| Msg::ActiveQuestion(ActiveQuestionAction::GetRandom)
                             >
                                 {"Get A Random Question"}
                             </button>
@@ -225,7 +227,7 @@ impl BucketPage {
             }
         };
 
-        let title = match &self.active_question {
+        let title = match &self.active_question.0 {
             FetchState::Success(_) => "Answer Question",
             _ => "Draw Question From Bucket"
         };
@@ -243,14 +245,14 @@ impl BucketPage {
     }
 
     fn render_new_question_card(&self) -> Html<Self> {
-        let textarea: Html<Self> = match &self.new_question_create {
+        let textarea: Html<Self> = match &self.new_question.upload_state {
             FetchState::Success(_)
             | FetchState::NotFetching => html! {
                 <textarea
                     class = "textarea is-medium"
                     rows=6
-                    value=&self.new_question
-                    oninput=|e| Msg::UpdateNewQuestion(e.value)
+                    value=&self.new_question.new_question_text
+                    oninput=|e| Msg::NewQuestion(NewQuestionAction::UpdateText(e.value))
                     placeholder="New Question"
                 />
             },
@@ -258,8 +260,8 @@ impl BucketPage {
                 <textarea
                     class = "textarea is-medium is-loading"
                     rows=6
-                    value=&self.new_question
-                    oninput=|e| Msg::UpdateNewQuestion(e.value)
+                    value=&self.new_question.new_question_text
+                    oninput=|e| Msg::NewQuestion(NewQuestionAction::UpdateText(e.value))
                     placeholder="New Question"
                 />
             },
@@ -267,8 +269,8 @@ impl BucketPage {
                 <textarea
                     class = "textarea is-medium is-danger"
                     rows=6
-                    value=&self.new_question
-                    oninput=|e| Msg::UpdateNewQuestion(e.value)
+                    value=&self.new_question.new_question_text
+                    oninput=|e| Msg::NewQuestion(NewQuestionAction::UpdateText(e.value))
                     placeholder="New Question"
                 />
             }
@@ -287,8 +289,8 @@ impl BucketPage {
                 <div class="card-footer">
                     <button
                         class= "button is-success card-footer-item is-radiusless"
-                        onclick=|_| Msg::SubmitNewQuestion
-                        disabled=self.new_question.is_empty()
+                        onclick=|_| Msg::NewQuestion(NewQuestionAction::Submit)
+                        disabled=self.new_question.new_question_text.is_empty()
                     >
                          {"Submit New Question"}
                     </button>
