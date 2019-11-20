@@ -229,7 +229,7 @@ impl SettingsModal {
                         </div>
                     </div>
                 </a>
-                <a class="panel-block">
+                <a class="panel-block" onclick=|_| Msg::ToggleDrawing>
                     <div class="level full_width">
                         <label>{"Drawing"}</label>
                         <div class="is-size-7">
