@@ -60,17 +60,10 @@ impl Model {
         // TODO make this conditional so it only shows up in index
         let create_bucket = html! {
 //            <RouterLink
-//                link: Route::from(AppRoute::CreateBucket)
-//                text: "Create Bucket"
-//                classes: "navbar-link"
+//                link = Route::from(AppRoute::CreateBucket).route
+//                text = "Create Bucket"
+//                classes = "navbar-item"
 //            />
-
-
-            <RouterLink
-                link = Route::from(AppRoute::CreateBucket).route
-                text = "Create Bucket"
-                classes = "navbar-item"
-            />
         };
         let inner_content = html! {
         <>

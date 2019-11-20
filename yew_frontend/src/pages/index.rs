@@ -7,6 +7,7 @@ use yewtil::NeqAssign;
 use yew_router::unit_state::{Route, RouterLink};
 use crate::AppRoute;
 use yew_router::agent::RouteRequest;
+use crate::auth::is_logged_in;
 
 pub struct IndexPage {
     public_buckets: FetchState<Vec<Bucket>>,
@@ -148,6 +149,7 @@ impl Component for IndexPage {
                         </div>
                     </div>
                 </div>
+                {Self::create_bucket_button()}
             </div>
         }
     }
@@ -166,6 +168,25 @@ impl IndexPage {
                 <label class="is-size-5">{&bucket.bucket_name} </label>
             </a>
         }
+    }
 
+    fn create_bucket_button() -> Html<Self> {
+        if is_logged_in() {
+            // TODO add a tooltip.
+            return html! {
+                <a
+                    class = "static_corner"
+                    onclick= |_| Msg::GoTo(AppRoute::CreateBucket)
+                >
+                    <div class= "has-background-info circle_button">
+                        <span class="icon has-text-info full_size" >
+                            <i class="fas fa-plus big_icon" style = "color: white"></i>
+                        </span>
+                    </div>
+                </a>
+            }
+        } else {
+            return html!{}
+        }
     }
 }

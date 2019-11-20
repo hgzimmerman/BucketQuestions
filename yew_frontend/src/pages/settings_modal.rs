@@ -17,7 +17,7 @@ pub struct SettingsModal {
     link: ComponentLink<SettingsModal>,
     settings: Settings,
     users_and_their_settings: FetchState<Vec<UserAndPermissions>>,
-    active_tab: SettingsTab
+    active_tab: SettingsTab,
 }
 
 #[derive(PartialEq, Debug, Clone, Copy)]
