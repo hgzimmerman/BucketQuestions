@@ -1,5 +1,4 @@
 use yew::{Component, ComponentLink, ShouldRender, Html, html, Properties};
-use yew::virtual_dom::VNode;
 use yewtil::NeqAssign;
 use yewtil::fetch::{FetchState, fetch_to_state_msg};
 use wire::bucket::{Bucket, ChangeBucketFlagsRequest};
@@ -7,7 +6,6 @@ use yew_router::unit_state::RouteAgentDispatcher;
 use yew_router::agent::RouteRequest;
 use yew_router::unit_state::Route;
 use crate::AppRoute;
-use stdweb::unstable::TryInto;
 use wire::bucket_user_relation::{BucketUserPermissions, UserAndPermissions};
 use crate::requests::bucket::{SetBucketFlags, GetUsersAndPermissionsInBucket};
 use crate::pages::settings_modal::Msg::FetchedUsersPermissions;

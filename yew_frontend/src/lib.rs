@@ -12,13 +12,11 @@ mod panels;
 
 use crate::pages::index::IndexPage;
 
-use yew_router::prelude::{Route};
 use yewtil::fetch::{FetchState,  FetchError, fetch_to_msg};
 
 use wire::user::User;
 use crate::requests::auth_and_user::GetUser;
 use yewtil::NeqAssign;
-use crate::components::login::login_or_user_panel::LoginUserPanel;
 use crate::pages::bucket::BucketPage;
 use crate::pages::create_bucket::CreateBucketPage;
 

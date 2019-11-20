@@ -1,26 +1,18 @@
 use yew::{Component, ComponentLink, Properties, html, Html, ShouldRender};
-use yew::virtual_dom::VNode;
 use yewtil::NeqAssign;
-use wire::question::{Question, NewQuestionRequest};
 use yewtil::fetch::{FetchState, fetch_to_state_msg};
-use crate::requests::question::{GetRandomQuestion, CreateQuestion, DeleteQuestion, GetNumberOfQeustionsInTheBucket};
 use wire::bucket::Bucket;
-use crate::requests::bucket::{GetBucketBySlug, GetPermissionsForUser, AddSelfToBucket};
-use uuid::Uuid;
-use crate::requests::answer::CreateAnswer;
-use wire::answer::NewAnswerRequest;
+use crate::requests::bucket::{GetBucketBySlug};
 use crate::pages::settings_modal::SettingsModal;
 use yew_router::unit_state::{RouteAgentDispatcher, Route};
 use crate::AppRoute;
 use yew_router::agent::RouteRequest;
-use wire::bucket_user_relation::BucketUserPermissions;
 use crate::pages::bucket::join_logic::{JoinAction, JoinLogic};
 use crate::pages::bucket::answer::{AnswerAction, AnswerState};
 use crate::pages::bucket::new_question::{NewQuestionAction, NewQuestionState};
 use crate::pages::bucket::num_questions::{NumQuestionAction, NumQuestionsState};
 use crate::pages::bucket::permissions::{PermissionsAction, PermissionsState, SettingsJoin};
 use crate::pages::bucket::active_question::{ActiveQuestionState, ActiveQuestionAction};
-
 
 mod new_question;
 mod active_question;
@@ -32,12 +24,13 @@ mod answer;
 /// Shorthand alias for the link argument.
 type BucketLink = ComponentLink<BucketPage>;
 
+// TODO it might make sense to further cluster these together. Eg answer would be contained within active_question
 /// Model for displaying bucket related data.
 pub struct BucketPage {
     props: Props,
     link: ComponentLink<BucketPage>,
     bucket: FetchState<Bucket>,
-    new_answer: AnswerState,
+    answer: AnswerState,
     new_question: NewQuestionState,
     num_questions: NumQuestionsState,
     permissions: PermissionsState,
@@ -74,7 +67,7 @@ impl Component for BucketPage {
             bucket: Default::default(),
             active_question: Default::default(),
             permissions: Default::default(),
-            new_answer: Default::default(),
+            answer: Default::default(),
             new_question: Default::default(),
             num_questions: Default::default()
         }
@@ -94,7 +87,7 @@ impl Component for BucketPage {
             Msg::FetchedBucket(state) => self.handle_fetched_bucket(state),
             Msg::ShowSettingsModal => self.show_settings_modal(),
             Msg::Joining(action) => JoinLogic::update(action, &mut self.link, &self.bucket),
-            Msg::Answer(action) => self.new_answer.update(action, &mut self.link, &mut self.active_question.0),
+            Msg::Answer(action) => self.answer.update(action, &mut self.link, &mut self.active_question.0),
             Msg::NewQuestion(action) => self.new_question.update(action, &mut self.link, &self.bucket),
             Msg::NumQuestions(action) => self.num_questions.update(action, &mut self.link, get_bucket_uuid()),
             Msg::Permissions(action) => self.permissions.update(action, &mut self.link, get_bucket_uuid()),
@@ -143,7 +136,7 @@ impl BucketPage {
                         <div class = "columns is-centered no_margin">
                             <div class="column is-two-thirds-tablet is-half-desktop is-centered">
                                 {self.render_title()}
-                                {self.active_question.render_q_and_a_card(&self.new_answer)} // TODO, consider moving the new answer inside of the active_question struct.
+                                {self.active_question.render_q_and_a_card(&self.answer)} // TODO, consider moving the new answer inside of the active_question struct.
                                 {self.new_question.render_new_question_card()}
                             </div>
                         </div>
@@ -226,7 +219,6 @@ impl BucketPage {
         };
 
         html! {
-
             <div class="card column_margin">
                 <header class="card-header">
                     {content}

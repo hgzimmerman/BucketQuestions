@@ -3,7 +3,6 @@ use serde::{Serialize, Deserialize};
 use wire::user::BEARER;
 
 use wire::bucket::{Bucket, NewBucketRequest};
-use serde::de::DeserializeOwned;
 
 
 // TODO move this into wire.

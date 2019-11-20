@@ -1,5 +1,5 @@
 use crate::pages::bucket::num_questions::NumQuestionAction;
-use yew::{Html, html, ShouldRender, ComponentLink};
+use yew::{Html, html, ShouldRender};
 use yewtil::fetch::{FetchState, fetch_to_state_msg};
 use crate::pages::bucket::{BucketPage, Msg, BucketLink};
 use crate::requests::question::CreateQuestion;

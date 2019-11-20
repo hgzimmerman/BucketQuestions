@@ -1,8 +1,5 @@
-use yew::{Component, ComponentLink, html, Html, ShouldRender, Classes};
+use yew::{Component, ComponentLink, html, Html, ShouldRender};
 use yew::virtual_dom::VNode;
-//use crate::components::full_height::{full_height_scrollable};
-//use crate::components::centered::centered;
-use crate::components::button::Button;
 use yew_css::{Css, css_file};
 use yewtil::fetch::{FetchError, FetchState, fetch_to_msg};
 use crate::requests::LinkResponse;

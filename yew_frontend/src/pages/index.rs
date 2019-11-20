@@ -1,10 +1,9 @@
 use yew::{Component, ComponentLink, html, ShouldRender, Html};
 use yew::virtual_dom::VNode;
-use yewtil::fetch::{FetchState, fetch_to_msg, FetchError, fetch_to_state_msg};
+use yewtil::fetch::{FetchState, fetch_to_state_msg};
 use wire::bucket::Bucket;
-use crate::requests::bucket::{GetPublicBuckets, GetParticipatingBuckets, CreateBucket};
+use crate::requests::bucket::{GetPublicBuckets, GetParticipatingBuckets};
 use yewtil::NeqAssign;
-use yew_router::unit_state::{Route, RouterLink};
 use crate::AppRoute;
 use yew_router::agent::RouteRequest;
 use crate::auth::is_logged_in;
@@ -13,7 +12,7 @@ pub struct IndexPage {
     public_buckets: FetchState<Vec<Bucket>>,
     users_buckets: FetchState<Vec<Bucket>>,
     /// For holding failure values for the create bucket request
-    create_bucket: FetchState<()>,
+//    create_bucket: FetchState<()>,
     link: ComponentLink<Self>
 }
 
@@ -21,8 +20,8 @@ pub struct IndexPage {
 pub enum Msg {
     FetchedPublicBuckets(FetchState<Vec<Bucket>>),
     FetchedUserBuckets(FetchState<Vec<Bucket>>),
-    RequestCreateBucket(CreateBucket),
-    FetchedCreatedBucket(FetchState<Bucket>),
+//    RequestCreateBucket(CreateBucket),
+//    FetchedCreatedBucket(FetchState<Bucket>),
     GoTo(AppRoute)
 }
 
@@ -34,7 +33,7 @@ impl Component for IndexPage {
         IndexPage {
             public_buckets: Default::default(),
             users_buckets: Default::default(),
-            create_bucket: Default::default(),
+//            create_bucket: Default::default(),
             link,
         }
     }
@@ -56,28 +55,28 @@ impl Component for IndexPage {
         match msg {
             Msg::FetchedPublicBuckets(state) => self.public_buckets.neq_assign(state),
             Msg::FetchedUserBuckets(state) => self.users_buckets.neq_assign(state),
-            Msg::RequestCreateBucket(create_bucket) => {
-                self.create_bucket.set_fetching();
-                let fetch = fetch_to_state_msg(create_bucket, Msg::FetchedCreatedBucket);
-                self.link.send_future(fetch);
-                false
-            }
-            Msg::FetchedCreatedBucket(bucket) => {
-                match bucket {
-                    FetchState::Success(bucket) => {
-                        // Add either to the bucket.
-                        self.users_buckets.alter(|buckets| {
-                            buckets.push(bucket.clone());
-                        });
-                        self.public_buckets.alter(|buckets| {
-                            buckets.push(bucket.clone());
-                        });
-                        true
-                    }
-                    FetchState::Failed(err) => self.create_bucket.neq_assign(FetchState::Failed(err)),
-                    _ => unreachable!()
-                }
-            }
+//            Msg::RequestCreateBucket(create_bucket) => {
+//                self.create_bucket.set_fetching();
+//                let fetch = fetch_to_state_msg(create_bucket, Msg::FetchedCreatedBucket);
+//                self.link.send_future(fetch);
+//                false
+//            }
+//            Msg::FetchedCreatedBucket(bucket) => {
+//                match bucket {
+//                    FetchState::Success(bucket) => {
+//                        // Add either to the bucket.
+//                        self.users_buckets.alter(|buckets| {
+//                            buckets.push(bucket.clone());
+//                        });
+//                        self.public_buckets.alter(|buckets| {
+//                            buckets.push(bucket.clone());
+//                        });
+//                        true
+//                    }
+//                    FetchState::Failed(err) => self.create_bucket.neq_assign(FetchState::Failed(err)),
+//                    _ => unreachable!()
+//                }
+//            }
             Msg::GoTo(route) => {
                 yew_router::unit_state::RouteAgentDispatcher::new().send(RouteRequest::ChangeRoute(route.into()));
                 false

@@ -1,4 +1,4 @@
-use yew::{Component, ComponentLink, Properties, html};
+use yew::{Component, ComponentLink, html};
 use yew::virtual_dom::VNode;
 use yewtil::NeqAssign;
 use yewtil::fetch::{FetchState, fetch_to_state_msg};
@@ -15,9 +15,9 @@ pub struct CreateBucketPage {
     link: ComponentLink<CreateBucketPage>
 }
 
-#[derive(Debug, PartialEq, Properties)]
-pub struct Props {
-}
+//#[derive(Debug, PartialEq, Properties)]
+//pub struct Props {
+//}
 
 pub enum Msg {
     UpdateBucketName(String),
@@ -27,9 +27,9 @@ pub enum Msg {
 
 impl Component for CreateBucketPage {
     type Message = Msg;
-    type Properties = Props;
+    type Properties = ();
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
         Self {
             bucket_name: "".to_string(),
             create_bucket: Default::default(),

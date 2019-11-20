@@ -1,12 +1,10 @@
-use yew::{Component, ComponentLink, Html, html, Properties, Callback, Classes};
+use yew::{Component, ComponentLink, Html, html, Properties, Callback};
 use yew::virtual_dom::VNode;
 use wire::user::User;
-use crate::components::button::Button;
 
 
 pub struct UserPanel {
     props: Props,
-    open: bool
 }
 
 #[derive(Debug, Properties)]
@@ -18,7 +16,6 @@ pub struct Props {
 }
 
 pub enum Msg {
-    ToggleOpen,
     LogOut
 }
 
@@ -29,13 +26,11 @@ impl Component for UserPanel {
     fn create(props: Self::Properties, _link: ComponentLink<Self>) -> Self {
         Self {
             props,
-            open: false
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> bool {
         match msg {
-            Msg::ToggleOpen => {self.open = !self.open; true}
             Msg::LogOut => {
                 self.props.callback.emit(());
                 true
